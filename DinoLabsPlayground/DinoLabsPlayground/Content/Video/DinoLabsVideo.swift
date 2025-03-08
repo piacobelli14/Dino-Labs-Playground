@@ -34,7 +34,7 @@ struct VideoView: View {
     @State private var initialLoadedVideoSize: CGSize = .zero
     @State private var initialLoadedVideoPosition: CGPoint = .zero
     @State private var currentVideo: NSImage? = nil
-    @State private var cropHistory: [(video: NSImage, size: CGSize, position: CGPoint)] = []
+    @State private var cropHistory: [(item: AVPlayerItem, size: CGSize, position: CGPoint, cropRect: CGRect)] = []
     @State private var cropRectPosition: CGPoint = .zero
     @State private var cropRectSize: CGSize = .zero
     @State private var initialCropDragOffset: CGPoint? = nil
@@ -55,6 +55,7 @@ struct VideoView: View {
     
     @State private var player: AVPlayer
     @State private var currentCropRect: CGRect = .zero
+    @State private var initialCropRect: CGRect = .zero
 
     init(geometry: GeometryProxy, fileURL: URL, hasUnsavedChanges: Binding<Bool>, leftPanelWidthRatio: Binding<CGFloat>) {
         self.geometry = geometry
@@ -105,7 +106,10 @@ struct VideoView: View {
                                         blurValue = 0.0
                                         grayscaleValue = 0.0
                                         sepiaValue = 0.0
+                                        currentCropRect = initialCropRect
                                         updateTextFields()
+                                        let originalItem = AVPlayerItem(url: fileURL)
+                                        player.replaceCurrentItem(with: originalItem)
                                         player.seek(to: .zero)
                                     }
                                     .containerHelper(backgroundColor: Color(hex: 0x515151), borderColor: Color(hex: 0x616161), borderWidth: 1, topLeft: 2, topRight: 2, bottomLeft: 2, bottomRight: 2, shadowColor: Color.white.opacity(0.5), shadowRadius: 1, shadowX: 0, shadowY: 0)
@@ -220,7 +224,7 @@ struct VideoView: View {
                                                 let newHeight = max(50, videoSize.height * scale)
                                                 videoSize = CGSize(width: newWidth, height: newHeight)
                                                 updateTextFields()
-                                                if !preserveAspectRatio {
+                                                if (!preserveAspectRatio) {
                                                     originalAspectRatio = videoSize.width / videoSize.height
                                                 }
                                             }
@@ -433,10 +437,18 @@ struct VideoView: View {
                                         
                                         VideoButtonMain {
                                             if let previousState = cropHistory.popLast() {
-                                                currentVideo = previousState.video
                                                 videoSize = previousState.size
                                                 videoPosition = previousState.position
+                                                currentCropRect = previousState.cropRect
+                                                player.replaceCurrentItem(with: previousState.item)
+                                            } else {
+                                                videoSize = initialLoadedVideoSize
+                                                videoPosition = initialLoadedVideoPosition
+                                                currentCropRect = initialCropRect
+                                                let originalItem = AVPlayerItem(url: fileURL)
+                                                player.replaceCurrentItem(with: originalItem)
                                             }
+                                            updateTextFields()
                                             isCropping = false
                                             cropRectSize = .zero
                                             cropRectPosition = .zero
@@ -969,6 +981,7 @@ struct VideoView: View {
                                         initialLoadedVideoPosition = videoPosition
                                         updateTextFields()
                                         currentCropRect = CGRect(origin: .zero, size: naturalSize)
+                                        initialCropRect = currentCropRect
                                     }
                                 }
                             }
@@ -1308,6 +1321,10 @@ struct VideoView: View {
     }
     
     private func cropVideo() {
+        if let currentItem = player.currentItem {
+            cropHistory.append((item: currentItem, size: videoSize, position: videoPosition, cropRect: currentCropRect))
+        }
+        
         DispatchQueue.global(qos: .userInitiated).async {
             let asset = AVAsset(url: fileURL)
             guard let videoTrack = asset.tracks(withMediaType: .video).first else { return }
@@ -1389,10 +1406,6 @@ struct VideoView: View {
             composition.instructions = [instruction]
             
             DispatchQueue.main.async {
-                if let thumbnail = currentVideo ?? NSImage(contentsOf: fileURL) {
-                    cropHistory.append((video: thumbnail, size: videoSize, position: videoPosition))
-                }
-                
                 let playerItem = AVPlayerItem(asset: asset)
                 playerItem.videoComposition = composition
                 player.replaceCurrentItem(with: playerItem)
