@@ -13,7 +13,6 @@ struct VideoView: View {
     let fileURL: URL
     @Binding var hasUnsavedChanges: Bool
     @Binding var leftPanelWidthRatio: CGFloat
-    
     @State private var xPos: String = "0.0"
     @State private var yPos: String = "0.0"
     @State private var videoWidth: String = "0.0"
@@ -52,7 +51,7 @@ struct VideoView: View {
     @State private var sepiaValue: CGFloat = 0.0
     @State private var videoScaleFactor: CGFloat = 1.0
     @State private var isPlaying: Bool = false
-    
+    @State private var isLooping: Bool = false
     @State private var player: AVPlayer
     @State private var currentCropRect: CGRect = .zero
     @State private var initialCropRect: CGRect = .zero
@@ -72,7 +71,7 @@ struct VideoView: View {
                     VStack(spacing: 0) {
                         VStack(spacing: 0) {
                             HStack(spacing: 0) {
-                                Image(systemName: "photo.fill")
+                                Image(systemName: "video.square.fill")
                                     .resizable()
                                     .scaledToFit()
                                     .frame(width: 15, height: 15)
@@ -992,49 +991,102 @@ struct VideoView: View {
                     .frame(maxHeight: .infinity - 60)
                     .containerHelper(backgroundColor: Color(hex: 0x242424), borderColor: .clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
                     
-                    HStack(spacing: 0) {
+                    HStack(spacing: 4) {
+                        HStack {
+                            VideoButtonMain {
+                                let currentSeconds = player.currentTime().seconds
+                                let newTime = max(currentSeconds - 15, 0)
+                                player.seek(to: CMTime(seconds: newTime, preferredTimescale: player.currentTime().timescale))
+                            }
+                            .containerHelper(backgroundColor: Color.clear, borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                            .frame(width: 15, height: 15)
+                            .overlay(
+                                Image(systemName: "backward")
+                                    .font(.system(size: 9, weight: .semibold))
+                                    .foregroundColor(Color(hex: 0xf5f5f5).opacity(0.8))
+                                    .allowsHitTesting(false)
+                            )
+                            .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
+                            
+                            VideoButtonMain {
+                                if isPlaying {
+                                    player.pause()
+                                } else {
+                                    player.play()
+                                }
+                                isPlaying.toggle()
+                            }
+                            .containerHelper(backgroundColor: Color.clear, borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                            .frame(width: 15, height: 15)
+                            .overlay(
+                                Image(systemName: isPlaying ? "pause.fill" : "play.fill")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundColor(Color(hex: 0xf5f5f5).opacity(0.8))
+                                    .allowsHitTesting(false)
+                            )
+                            .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
+                            
+                            VideoButtonMain {
+                                if isLooping {
+                                    isLooping = false
+                                } else {
+                                    isLooping = true
+                                }
+                            }
+                            .containerHelper(backgroundColor: Color.clear, borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                            .frame(width: 15, height: 15)
+                            .overlay(
+                                Image(systemName: "repeat")
+                                    .font(.system(size: 14, weight: .semibold))
+                                    .foregroundColor(!isLooping ? Color(hex: 0xf5f5f5).opacity(0.8) : Color(hex: 0xAD6ADD))
+                                    .allowsHitTesting(false)
+                            )
+                            .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
+                            
+                            VideoButtonMain {
+                                let currentSeconds = player.currentTime().seconds
+                                let duration = player.currentItem?.duration.seconds ?? 0
+                                let newTime = min(currentSeconds + 15, duration)
+                                player.seek(to: CMTime(seconds: newTime, preferredTimescale: player.currentTime().timescale))
+                            }
+                            .containerHelper(backgroundColor: Color.clear, borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                            .frame(width: 15, height: 15)
+                            .overlay(
+                                Image(systemName: "forward")
+                                    .font(.system(size: 9, weight: .semibold))
+                                    .foregroundColor(Color(hex: 0xf5f5f5).opacity(0.8))
+                                    .allowsHitTesting(false)
+                            )
+                            .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
+                        }
+                        .padding(.horizontal, 12)
+                        
                         Spacer()
                         
-                        VideoButtonMain {
-                            if isPlaying {
-                                player.pause()
-                            } else {
-                                player.play()
-                            }
-                            isPlaying.toggle()
+                        HStack {
+                            Toggle("", isOn: $preserveAspectRatio)
+                                .toggleStyle(ToggleSwitch(
+                                    toggleWidth: 25,
+                                    toggleHeight: 14,
+                                    circleSize: 12,
+                                    activeColor: .purple,
+                                    inactiveColor: Color(hex: 0x333333),
+                                    thumbColor: .white,
+                                    textColor: .white.opacity(0.8),
+                                    fontSize: 9,
+                                    fontWeight: .bold,
+                                    activeText: "Preserve Aspect Ratio",
+                                    inactiveText: "Ignore Aspect Ratio",
+                                    showText: true,
+                                    animationDuration: 0.2,
+                                    animationDamping: 0.8
+                                ))
+                                .padding(.trailing, 20)
                         }
-                        .containerHelper(backgroundColor: Color(hex: 0x515151), borderColor: Color(hex: 0x616161), borderWidth: 1, topLeft: 2, topRight: 2, bottomLeft: 2, bottomRight: 2, shadowColor: Color.white.opacity(0.5), shadowRadius: 1, shadowX: 0, shadowY: 0)
-                        .frame(width: 30, height: 30)
-                        .overlay(
-                            Image(systemName: isPlaying ? "pause.fill" : "play.fill")
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundColor(Color(hex: 0xf5f5f5).opacity(0.8))
-                                .allowsHitTesting(false)
-                        )
-                        .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
-                        .padding(.trailing, 10)
-                        
-                        Toggle("", isOn: $preserveAspectRatio)
-                            .toggleStyle(ToggleSwitch(
-                                toggleWidth: 25,
-                                toggleHeight: 14,
-                                circleSize: 12,
-                                activeColor: .purple,
-                                inactiveColor: Color(hex: 0x333333),
-                                thumbColor: .white,
-                                textColor: .white.opacity(0.8),
-                                fontSize: 9,
-                                fontWeight: .bold,
-                                activeText: "Preserve Aspect Ratio",
-                                inactiveText: "Ignore Aspect Ratio",
-                                showText: true,
-                                animationDuration: 0.2,
-                                animationDamping: 0.8
-                            ))
-                            .padding(.trailing, 20)
+                        .padding(.horizontal, 12)
                     }
                     .frame(width: geometry.size.width * (1 - leftPanelWidthRatio) * 0.7, height: 60)
-                    .containerHelper(backgroundColor: Color(hex: 0x171717), borderColor: .clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                    .containerHelper(backgroundColor: Color(hex: 0x171717), borderColor: .clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
                     .overlay(
                         Rectangle()
                             .frame(height: 3.0)
@@ -1059,6 +1111,14 @@ struct VideoView: View {
         .onChange(of: preserveAspectRatio) { newValue in
             if newValue {
                 originalAspectRatio = videoSize.width / videoSize.height
+            }
+        }
+        .onAppear {
+            NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: player.currentItem, queue: .main) { _ in
+                if isLooping {
+                    player.seek(to: .zero)
+                    player.play()
+                }
             }
         }
     }
