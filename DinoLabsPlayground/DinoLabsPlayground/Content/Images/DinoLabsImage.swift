@@ -1249,10 +1249,7 @@ struct ImageView: View {
             x: vector.x * cos(rad) - vector.y * sin(rad),
             y: vector.x * sin(rad) + vector.y * cos(rad)
         )
-        let flipX: CGFloat = flipHorizontal ? -1 : 1
-        let flipY: CGFloat = flipVertical ? -1 : 1
-        let flippedVector = CGPoint(x: rotatedVector.x * flipX, y: rotatedVector.y * flipY)
-        return CGPoint(x: cropRectPosition.x + flippedVector.x, y: cropRectPosition.y + flippedVector.y)
+        return CGPoint(x: cropRectPosition.x + rotatedVector.x, y: cropRectPosition.y + rotatedVector.y)
     }
     
     private func cropRotationHandlePosition(for corner: Corner) -> CGPoint {

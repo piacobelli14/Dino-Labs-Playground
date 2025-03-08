@@ -16,26 +16,25 @@ struct VideoView: View {
     
     @State private var xPos: String = "0.0"
     @State private var yPos: String = "0.0"
-    @State private var imageWidth: String = "0.0"
-    @State private var imageHeight: String = "0.0"
+    @State private var videoWidth: String = "0.0"
+    @State private var videoHeight: String = "0.0"
     @State private var preserveAspectRatio: Bool = true
     @State private var isCropping: Bool = false
-    @State private var isCircleCropping: Bool = false
-    @State private var imageSize: CGSize = .zero
+    @State private var videoSize: CGSize = .zero
     @State private var originalAspectRatio: CGFloat = 1.0
     @State private var lastDragPosition: CGPoint?
-    @State private var imagePosition: CGPoint = .zero
-    @State private var initialDragImageSize: CGSize?
-    @State private var initialDragImagePosition: CGPoint?
+    @State private var videoPosition: CGPoint = .zero
+    @State private var initialDragVideoSize: CGSize?
+    @State private var initialDragVideoPosition: CGPoint?
     @State private var editorSize: CGSize = .zero
     @State private var initialDragOffset: CGPoint? = nil
     @State private var rotationAngle: Angle = .zero
     @State private var flipHorizontal: Bool = false
     @State private var flipVertical: Bool = false
-    @State private var initialLoadedImageSize: CGSize = .zero
-    @State private var initialLoadedImagePosition: CGPoint = .zero
-    @State private var currentImage: NSImage? = nil
-    @State private var cropHistory: [(image: NSImage, size: CGSize, position: CGPoint)] = []
+    @State private var initialLoadedVideoSize: CGSize = .zero
+    @State private var initialLoadedVideoPosition: CGPoint = .zero
+    @State private var currentVideo: NSImage? = nil
+    @State private var cropHistory: [(video: NSImage, size: CGSize, position: CGPoint)] = []
     @State private var cropRectPosition: CGPoint = .zero
     @State private var cropRectSize: CGSize = .zero
     @State private var initialCropDragOffset: CGPoint? = nil
@@ -51,11 +50,12 @@ struct VideoView: View {
     @State private var blurValue: CGFloat = 0.0
     @State private var grayscaleValue: CGFloat = 0.0
     @State private var sepiaValue: CGFloat = 0.0
-    @State private var imageScaleFactor: CGFloat = 1.0
+    @State private var videoScaleFactor: CGFloat = 1.0
     @State private var isPlaying: Bool = false
     
     @State private var player: AVPlayer
-    
+    @State private var currentCropRect: CGRect = .zero
+
     init(geometry: GeometryProxy, fileURL: URL, hasUnsavedChanges: Binding<Bool>, leftPanelWidthRatio: Binding<CGFloat>) {
         self.geometry = geometry
         self.fileURL = fileURL
@@ -86,17 +86,16 @@ struct VideoView: View {
                                 Spacer()
                                 
                                 HStack(spacing: 12) {
-                                    ImageButtonMain {
-                                        imageSize = initialLoadedImageSize
-                                        imagePosition = initialLoadedImagePosition
+                                    VideoButtonMain {
+                                        videoSize = initialLoadedVideoSize
+                                        videoPosition = initialLoadedVideoPosition
                                         rotationAngle = .zero
                                         flipHorizontal = false
                                         flipVertical = false
                                         isCropping = false
-                                        isCircleCropping = false
                                         cropRectSize = .zero
                                         cropRectPosition = .zero
-                                        currentImage = NSImage(contentsOf: fileURL)
+                                        currentVideo = NSImage(contentsOf: fileURL)
                                         cropHistory = []
                                         opacityValue = 1.0
                                         hueValue = 0.0
@@ -119,8 +118,7 @@ struct VideoView: View {
                                     )
                                     .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
                                     
-                                    ImageButtonMain {
-                                        
+                                    VideoButtonMain {
                                     }
                                     .containerHelper(backgroundColor: Color(hex: 0x515151), borderColor: Color(hex: 0x616161), borderWidth: 1, topLeft: 2, topRight: 2, bottomLeft: 2, bottomRight: 2, shadowColor: Color.white.opacity(0.5), shadowRadius: 1, shadowX: 0, shadowY: 0)
                                     .frame(width: 20, height: 20)
@@ -155,7 +153,7 @@ struct VideoView: View {
                                         CodeTextField(placeholder: "", text: $xPos, onReturnKeyPressed: {
                                             let numericString = extractNumeric(from: xPos)
                                             if let newX = Double(numericString) {
-                                                imagePosition.x = CGFloat(newX)
+                                                videoPosition.x = CGFloat(newX)
                                                 updateTextFields()
                                             }
                                         })
@@ -172,7 +170,7 @@ struct VideoView: View {
                                         CodeTextField(placeholder: "", text: $yPos, onReturnKeyPressed: {
                                             let numericString = extractNumeric(from: yPos)
                                             if let newY = Double(numericString) {
-                                                imagePosition.y = CGFloat(newY)
+                                                videoPosition.y = CGFloat(newY)
                                                 updateTextFields()
                                             }
                                         })
@@ -192,13 +190,16 @@ struct VideoView: View {
                                     .padding(.bottom, 16)
                                     
                                     HStack(spacing: 8) {
-                                        ImageButtonMain {
+                                        VideoButtonMain {
                                             if !isCropping {
                                                 let scale: CGFloat = 1.1
-                                                let newWidth = imageSize.width * scale
-                                                let newHeight = imageSize.height * scale
-                                                imageSize = CGSize(width: newWidth, height: newHeight)
+                                                let newWidth = videoSize.width * scale
+                                                let newHeight = videoSize.height * scale
+                                                videoSize = CGSize(width: newWidth, height: newHeight)
                                                 updateTextFields()
+                                                if !preserveAspectRatio {
+                                                    originalAspectRatio = videoSize.width / videoSize.height
+                                                }
                                             }
                                         }
                                         .containerHelper(backgroundColor: Color(hex: 0x515151), borderColor: Color(hex: 0x616161), borderWidth: 1, topLeft: 2, topRight: 2, bottomLeft: 2, bottomRight: 2, shadowColor: Color.white.opacity(0.5), shadowRadius: 1, shadowX: 0, shadowY: 0)
@@ -212,13 +213,16 @@ struct VideoView: View {
                                         .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
                                         .opacity(isCropping ? 0.5 : 1.0)
                                         
-                                        ImageButtonMain {
+                                        VideoButtonMain {
                                             if !isCropping {
                                                 let scale: CGFloat = 0.9
-                                                let newWidth = max(50, imageSize.width * scale)
-                                                let newHeight = max(50, imageSize.height * scale)
-                                                imageSize = CGSize(width: newWidth, height: newHeight)
+                                                let newWidth = max(50, videoSize.width * scale)
+                                                let newHeight = max(50, videoSize.height * scale)
+                                                videoSize = CGSize(width: newWidth, height: newHeight)
                                                 updateTextFields()
+                                                if !preserveAspectRatio {
+                                                    originalAspectRatio = videoSize.width / videoSize.height
+                                                }
                                             }
                                         }
                                         .containerHelper(backgroundColor: Color(hex: 0x515151), borderColor: Color(hex: 0x616161), borderWidth: 1, topLeft: 2, topRight: 2, bottomLeft: 2, bottomRight: 2, shadowColor: Color.white.opacity(0.5), shadowRadius: 1, shadowX: 0, shadowY: 0)
@@ -232,7 +236,7 @@ struct VideoView: View {
                                         .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
                                         .opacity(isCropping ? 0.5 : 1.0)
                                         
-                                        ImageButtonMain {
+                                        VideoButtonMain {
                                             if !isCropping {
                                                 rotationAngle -= .degrees(90)
                                             }
@@ -248,7 +252,7 @@ struct VideoView: View {
                                         .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
                                         .opacity(isCropping ? 0.5 : 1.0)
                                         
-                                        ImageButtonMain {
+                                        VideoButtonMain {
                                             if !isCropping {
                                                 rotationAngle += .degrees(90)
                                             }
@@ -264,12 +268,12 @@ struct VideoView: View {
                                         .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
                                         .opacity(isCropping ? 0.5 : 1.0)
                                         
-                                        ImageButtonMain {
+                                        VideoButtonMain {
                                             if !isCropping {
                                                 flipHorizontal.toggle()
                                             }
                                         }
-                                        .containerHelper(backgroundColor: Color(hex: 0x515151), borderColor: Color(hex: 0x616161), borderWidth: 1, topLeft: 2, topRight: 2, bottomLeft: 2, bottomRight: 2, shadowColor: Color.white.opacity(0.5), shadowRadius: 1, shadowX: 0, shadowY: 0)
+                                        .containerHelper(backgroundColor: Color(hex: 0x515151), borderColor: Color(hex: 0x515151), borderWidth: 1, topLeft: 2, topRight: 2, bottomLeft: 2, bottomRight: 2, shadowColor: Color.white.opacity(0.5), shadowRadius: 1, shadowX: 0, shadowY: 0)
                                         .frame(width: geometry.size.width * 0.02, height: 20)
                                         .overlay(
                                             Image(systemName: "arrow.left.arrow.right")
@@ -280,7 +284,7 @@ struct VideoView: View {
                                         .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
                                         .opacity(isCropping ? 0.5 : 1.0)
                                         
-                                        ImageButtonMain {
+                                        VideoButtonMain {
                                             if !isCropping {
                                                 flipVertical.toggle()
                                             }
@@ -339,7 +343,7 @@ struct VideoView: View {
                                 Spacer()
                                 VStack(alignment: .leading, spacing: 0) {
                                     HStack {
-                                        Text("Image Size")
+                                        Text("Video Size")
                                             .font(.system(size: 9, weight: .semibold))
                                             .foregroundColor(Color(hex: 0xc1c1c1))
                                             .padding(.leading, 2)
@@ -349,16 +353,19 @@ struct VideoView: View {
                                     .padding(.bottom, 8)
                                     
                                     HStack(spacing: 8) {
-                                        CodeTextField(placeholder: "", text: $imageWidth, onReturnKeyPressed: {
-                                            let numericString = extractNumeric(from: imageWidth)
+                                        CodeTextField(placeholder: "", text: $videoWidth, onReturnKeyPressed: {
+                                            let numericString = extractNumeric(from: videoWidth)
                                             if let newWidth = Double(numericString) {
                                                 if preserveAspectRatio {
-                                                    imageSize.width = CGFloat(newWidth)
-                                                    imageSize.height = CGFloat(newWidth) / originalAspectRatio
+                                                    videoSize.width = CGFloat(newWidth)
+                                                    videoSize.height = CGFloat(newWidth) / originalAspectRatio
                                                 } else {
-                                                    imageSize.width = CGFloat(newWidth)
+                                                    videoSize.width = CGFloat(newWidth)
                                                 }
                                                 updateTextFields()
+                                                if !preserveAspectRatio {
+                                                    originalAspectRatio = videoSize.width / videoSize.height
+                                                }
                                             }
                                         })
                                         .lineLimit(1)
@@ -371,16 +378,19 @@ struct VideoView: View {
                                         .containerHelper(backgroundColor: Color(hex: 0x222222), borderColor: Color(hex: 0x616161), borderWidth: 1, topLeft: 2, topRight: 2, bottomLeft: 2, bottomRight: 2, shadowColor: .white.opacity(0.5), shadowRadius: 0.5, shadowX: 0, shadowY: 0)
                                         .hoverEffect(opacity: 0.8)
                                         
-                                        CodeTextField(placeholder: "", text: $imageHeight, onReturnKeyPressed: {
-                                            let numericString = extractNumeric(from: imageHeight)
+                                        CodeTextField(placeholder: "", text: $videoHeight, onReturnKeyPressed: {
+                                            let numericString = extractNumeric(from: videoHeight)
                                             if let newHeight = Double(numericString) {
                                                 if preserveAspectRatio {
-                                                    imageSize.height = CGFloat(newHeight)
-                                                    imageSize.width = CGFloat(newHeight) * originalAspectRatio
+                                                    videoSize.height = CGFloat(newHeight)
+                                                    videoSize.width = CGFloat(newHeight) * originalAspectRatio
                                                 } else {
-                                                    imageSize.height = CGFloat(newHeight)
+                                                    videoSize.height = CGFloat(newHeight)
                                                 }
                                                 updateTextFields()
+                                                if !preserveAspectRatio {
+                                                    originalAspectRatio = videoSize.width / videoSize.height
+                                                }
                                             }
                                         })
                                         .lineLimit(1)
@@ -399,16 +409,16 @@ struct VideoView: View {
                                     .padding(.bottom, 16)
                                     
                                     HStack(spacing: 8) {
-                                        ImageButtonMain {
+                                        VideoButtonMain {
                                             if isCropping {
-                                                cropImage()
+                                                cropVideo()
                                                 isCropping = false
-                                                isCircleCropping = false
                                             } else {
                                                 isCropping = true
-                                                isCircleCropping = false
-                                                cropRectPosition = imagePosition
-                                                cropRectSize = imageSize
+                                                if cropRectSize == .zero {
+                                                    cropRectPosition = videoPosition
+                                                    cropRectSize = videoSize
+                                                }
                                             }
                                         }
                                         .containerHelper(backgroundColor: isCropping ? Color(hex: 0xAD6ADD) : Color(hex: 0x515151), borderColor: Color(hex: 0x616161), borderWidth: 1, topLeft: 2, topRight: 2, bottomLeft: 2, bottomRight: 2, shadowColor: Color.white.opacity(0.5), shadowRadius: 1, shadowX: 0, shadowY: 0)
@@ -421,49 +431,11 @@ struct VideoView: View {
                                         )
                                         .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
                                         
-                                        if isCropping {
-                                            ImageButtonMain {
-                                                if isCircleCropping {
-                                                    isCircleCropping = false
-                                                } else {
-                                                    isCircleCropping = true
-                                                    cropRectSize = imageSize
-                                                    cropRectPosition = imagePosition
-                                                }
-                                            }
-                                            .containerHelper(backgroundColor: isCircleCropping ? Color(hex: 0xAD6ADD) : Color(hex: 0x515151), borderColor: Color(hex: 0x616161), borderWidth: 1, topLeft: 2, topRight: 2, bottomLeft: 2, bottomRight: 2, shadowColor: Color.white.opacity(0.5), shadowRadius: 1, shadowX: 0, shadowY: 0)
-                                            .frame(width: geometry.size.width * 0.02, height: 20)
-                                            .overlay(
-                                                Image(systemName: "circle.dotted")
-                                                    .font(.system(size: 10, weight: .semibold))
-                                                    .foregroundColor(Color(hex: 0xf5f5f5).opacity(0.8))
-                                                    .allowsHitTesting(false)
-                                            )
-                                            .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
-                                        }
-                                        
-                                        if isCropping {
-                                            ImageButtonMain {
-                                                isCropping = false
-                                                cropRectSize = .zero
-                                                cropRectPosition = .zero
-                                            }
-                                            .containerHelper(backgroundColor: Color(hex: 0x515151), borderColor: Color(hex: 0x616161), borderWidth: 1, topLeft: 2, topRight: 2, bottomLeft: 2, bottomRight: 2, shadowColor: Color.white.opacity(0.5), shadowRadius: 1, shadowX: 0, shadowY: 0)
-                                            .frame(width: geometry.size.width * 0.02, height: 20)
-                                            .overlay(
-                                                Image(systemName: "xmark.square.fill")
-                                                    .font(.system(size: 10, weight: .semibold))
-                                                    .foregroundColor(Color(hex: 0xf5f5f5).opacity(0.8))
-                                                    .allowsHitTesting(false)
-                                            )
-                                            .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
-                                        }
-                                        
-                                        ImageButtonMain {
+                                        VideoButtonMain {
                                             if let previousState = cropHistory.popLast() {
-                                                currentImage = previousState.image
-                                                imageSize = previousState.size
-                                                imagePosition = previousState.position
+                                                currentVideo = previousState.video
+                                                videoSize = previousState.size
+                                                videoPosition = previousState.position
                                             }
                                             isCropping = false
                                             cropRectSize = .zero
@@ -487,10 +459,10 @@ struct VideoView: View {
                                     
                                     if isCropping {
                                         HStack(spacing: 8) {
-                                            ImageButtonMain {
+                                            VideoButtonMain {
                                                 let presetRatio: CGFloat = 1.0
-                                                let currentWidth = imageSize.width
-                                                let currentHeight = imageSize.height
+                                                let currentWidth = videoSize.width
+                                                let currentHeight = videoSize.height
                                                 var newWidth: CGFloat = currentWidth
                                                 var newHeight: CGFloat = currentHeight
                                                 if currentWidth / currentHeight > presetRatio {
@@ -501,7 +473,7 @@ struct VideoView: View {
                                                     newHeight = newWidth / presetRatio
                                                 }
                                                 cropRectSize = CGSize(width: newWidth, height: newHeight)
-                                                cropRectPosition = imagePosition
+                                                cropRectPosition = videoPosition
                                             }
                                             .containerHelper(backgroundColor: Color(hex: 0x515151), borderColor: Color(hex: 0x616161), borderWidth: 1, topLeft: 2, topRight: 2, bottomLeft: 2, bottomRight: 2, shadowColor: Color.white.opacity(0.5), shadowRadius: 1, shadowX: 0, shadowY: 0)
                                             .frame(width: geometry.size.width * 0.03, height: 20)
@@ -513,10 +485,10 @@ struct VideoView: View {
                                             )
                                             .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
                                             
-                                            ImageButtonMain {
+                                            VideoButtonMain {
                                                 let presetRatio: CGFloat = 4.0/3.0
-                                                let currentWidth = imageSize.width
-                                                let currentHeight = imageSize.height
+                                                let currentWidth = videoSize.width
+                                                let currentHeight = videoSize.height
                                                 var newWidth: CGFloat = currentWidth
                                                 var newHeight: CGFloat = currentHeight
                                                 if currentWidth / currentHeight > presetRatio {
@@ -527,7 +499,7 @@ struct VideoView: View {
                                                     newHeight = newWidth / presetRatio
                                                 }
                                                 cropRectSize = CGSize(width: newWidth, height: newHeight)
-                                                cropRectPosition = imagePosition
+                                                cropRectPosition = videoPosition
                                             }
                                             .containerHelper(backgroundColor: Color(hex: 0x515151), borderColor: Color(hex: 0x616161), borderWidth: 1, topLeft: 2, topRight: 2, bottomLeft: 2, bottomRight: 2, shadowColor: Color.white.opacity(0.5), shadowRadius: 1, shadowX: 0, shadowY: 0)
                                             .frame(width: geometry.size.width * 0.03, height: 20)
@@ -539,10 +511,10 @@ struct VideoView: View {
                                             )
                                             .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
                                             
-                                            ImageButtonMain {
+                                            VideoButtonMain {
                                                 let presetRatio: CGFloat = 16.0/9.0
-                                                let currentWidth = imageSize.width
-                                                let currentHeight = imageSize.height
+                                                let currentWidth = videoSize.width
+                                                let currentHeight = videoSize.height
                                                 var newWidth: CGFloat = currentWidth
                                                 var newHeight: CGFloat = currentHeight
                                                 if currentWidth / currentHeight > presetRatio {
@@ -553,7 +525,7 @@ struct VideoView: View {
                                                     newHeight = newWidth / presetRatio
                                                 }
                                                 cropRectSize = CGSize(width: newWidth, height: newHeight)
-                                                cropRectPosition = imagePosition
+                                                cropRectPosition = videoPosition
                                             }
                                             .containerHelper(backgroundColor: Color(hex: 0x515151), borderColor: Color(hex: 0x616161), borderWidth: 1, topLeft: 2, topRight: 2, bottomLeft: 2, bottomRight: 2, shadowColor: Color.white.opacity(0.5), shadowRadius: 1, shadowX: 0, shadowY: 0)
                                             .frame(width: geometry.size.width * 0.03, height: 20)
@@ -894,8 +866,8 @@ struct VideoView: View {
                     VStack {
                         GeometryReader { proxy in
                             ZStack {
-                                VideoPlayerView(player: player)
-                                    .frame(width: imageSize.width, height: imageSize.height)
+                                VideoPlayerView(player: player, preserveAspectRatio: preserveAspectRatio)
+                                    .frame(width: videoSize.width, height: videoSize.height)
                                     .rotationEffect(rotationAngle)
                                     .scaleEffect(x: flipHorizontal ? -1 : 1, y: flipVertical ? -1 : 1)
                                     .opacity(Double(opacityValue))
@@ -909,8 +881,8 @@ struct VideoView: View {
                                         Color(red: 89/255, green: 77/255, blue: 51/255)
                                             .opacity(Double(sepiaValue))
                                     )
-                                    .position(imagePosition)
-                                    .gesture(isCropping ? nil : imageDragGesture())
+                                    .position(videoPosition)
+                                    .gesture(isCropping ? nil : videoDragGesture())
                                 
                                 if !isCropping {
                                     Group {
@@ -941,28 +913,14 @@ struct VideoView: View {
                                 }
                                 
                                 if isCropping {
-                                    if isCircleCropping {
-                                        Ellipse()
-                                            .fill(Color.black.opacity(0.3))
-                                            .frame(width: cropRectSize.width, height: cropRectSize.height)
-                                            .overlay(
-                                                Ellipse()
-                                                    .stroke(Color.white.opacity(0.8), lineWidth: 2)
-                                            )
-                                            .rotationEffect(cropRotationAngle + rotationAngle)
-                                            .scaleEffect(x: flipHorizontal ? -1 : 1, y: flipVertical ? -1 : 1)
-                                            .position(cropRectPosition)
-                                            .gesture(cropDragGesture())
-                                    } else {
-                                        Rectangle()
-                                            .fill(Color.black.opacity(0.3))
-                                            .frame(width: cropRectSize.width, height: cropRectSize.height)
-                                            .border(Color.white.opacity(0.8), width: 2)
-                                            .rotationEffect(cropRotationAngle + rotationAngle)
-                                            .scaleEffect(x: flipHorizontal ? -1 : 1, y: flipVertical ? -1 : 1)
-                                            .position(cropRectPosition)
-                                            .gesture(cropDragGesture())
-                                    }
+                                    Rectangle()
+                                        .fill(Color.black.opacity(0.3))
+                                        .frame(width: cropRectSize.width, height: cropRectSize.height)
+                                        .border(Color.white.opacity(0.8), width: 2)
+                                        .rotationEffect(cropRotationAngle + rotationAngle)
+                                        .scaleEffect(x: flipHorizontal ? -1 : 1, y: flipVertical ? -1 : 1)
+                                        .position(cropRectPosition)
+                                        .gesture(cropDragGesture())
                                     
                                     Group {
                                         RoundedRectangle(cornerRadius: 2)
@@ -993,7 +951,7 @@ struct VideoView: View {
                             }
                             .onAppear {
                                 editorSize = proxy.size
-                                if imageSize == .zero {
+                                if videoSize == .zero {
                                     let asset = AVAsset(url: fileURL)
                                     if let track = asset.tracks(withMediaType: .video).first {
                                         let naturalSize = track.naturalSize
@@ -1001,15 +959,16 @@ struct VideoView: View {
                                         let maxWidth = proxy.size.width * 0.8
                                         let maxHeight = proxy.size.height * 0.8
                                         let scale = min(maxWidth / naturalSize.width, maxHeight / naturalSize.height)
-                                        imageScaleFactor = scale
-                                        imageSize = CGSize(
+                                        videoScaleFactor = scale
+                                        videoSize = CGSize(
                                             width: naturalSize.width * scale,
                                             height: naturalSize.height * scale
                                         )
-                                        imagePosition = CGPoint(x: proxy.size.width / 2, y: proxy.size.height / 2)
-                                        initialLoadedImageSize = imageSize
-                                        initialLoadedImagePosition = imagePosition
+                                        videoPosition = CGPoint(x: proxy.size.width / 2, y: proxy.size.height / 2)
+                                        initialLoadedVideoSize = videoSize
+                                        initialLoadedVideoPosition = videoPosition
                                         updateTextFields()
+                                        currentCropRect = CGRect(origin: .zero, size: naturalSize)
                                     }
                                 }
                             }
@@ -1023,7 +982,7 @@ struct VideoView: View {
                     HStack(spacing: 0) {
                         Spacer()
                         
-                        ImageButtonMain {
+                        VideoButtonMain {
                             if isPlaying {
                                 player.pause()
                             } else {
@@ -1084,6 +1043,11 @@ struct VideoView: View {
             )
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onChange(of: preserveAspectRatio) { newValue in
+            if newValue {
+                originalAspectRatio = videoSize.width / videoSize.height
+            }
+        }
     }
     
     private enum Corner {
@@ -1107,30 +1071,30 @@ struct VideoView: View {
         let offset: CGPoint
         switch corner {
         case .topLeft:
-            offset = CGPoint(x: -imageSize.width/2, y: -imageSize.height/2)
+            offset = CGPoint(x: -videoSize.width/2, y: -videoSize.height/2)
         case .topRight:
-            offset = CGPoint(x: imageSize.width/2, y: -imageSize.height/2)
+            offset = CGPoint(x: videoSize.width/2, y: -videoSize.height/2)
         case .bottomLeft:
-            offset = CGPoint(x: -imageSize.width/2, y: imageSize.height/2)
+            offset = CGPoint(x: -videoSize.width/2, y: videoSize.height/2)
         case .bottomRight:
-            offset = CGPoint(x: imageSize.width/2, y: imageSize.height/2)
+            offset = CGPoint(x: videoSize.width/2, y: videoSize.height/2)
         }
         let rad = CGFloat(rotationAngle.radians)
         let rotatedOffset = CGPoint(
             x: offset.x * cos(rad) - offset.y * sin(rad),
             y: offset.x * sin(rad) + offset.y * cos(rad)
         )
-        return CGPoint(x: imagePosition.x + rotatedOffset.x, y: imagePosition.y + rotatedOffset.y)
+        return CGPoint(x: videoPosition.x + rotatedOffset.x, y: videoPosition.y + rotatedOffset.y)
     }
     
     private func dragGesture(for corner: Corner) -> some Gesture {
         DragGesture(minimumDistance: 0)
             .onChanged { value in
-                if initialDragImageSize == nil || initialDragImagePosition == nil {
-                    initialDragImageSize = imageSize
-                    initialDragImagePosition = imagePosition
+                if initialDragVideoSize == nil || initialDragVideoPosition == nil {
+                    initialDragVideoSize = videoSize
+                    initialDragVideoPosition = videoPosition
                     if preserveAspectRatio {
-                        originalAspectRatio = imageSize.width / imageSize.height
+                        originalAspectRatio = videoSize.width / videoSize.height
                     }
                 }
                 let translation = value.translation
@@ -1138,10 +1102,10 @@ struct VideoView: View {
                 let localTranslationX = translation.width * cos(rad) + translation.height * sin(rad)
                 let localTranslationY = -translation.width * sin(rad) + translation.height * cos(rad)
                 let sensitivity: CGFloat = 0.5
-                var newWidth: CGFloat = imageSize.width
-                var newHeight: CGFloat = imageSize.height
+                var newWidth: CGFloat = videoSize.width
+                var newHeight: CGFloat = videoSize.height
                 
-                if let initialSize = initialDragImageSize {
+                if let initialSize = initialDragVideoSize {
                     switch corner {
                     case .topLeft:
                         newWidth = max(50, initialSize.width - localTranslationX * sensitivity)
@@ -1174,8 +1138,8 @@ struct VideoView: View {
                     }
                 }
                 
-                imageSize = CGSize(width: newWidth, height: newHeight)
-                if let initialCenter = initialDragImagePosition, let initialSize = initialDragImageSize {
+                videoSize = CGSize(width: newWidth, height: newHeight)
+                if let initialCenter = initialDragVideoPosition, let initialSize = initialDragVideoSize {
                     let initialFixedLocal = fixedLocalOffset(for: corner, size: initialSize)
                     let initialFixedScreen = CGPoint(
                         x: initialCenter.x + initialFixedLocal.x * cos(rad) - initialFixedLocal.y * sin(rad),
@@ -1186,30 +1150,33 @@ struct VideoView: View {
                         x: newFixedLocal.x * cos(rad) - newFixedLocal.y * sin(rad),
                         y: newFixedLocal.x * sin(rad) + newFixedLocal.y * cos(rad)
                     )
-                    imagePosition = CGPoint(x: initialFixedScreen.x - rotatedNewFixed.x,
+                    videoPosition = CGPoint(x: initialFixedScreen.x - rotatedNewFixed.x,
                                             y: initialFixedScreen.y - rotatedNewFixed.y)
                 }
                 updateTextFields()
             }
             .onEnded { _ in
-                initialDragImageSize = nil
-                initialDragImagePosition = nil
+                if !preserveAspectRatio {
+                    originalAspectRatio = videoSize.width / videoSize.height
+                }
+                initialDragVideoSize = nil
+                initialDragVideoPosition = nil
             }
     }
     
-    private func imageDragGesture() -> some Gesture {
+    private func videoDragGesture() -> some Gesture {
         DragGesture()
             .onChanged { value in
                 if initialDragOffset == nil {
-                    initialDragOffset = imagePosition
+                    initialDragOffset = videoPosition
                 }
                 let newX = initialDragOffset!.x + value.translation.width
                 let newY = initialDragOffset!.y + value.translation.height
-                let halfWidth = imageSize.width / 2
-                let halfHeight = imageSize.height / 2
+                let halfWidth = videoSize.width / 2
+                let halfHeight = videoSize.height / 2
                 let clampedX = min(max(newX, halfWidth), editorSize.width - halfWidth)
                 let clampedY = min(max(newY, halfHeight), editorSize.height - halfHeight)
-                imagePosition = CGPoint(x: clampedX, y: clampedY)
+                videoPosition = CGPoint(x: clampedX, y: clampedY)
                 updateTextFields()
             }
             .onEnded { _ in
@@ -1218,10 +1185,10 @@ struct VideoView: View {
     }
     
     private func updateTextFields() {
-        imageWidth = String(format: "W: %.1fpx", imageSize.width)
-        imageHeight = String(format: "H: %.1fpx", imageSize.height)
-        xPos = String(format: "X: %.1f", imagePosition.x)
-        yPos = String(format: "Y: %.1f", imagePosition.y)
+        videoWidth = String(format: "W: %.1fpx", videoSize.width)
+        videoHeight = String(format: "H: %.1fpx", videoSize.height)
+        xPos = String(format: "X: %.1f", videoPosition.x)
+        yPos = String(format: "Y: %.1f", videoPosition.y)
     }
     
     private func extractNumeric(from text: String) -> String {
@@ -1248,10 +1215,7 @@ struct VideoView: View {
             x: vector.x * cos(rad) - vector.y * sin(rad),
             y: vector.x * sin(rad) + vector.y * cos(rad)
         )
-        let flipX: CGFloat = flipHorizontal ? -1 : 1
-        let flipY: CGFloat = flipVertical ? -1 : 1
-        let flippedVector = CGPoint(x: rotatedVector.x * flipX, y: rotatedVector.y * flipY)
-        return CGPoint(x: cropRectPosition.x + flippedVector.x, y: cropRectPosition.y + flippedVector.y)
+        return CGPoint(x: cropRectPosition.x + rotatedVector.x, y: cropRectPosition.y + rotatedVector.y)
     }
     
     private func cropRotationHandlePosition(for corner: Corner) -> CGPoint {
@@ -1343,20 +1307,18 @@ struct VideoView: View {
             }
     }
     
-    private func cropImage() {
-        let isCircleCrop = isCircleCropping
+    private func cropVideo() {
         DispatchQueue.global(qos: .userInitiated).async {
-            guard let image = currentImage ?? NSImage(contentsOf: fileURL),
-                  let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return }
+            let asset = AVAsset(url: fileURL)
+            guard let videoTrack = asset.tracks(withMediaType: .video).first else { return }
             
-            let imageScale = image.scale
-            let pixelWidth = CGFloat(cgImage.width)
-            let pixelHeight = CGFloat(cgImage.height)
+            let pixelWidth = currentCropRect.width
+            let pixelHeight = currentCropRect.height
             
-            let viewToImageScaleX = pixelWidth / imageSize.width
-            let viewToImageScaleY = pixelHeight / imageSize.height
+            let viewToVideoScaleX = pixelWidth / videoSize.width
+            let viewToVideoScaleY = pixelHeight / videoSize.height
             
-            let imageRad = CGFloat(rotationAngle.radians)
+            let videoRad = CGFloat(rotationAngle.radians)
             let cropRad = CGFloat((cropRotationAngle + rotationAngle).radians)
             
             let halfWidth = cropRectSize.width / 2
@@ -1375,80 +1337,70 @@ struct VideoView: View {
                     y: corner.x * sin(cropRad) + corner.y * cos(cropRad)
                 )
                 
-                let translationX = cropRectPosition.x + rotatedCrop.x - imagePosition.x
-                let translationY = cropRectPosition.y + rotatedCrop.y - imagePosition.y
+                let translationX = cropRectPosition.x + rotatedCrop.x - videoPosition.x
+                let translationY = cropRectPosition.y + rotatedCrop.y - videoPosition.y
                 let flippedTranslationX = (flipHorizontal ? -1 : 1) * translationX
                 let flippedTranslationY = (flipVertical ? -1 : 1) * translationY
                 let viewPoint = CGPoint(x: flippedTranslationX, y: flippedTranslationY)
                 
                 let unrotated = CGPoint(
-                    x: viewPoint.x * cos(-imageRad) - viewPoint.y * sin(-imageRad),
-                    y: viewPoint.x * sin(-imageRad) + viewPoint.y * cos(-imageRad)
+                    x: viewPoint.x * cos(-videoRad) - viewPoint.y * sin(-videoRad),
+                    y: viewPoint.x * sin(-videoRad) + viewPoint.y * cos(-videoRad)
                 )
                 
                 let pixelPoint = CGPoint(
-                    x: (unrotated.x + imageSize.width/2) * viewToImageScaleX,
-                    y: (unrotated.y + imageSize.height/2) * viewToImageScaleY
+                    x: (unrotated.x + videoSize.width/2) * viewToVideoScaleX,
+                    y: (unrotated.y + videoSize.height/2) * viewToVideoScaleY
                 )
                 pixelCorners.append(pixelPoint)
             }
             
             let minX = pixelCorners.map { $0.x }.min() ?? 0
-            let maxX = pixelCorners.map { $0.x }.max() ?? 0
+            let maxX = pixelCorners.map { $0.x }.max() ?? pixelWidth
             let minY = pixelCorners.map { $0.y }.min() ?? 0
-            let maxY = pixelCorners.map { $0.y }.max() ?? 0
+            let maxY = pixelCorners.map { $0.y }.max() ?? pixelHeight
             
-            let cropRect = CGRect(
+            let newCropPixelRect = CGRect(
                 x: max(0, minX),
                 y: max(0, minY),
                 width: min(pixelWidth - max(0, minX), maxX - minX),
                 height: min(pixelHeight - max(0, minY), maxY - minY)
             )
             
-            if isCircleCrop {
-                guard let rectCroppedCG = cgImage.cropping(to: cropRect),
-                      let ctx = CGContext(
-                        data: nil,
-                        width: Int(cropRect.width),
-                        height: Int(cropRect.height),
-                        bitsPerComponent: cgImage.bitsPerComponent,
-                        bytesPerRow: 0,
-                        space: cgImage.colorSpace ?? CGColorSpaceCreateDeviceRGB(),
-                        bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue
-                      ) else { return }
-                
-                ctx.setFillColor(NSColor.clear.cgColor)
-                ctx.fill(CGRect(origin: .zero, size: cropRect.size))
-                
-                ctx.addEllipse(in: CGRect(origin: .zero, size: cropRect.size))
-                ctx.clip()
-                ctx.draw(rectCroppedCG, in: CGRect(origin: .zero, size: cropRect.size))
-                
-                if let newCG = ctx.makeImage() {
-                    let newImage = NSImage(cgImage: newCG, size: cropRect.size)
-                    DispatchQueue.main.async {
-                        cropHistory.append((image: currentImage ?? image, size: imageSize, position: imagePosition))
-                        currentImage = newImage
-                        imageSize = cropRectSize
-                        imagePosition = cropRectPosition
-                        cropRectSize = .zero
-                        cropRectPosition = .zero
-                        updateTextFields()
-                    }
+            let updatedCropRect = CGRect(
+                x: currentCropRect.origin.x + newCropPixelRect.origin.x,
+                y: currentCropRect.origin.y + newCropPixelRect.origin.y,
+                width: newCropPixelRect.size.width,
+                height: newCropPixelRect.size.height
+            )
+            
+            let composition = AVMutableVideoComposition()
+            composition.renderSize = updatedCropRect.size
+            composition.frameDuration = CMTime(value: 1, timescale: 30)
+            
+            let instruction = AVMutableVideoCompositionInstruction()
+            instruction.timeRange = CMTimeRange(start: .zero, duration: asset.duration)
+            
+            let layerInstruction = AVMutableVideoCompositionLayerInstruction(assetTrack: videoTrack)
+            let transform = CGAffineTransform(translationX: -updatedCropRect.origin.x, y: -updatedCropRect.origin.y)
+            layerInstruction.setTransform(transform, at: .zero)
+            
+            instruction.layerInstructions = [layerInstruction]
+            composition.instructions = [instruction]
+            
+            DispatchQueue.main.async {
+                if let thumbnail = currentVideo ?? NSImage(contentsOf: fileURL) {
+                    cropHistory.append((video: thumbnail, size: videoSize, position: videoPosition))
                 }
-            } else {
-                if let croppedCG = cgImage.cropping(to: cropRect) {
-                    let newImage = NSImage(cgImage: croppedCG, size: cropRect.size)
-                    DispatchQueue.main.async {
-                        cropHistory.append((image: currentImage ?? image, size: imageSize, position: imagePosition))
-                        currentImage = newImage
-                        imageSize = cropRectSize
-                        imagePosition = cropRectPosition
-                        cropRectSize = .zero
-                        cropRectPosition = .zero
-                        updateTextFields()
-                    }
-                }
+                
+                let playerItem = AVPlayerItem(asset: asset)
+                playerItem.videoComposition = composition
+                player.replaceCurrentItem(with: playerItem)
+                
+                videoSize = cropRectSize
+                videoPosition = cropRectPosition
+                currentCropRect = updatedCropRect
+                updateTextFields()
             }
         }
     }
@@ -1456,12 +1408,13 @@ struct VideoView: View {
 
 struct VideoPlayerView: NSViewRepresentable {
     let player: AVPlayer
+    let preserveAspectRatio: Bool
     
     func makeNSView(context: Context) -> NSView {
         let view = NSView()
         let playerLayer = AVPlayerLayer(player: player)
         playerLayer.frame = view.bounds
-        playerLayer.videoGravity = .resizeAspect
+        playerLayer.videoGravity = .resize
         view.layer = playerLayer
         view.wantsLayer = true
         return view
@@ -1470,6 +1423,8 @@ struct VideoPlayerView: NSViewRepresentable {
     func updateNSView(_ nsView: NSView, context: Context) {
         if let playerLayer = nsView.layer as? AVPlayerLayer {
             playerLayer.player = player
+            playerLayer.videoGravity = .resize
+            playerLayer.mask = nil
         }
     }
 }
