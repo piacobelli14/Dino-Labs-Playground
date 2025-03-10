@@ -631,9 +631,9 @@ struct ImageView: View {
                                                 get: { Double(opacityValue) },
                                                 set: { opacityValue = CGFloat($0) }
                                             ),
-                                            range: 0.0...1.0, step: 0.1, sliderHeight: 8, thumbSize: 12, activeColor: .purple, inactiveColor: Color(white: 0.3), thumbColor: .white, showText: false, animationDuration: 0.2, animationDamping: 0.7
+                                            range: 0.0...1.0, step: 0.1, sliderWidth: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.8, sliderHeight: 8, thumbSize: 12, activeColor: .purple, inactiveColor: Color(white: 0.3), thumbColor: .white, showText: false, animationDuration: 0.2, animationDamping: 0.7
                                         )
-                                        .padding(.leading, 4)
+                                        .padding(.horizontal, 2)
                                         Spacer()
                                     }
                                     .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.9)
@@ -665,9 +665,9 @@ struct ImageView: View {
                                                 get: { hueValue },
                                                 set: { hueValue = $0 }
                                             ),
-                                            range: 0.0...360.0, step: 1, sliderHeight: 8, thumbSize: 12, activeColor: .purple, inactiveColor: Color(white: 0.3), thumbColor: .white, showText: false, animationDuration: 0.2, animationDamping: 0.7
+                                            range: 0.0...1.0, step: 0.1, sliderWidth: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.8, sliderHeight: 8, thumbSize: 12, activeColor: .purple, inactiveColor: Color(white: 0.3), thumbColor: .white, showText: false, animationDuration: 0.2, animationDamping: 0.7
                                         )
-                                        .padding(.leading, 4)
+                                        .padding(.horizontal, 2)
                                         Spacer()
                                     }
                                     .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.9)
@@ -699,9 +699,9 @@ struct ImageView: View {
                                                 get: { Double(saturationValue) },
                                                 set: { saturationValue = CGFloat($0) }
                                             ),
-                                            range: 0.0...2.0, step: 0.1, sliderHeight: 8, thumbSize: 12, activeColor: .purple, inactiveColor: Color(white: 0.3), thumbColor: .white, showText: false, animationDuration: 0.2, animationDamping: 0.7
+                                            range: 0.0...1.0, step: 0.1, sliderWidth: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.8, thumbSize: 12, activeColor: .purple, inactiveColor: Color(white: 0.3), thumbColor: .white, showText: false, animationDuration: 0.2, animationDamping: 0.7
                                         )
-                                        .padding(.leading, 4)
+                                        .padding(.horizontal, 2)
                                         Spacer()
                                     }
                                     .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.9)
@@ -733,9 +733,9 @@ struct ImageView: View {
                                                 get: { Double(brightnessValue) },
                                                 set: { brightnessValue = CGFloat($0) }
                                             ),
-                                            range: -1.0...1.0, step: 0.1, sliderHeight: 8, thumbSize: 12, activeColor: .purple, inactiveColor: Color(white: 0.3), thumbColor: .white, showText: false, animationDuration: 0.2, animationDamping: 0.7
+                                            range: -1.0...1.0, step: 0.1, sliderWidth: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.8, sliderHeight: 8, thumbSize: 12, activeColor: .purple, inactiveColor: Color(white: 0.3), thumbColor: .white, showText: false, animationDuration: 0.2, animationDamping: 0.7
                                         )
-                                        .padding(.leading, 4)
+                                        .padding(.horizontal, 2)
                                         Spacer()
                                     }
                                     .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.9)
@@ -767,9 +767,9 @@ struct ImageView: View {
                                                 get: { Double(contrastValue) },
                                                 set: { contrastValue = CGFloat($0) }
                                             ),
-                                            range: 0.0...2.0, step: 0.1, sliderHeight: 8, thumbSize: 12, activeColor: .purple, inactiveColor: Color(white: 0.3), thumbColor: .white, showText: false, animationDuration: 0.2, animationDamping: 0.7
+                                            range: 0.0...1.0, step: 0.1, sliderWidth: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.8, thumbSize: 12, activeColor: .purple, inactiveColor: Color(white: 0.3), thumbColor: .white, showText: false, animationDuration: 0.2, animationDamping: 0.7
                                         )
-                                        .padding(.leading, 4)
+                                        .padding(.horizontal, 2)
                                         Spacer()
                                     }
                                     .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.85)
@@ -801,9 +801,9 @@ struct ImageView: View {
                                                 get: { Double(blurValue) },
                                                 set: { blurValue = CGFloat($0) }
                                             ),
-                                            range: 0.0...10.0, step: 0.1, sliderHeight: 8, thumbSize: 12, activeColor: .purple, inactiveColor: Color(white: 0.3), thumbColor: .white, showText: false, animationDuration: 0.2, animationDamping: 0.7
+                                            range: 0.0...10.0, step: 0.1, sliderWidth: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.8, sliderHeight: 8, thumbSize: 12, activeColor: .purple, inactiveColor: Color(white: 0.3), thumbColor: .white, showText: false, animationDuration: 0.2, animationDamping: 0.7
                                         )
-                                        .padding(.leading, 4)
+                                        .padding(.horizontal, 2)
                                         Spacer()
                                     }
                                     .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.9)
@@ -835,9 +835,9 @@ struct ImageView: View {
                                                 get: { Double(grayscaleValue) },
                                                 set: { grayscaleValue = CGFloat($0) }
                                             ),
-                                            range: 0.0...1.0, step: 0.1, sliderHeight: 8, thumbSize: 12, activeColor: .purple, inactiveColor: Color(white: 0.3), thumbColor: .white, showText: false, animationDuration: 0.2, animationDamping: 0.7
+                                            range: 0.0...1.0, step: 0.1, sliderWidth: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.8, sliderHeight: 8, thumbSize: 12, activeColor: .purple, inactiveColor: Color(white: 0.3), thumbColor: .white, showText: false, animationDuration: 0.2, animationDamping: 0.7
                                         )
-                                        .padding(.leading, 4)
+                                        .padding(.horizontal, 2)
                                         Spacer()
                                     }
                                     .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.9)
@@ -869,9 +869,9 @@ struct ImageView: View {
                                                 get: { Double(sepiaValue) },
                                                 set: { sepiaValue = CGFloat($0) }
                                             ),
-                                            range: 0.0...0.5, step: 0.1, sliderHeight: 8, thumbSize: 12, activeColor: .purple, inactiveColor: Color(white: 0.3), thumbColor: .white, showText: false, animationDuration: 0.2, animationDamping: 0.7
+                                            range: 0.0...0.5, step: 0.1, sliderWidth: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.8, sliderHeight: 8, thumbSize: 12, activeColor: .purple, inactiveColor: Color(white: 0.3), thumbColor: .white, showText: false, animationDuration: 0.2, animationDamping: 0.7
                                         )
-                                        .padding(.leading, 4)
+                                        .padding(.horizontal, 2)
                                         Spacer()
                                     }
                                     .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.9)

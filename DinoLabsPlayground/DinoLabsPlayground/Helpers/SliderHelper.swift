@@ -70,12 +70,12 @@ struct Slider: View {
                 GeometryReader { geometry in
                     let trackWidth = sliderWidth
                     let ratio = CGFloat((value - range.lowerBound) / (range.upperBound - range.lowerBound))
-                    let xPos = ratio * sliderWidth * 0.6
+                    let xPos = showText ? ratio * sliderWidth * 0.6 : ratio * sliderWidth
                     
                     ZStack(alignment: .leading) {
                         Capsule()
                             .fill(inactiveColor)
-                            .frame(width: sliderWidth * 0.6, height: sliderHeight)
+                            .frame(width: showText ? sliderWidth * 0.6 : sliderWidth, height: sliderHeight)
                         
                         Capsule()
                             .fill(activeColor)
@@ -113,12 +113,11 @@ struct Slider: View {
                                 }
                             }
                     }
-                    .frame(width: sliderWidth * 0.6, height: thumbSize)
+                    .frame(width: showText ? sliderWidth * 0.6 : sliderWidth, height: thumbSize)
                 }
-                .frame(width: sliderWidth * 0.6, height: thumbSize)
+                .frame(width: showText ? sliderWidth * 0.6 : sliderWidth, height: thumbSize)
             }
-            .frame(width: sliderWidth * 0.6)
-            
+            .frame(width: showText ? sliderWidth * 0.6 : sliderWidth)
             
             
             if showText {

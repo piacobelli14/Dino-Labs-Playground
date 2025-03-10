@@ -57,9 +57,14 @@ struct VideoView: View {
     @State private var player: AVPlayer
     @State private var currentCropRect: CGRect = .zero
     @State private var initialCropRect: CGRect = .zero
-    @State private var frames: [(NSImage, String, Int)] = []
+    @State private var frames: [(NSImage, String, Double)] = []
     @State private var isGeneratingFrames = false
     @State private var selectedFrameIndex: Int? = nil
+    @State private var isClipping: Bool = false
+    @State private var clipOverlayX: CGFloat = 0
+    @State private var clipOverlayWidth: CGFloat = 200
+    @State private var initialClipOverlayX: CGFloat? = nil
+    @State private var initialClipOverlayWidth: CGFloat? = nil
 
     init(geometry: GeometryProxy, fileURL: URL, hasUnsavedChanges: Binding<Bool>, leftPanelWidthRatio: Binding<CGFloat>) {
         self.geometry = geometry
@@ -612,15 +617,24 @@ struct VideoView: View {
                                                 get: { Double(opacityValue) },
                                                 set: { opacityValue = CGFloat($0) }
                                             ),
-                                            range: 0.0...1.0, step: 0.1, sliderHeight: 8, thumbSize: 12, activeColor: .purple, inactiveColor: Color(white: 0.3), thumbColor: .white, showText: false, animationDuration: 0.2, animationDamping: 0.7
+                                            range: 0.0...1.0,
+                                            step: 0.1,
+                                            sliderWidth: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.8,
+                                            sliderHeight: 8,
+                                            thumbSize: 12,
+                                            activeColor: .purple,
+                                            inactiveColor: Color(white: 0.3),
+                                            thumbColor: .white,
+                                            showText: false,
+                                            animationDuration: 0.2,
+                                            animationDamping: 0.7
                                         )
-                                        .padding(.leading, 4)
+                                        .padding(.horizontal, 2)
                                         Spacer()
                                     }
                                     .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.9)
                                     .padding(.bottom, 16)
                                 }
-                                
                                 Spacer()
                             }
                             .frame(width: geometry.size.width * (1 - leftPanelWidthRatio) * 0.3)
@@ -644,16 +658,22 @@ struct VideoView: View {
                                             value: Binding<Double>(
                                                 get: { hueValue },
                                                 set: { hueValue = $0 }
-                                            ),
-                                            range: 0.0...360.0, step: 1, sliderHeight: 8, thumbSize: 12, activeColor: .purple, inactiveColor: Color(white: 0.3), thumbColor: .white, showText: false, animationDuration: 0.2, animationDamping: 0.7
+                                            ), range: 0.0...1.0, step: 0.1, sliderWidth: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.8,
+                                            sliderHeight: 8,
+                                            thumbSize: 12,
+                                            activeColor: .purple,
+                                            inactiveColor: Color(white: 0.3),
+                                            thumbColor: .white,
+                                            showText: false,
+                                            animationDuration: 0.2,
+                                            animationDamping: 0.7
                                         )
-                                        .padding(.leading, 4)
+                                        .padding(.horizontal, 2)
                                         Spacer()
                                     }
                                     .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.9)
                                     .padding(.bottom, 16)
                                 }
-                                
                                 Spacer()
                             }
                             .frame(width: geometry.size.width * (1 - leftPanelWidthRatio) * 0.3)
@@ -678,15 +698,24 @@ struct VideoView: View {
                                                 get: { Double(saturationValue) },
                                                 set: { saturationValue = CGFloat($0) }
                                             ),
-                                            range: 0.0...2.0, step: 0.1, sliderHeight: 8, thumbSize: 12, activeColor: .purple, inactiveColor: Color(white: 0.3), thumbColor: .white, showText: false, animationDuration: 0.2, animationDamping: 0.7
+                                            range: 0.0...2.0,
+                                            step: 0.1,
+                                            sliderWidth: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.8,
+                                            sliderHeight: 8,
+                                            thumbSize: 12,
+                                            activeColor: .purple,
+                                            inactiveColor: Color(white: 0.3),
+                                            thumbColor: .white,
+                                            showText: false,
+                                            animationDuration: 0.2,
+                                            animationDamping: 0.7
                                         )
-                                        .padding(.leading, 4)
+                                        .padding(.horizontal, 2)
                                         Spacer()
                                     }
                                     .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.9)
                                     .padding(.bottom, 16)
                                 }
-                                
                                 Spacer()
                             }
                             .frame(width: geometry.size.width * (1 - leftPanelWidthRatio) * 0.3)
@@ -711,15 +740,24 @@ struct VideoView: View {
                                                 get: { Double(brightnessValue) },
                                                 set: { brightnessValue = CGFloat($0) }
                                             ),
-                                            range: -1.0...1.0, step: 0.1, sliderHeight: 8, thumbSize: 12, activeColor: .purple, inactiveColor: Color(white: 0.3), thumbColor: .white, showText: false, animationDuration: 0.2, animationDamping: 0.7
+                                            range: -1.0...1.0,
+                                            step: 0.1,
+                                            sliderWidth: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.8,
+                                            sliderHeight: 8,
+                                            thumbSize: 12,
+                                            activeColor: .purple,
+                                            inactiveColor: Color(white: 0.3),
+                                            thumbColor: .white,
+                                            showText: false,
+                                            animationDuration: 0.2,
+                                            animationDamping: 0.7
                                         )
-                                        .padding(.leading, 4)
+                                        .padding(.horizontal, 2)
                                         Spacer()
                                     }
                                     .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.9)
                                     .padding(.bottom, 16)
                                 }
-                                
                                 Spacer()
                             }
                             .frame(width: geometry.size.width * (1 - leftPanelWidthRatio) * 0.3)
@@ -744,15 +782,24 @@ struct VideoView: View {
                                                 get: { Double(contrastValue) },
                                                 set: { contrastValue = CGFloat($0) }
                                             ),
-                                            range: 0.0...2.0, step: 0.1, sliderHeight: 8, thumbSize: 12, activeColor: .purple, inactiveColor: Color(white: 0.3), thumbColor: .white, showText: false, animationDuration: 0.2, animationDamping: 0.7
+                                            range: 0.0...2.0,
+                                            step: 0.1,
+                                            sliderWidth: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.8,
+                                            sliderHeight: 8,
+                                            thumbSize: 12,
+                                            activeColor: .purple,
+                                            inactiveColor: Color(white: 0.3),
+                                            thumbColor: .white,
+                                            showText: false,
+                                            animationDuration: 0.2,
+                                            animationDamping: 0.7
                                         )
-                                        .padding(.leading, 4)
+                                        .padding(.horizontal, 2)
                                         Spacer()
                                     }
                                     .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.85)
                                     .padding(.bottom, 16)
                                 }
-                                
                                 Spacer()
                             }
                             .frame(width: geometry.size.width * (1 - leftPanelWidthRatio) * 0.3)
@@ -777,15 +824,24 @@ struct VideoView: View {
                                                 get: { Double(blurValue) },
                                                 set: { blurValue = CGFloat($0) }
                                             ),
-                                            range: 0.0...10.0, step: 0.1, sliderHeight: 8, thumbSize: 12, activeColor: .purple, inactiveColor: Color(white: 0.3), thumbColor: .white, showText: false, animationDuration: 0.2, animationDamping: 0.7
+                                            range: 0.0...10.0,
+                                            step: 0.1,
+                                            sliderWidth: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.8,
+                                            sliderHeight: 8,
+                                            thumbSize: 12,
+                                            activeColor: .purple,
+                                            inactiveColor: Color(white: 0.3),
+                                            thumbColor: .white,
+                                            showText: false,
+                                            animationDuration: 0.2,
+                                            animationDamping: 0.7
                                         )
-                                        .padding(.leading, 4)
+                                        .padding(.horizontal, 2)
                                         Spacer()
                                     }
                                     .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.9)
                                     .padding(.bottom, 16)
                                 }
-                                
                                 Spacer()
                             }
                             .frame(width: geometry.size.width * (1 - leftPanelWidthRatio) * 0.3)
@@ -810,15 +866,24 @@ struct VideoView: View {
                                                 get: { Double(grayscaleValue) },
                                                 set: { grayscaleValue = CGFloat($0) }
                                             ),
-                                            range: 0.0...1.0, step: 0.1, sliderHeight: 8, thumbSize: 12, activeColor: .purple, inactiveColor: Color(white: 0.3), thumbColor: .white, showText: false, animationDuration: 0.2, animationDamping: 0.7
+                                            range: 0.0...1.0,
+                                            step: 0.1,
+                                            sliderWidth: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.8,
+                                            sliderHeight: 8,
+                                            thumbSize: 12,
+                                            activeColor: .purple,
+                                            inactiveColor: Color(white: 0.3),
+                                            thumbColor: .white,
+                                            showText: false,
+                                            animationDuration: 0.2,
+                                            animationDamping: 0.7
                                         )
-                                        .padding(.leading, 4)
+                                        .padding(.horizontal, 2)
                                         Spacer()
                                     }
                                     .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.9)
                                     .padding(.bottom, 16)
                                 }
-                                
                                 Spacer()
                             }
                             .frame(width: geometry.size.width * (1 - leftPanelWidthRatio) * 0.3)
@@ -843,15 +908,24 @@ struct VideoView: View {
                                                 get: { Double(sepiaValue) },
                                                 set: { sepiaValue = CGFloat($0) }
                                             ),
-                                            range: 0.0...0.5, step: 0.1, sliderHeight: 8, thumbSize: 12, activeColor: .purple, inactiveColor: Color(white: 0.3), thumbColor: .white, showText: false, animationDuration: 0.2, animationDamping: 0.7
+                                            range: 0.0...0.5,
+                                            step: 0.1,
+                                            sliderWidth: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.8,
+                                            sliderHeight: 8,
+                                            thumbSize: 12,
+                                            activeColor: .purple,
+                                            inactiveColor: Color(white: 0.3),
+                                            thumbColor: .white,
+                                            showText: false,
+                                            animationDuration: 0.2,
+                                            animationDamping: 0.7
                                         )
-                                        .padding(.leading, 4)
+                                        .padding(.horizontal, 2)
                                         Spacer()
                                     }
                                     .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.9)
                                     .padding(.bottom, 16)
                                 }
-                                
                                 Spacer()
                             }
                             .frame(width: geometry.size.width * (1 - leftPanelWidthRatio) * 0.3)
@@ -869,20 +943,30 @@ struct VideoView: View {
                     }
                     .frame(width: geometry.size.width * (1 - leftPanelWidthRatio) * 0.3)
                     .frame(maxHeight: .infinity)
-                    .containerHelper(backgroundColor: Color(hex: 0x171717), borderColor: .clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                    .containerHelper(backgroundColor: Color(hex: 0x171717), borderColor: .clear, borderWidth: 0,
+                                     topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0,
+                                     shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
                     .overlay(
                         Rectangle()
                             .frame(width: 3.0)
                             .foregroundColor(Color(hex: 0x121212).opacity(0.4)),
                         alignment: .trailing
                     )
+                    .overlay(
+                        Rectangle()
+                            .frame(width: isFrameState ? geometry.size.width * (1 - leftPanelWidthRatio) * 0.3 : 0)
+                            .frame(maxHeight: isFrameState ? .infinity : 0)
+                            .foregroundColor(isFrameState ? Color.black.opacity(0.3) : Color.clear)
+                            .allowsHitTesting(false)
+                    )
+                    .disabled(isFrameState)
                 }
-
+                
                 VStack(spacing: 0) {
                     VStack {
                         GeometryReader { proxy in
                             ZStack {
-                                VideoPlayerView(player: player, preserveAspectRatio: preserveAspectRatio)
+                                VideoPlayer(player: player, preserveAspectRatio: preserveAspectRatio)
                                     .frame(width: videoSize.width, height: videoSize.height)
                                     .rotationEffect(rotationAngle)
                                     .scaleEffect(x: flipHorizontal ? -1 : 1, y: flipVertical ? -1 : 1)
@@ -995,46 +1079,94 @@ struct VideoView: View {
                     .frame(width: geometry.size.width * (1 - leftPanelWidthRatio) * 0.7)
                     .frame(maxHeight: isFrameState ? .infinity - 60 - 100 : .infinity - 60)
                     .containerHelper(backgroundColor: Color(hex: 0x242424), borderColor: .clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
-                    
+
                     if isFrameState {
                         HStack(spacing: 0) {
-                            if isGeneratingFrames {
-                                ProgressView()
-                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                            } else {
+                            if isClipping {
+                                
                                 ScrollView([.horizontal], showsIndicators: false) {
-                                    HStack(spacing: 8) {
-                                        ForEach(frames.indices, id: \.self) { i in
-                                            VStack {
-                                                Image(nsImage: frames[i].0)
-                                                    .resizable()
-                                                    .scaledToFit()
-                                                    .frame(width: 80, height: 45)
-                                                Text(frames[i].1)
-                                                    .font(.system(size: 9))
-                                                    .foregroundColor(.white)
-                                            }
-                                            .padding(8)
-                                            .containerHelper(backgroundColor: selectedFrameIndex == i ? Color.white.opacity(0.05) : Color.clear, borderColor: selectedFrameIndex == i ? Color(hex: 0xAD6ADD) : Color.clear, borderWidth: 1, topLeft: 4, topRight: 4, bottomLeft: 4, bottomRight: 4, shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
-                                            .hoverEffect(opacity: 0.6, scale: 1.05, cursor: .pointingHand)
-                                            .onTapGesture {
-                                                if selectedFrameIndex == i {
-                                                    selectedFrameIndex = nil
-                                                    player.seek(to: .zero)
-                                                } else {
-                                                    selectedFrameIndex = i
-                                                    player.seek(to: CMTime(seconds: Double(frames[i].2), preferredTimescale: 600))
+                                    ZStack(alignment: .topLeading) {
+                                        ClipTimeline(totalDuration: player.currentItem?.duration.seconds ?? 0)
+                                            .padding(.horizontal, 12)
+                                            .padding(.vertical, 8)
+                                        
+                                        Rectangle()
+                                            .fill(Color.white.opacity(0.15))
+                                            .frame(width: clipOverlayWidth, height: 100)
+                                            .position(x: clipOverlayX + clipOverlayWidth / 2, y:50)
+                                            .gesture(clipOverlayDragGesture())
+                                            .padding(.vertical, 8)
+                                        
+                                        Rectangle()
+                                            .fill(Color.black.opacity(0.8))
+                                            .frame(width: 5, height: 100)
+                                            .position(x: clipOverlayX, y: 50)
+                                            .gesture(clipOverlayResizeGesture(isLeft: true))
+                                            .padding(.vertical, 8)
+                                        
+                                        Rectangle()
+                                            .fill(Color.black.opacity(0.8))
+                                            .frame(width: 5, height: 100)
+                                            .position(x: clipOverlayX + clipOverlayWidth, y: 50)
+                                            .gesture(clipOverlayResizeGesture(isLeft: false))
+                                            .padding(.vertical, 8)
+                                    }
+                                }
+                            } else {
+                                if isGeneratingFrames {
+                                    ProgressView()
+                                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                } else {
+                                    ScrollView([.horizontal], showsIndicators: false) {
+                                        ZStack(alignment: .topLeading) {
+                                            HStack(spacing: 8) {
+                                                ForEach(frames.indices, id: \.self) { i in
+                                                    VStack {
+                                                        Image(nsImage: frames[i].0)
+                                                            .resizable()
+                                                            .scaledToFit()
+                                                            .frame(width: 80, height: 45)
+                                                        Text(frames[i].1)
+                                                            .font(.system(size: 9))
+                                                            .foregroundColor(.white)
+                                                    }
+                                                    .padding(8)
+                                                    .containerHelper(
+                                                        backgroundColor: selectedFrameIndex == i ? Color.white.opacity(0.05) : Color.clear,
+                                                        borderColor: selectedFrameIndex == i ? Color(hex: 0xAD6ADD) : Color.clear,
+                                                        borderWidth: 1,
+                                                        topLeft: 4,
+                                                        topRight: 4,
+                                                        bottomLeft: 4,
+                                                        bottomRight: 4,
+                                                        shadowColor: Color.clear,
+                                                        shadowRadius: 0,
+                                                        shadowX: 0,
+                                                        shadowY: 0
+                                                    )
+                                                    .hoverEffect(opacity: 0.6, scale: 1.05, cursor: .pointingHand)
+                                                    .onTapGesture {
+                                                        if selectedFrameIndex == i {
+                                                            selectedFrameIndex = nil
+                                                            player.seek(to: .zero)
+                                                        } else {
+                                                            selectedFrameIndex = i
+                                                            player.seek(to: CMTime(seconds: frames[i].2, preferredTimescale: 600))
+                                                        }
+                                                    }
                                                 }
                                             }
+                                            .padding(.horizontal, 12)
+                                            .padding(.vertical, 8)
                                         }
                                     }
-                                    .padding(.horizontal, 12)
-                                    .padding(.vertical, 8)
                                 }
                             }
                         }
                         .frame(width: geometry.size.width * (1 - leftPanelWidthRatio) * 0.7, height: 100)
-                        .containerHelper(backgroundColor: Color(hex: 0x313131), borderColor: .clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                        .containerHelper(backgroundColor: Color(hex: 0x313131), borderColor: .clear, borderWidth: 0,
+                                         topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0,
+                                         shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
                         .overlay(
                             Rectangle()
                                 .frame(height: 3.0)
@@ -1044,6 +1176,155 @@ struct VideoView: View {
                     }
                     
                     HStack(spacing: 4) {
+                        HStack(spacing: 12) {
+                            Menu("\(playbackSpeed, specifier: "%.1f")x") {
+                                Button("0.5x") { playbackSpeed = 0.5 }
+                                Button("1.0x") { playbackSpeed = 1.0 }
+                                Button("1.5x") { playbackSpeed = 1.5 }
+                                Button("2.0x") { playbackSpeed = 2.0 }
+                                Button("2.5x") { playbackSpeed = 2.5 }
+                                Button("3.0x") { playbackSpeed = 3.0 }
+                            }
+                            .disabled(isFrameState)
+                            .font(.system(size: 8, weight: .semibold))
+                            .frame(width: 70)
+                            .foregroundColor(Color.white.opacity(0.8))
+                            
+                            VideoButtonMain {
+                                if isFrameState {
+                                    isFrameState = false
+                                } else {
+                                    isFrameState = true
+                                    player.pause()
+                                    isGeneratingFrames = true
+                                    DispatchQueue.global(qos: .userInitiated).async {
+                                        if let currentAsset = player.currentItem?.asset {
+                                            let duration = currentAsset.duration.seconds
+                                            let generator = AVAssetImageGenerator(asset: currentAsset)
+                                            generator.appliesPreferredTrackTransform = true
+                                            generator.requestedTimeToleranceBefore = .zero
+                                            generator.requestedTimeToleranceAfter = .zero
+                                            
+                                            var tempFrames: [(NSImage, String, Double)] = []
+                                            
+                                            let totalSeconds = Int(floor(duration))
+                                            for s in 0...totalSeconds {
+                                                let requestTime = CMTime(seconds: Double(s), preferredTimescale: 600)
+                                                
+                                                do {
+                                                    var actual = CMTime.zero
+                                                    let cg = try generator.copyCGImage(at: requestTime, actualTime: &actual)
+                                                    let mm = s / 60
+                                                    let ss = s % 60
+                                                    let label = String(format: "%02d:%02d", mm, ss)
+                                                    
+                                                    let img = NSImage(cgImage: cg, size: NSSize(width: 80, height: 45))
+                                                    tempFrames.append((img, label, Double(s)))
+                                                } catch {}
+                                            }
+                                            
+                                            DispatchQueue.main.async {
+                                                frames = tempFrames
+                                                isGeneratingFrames = false
+                                            }
+                                        } else {
+                                            DispatchQueue.main.async {
+                                                isGeneratingFrames = false
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            .containerHelper(backgroundColor: Color.clear, borderColor: Color.clear, borderWidth: 0,
+                                             topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0,
+                                             shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                            .disabled((isFrameState && isClipping) ? true : false)
+                            .frame(width: 15, height: 15)
+                            .overlay(
+                                Image(systemName: (isFrameState && !isClipping) ? "xmark.square" : "film.stack")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundColor((isFrameState && isClipping) ? Color.white.opacity(0.4) : Color.white.opacity(0.9))
+                                    .allowsHitTesting(false)
+                            )
+                            .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
+                            
+                            VideoButtonMain {
+                                if isFrameState {
+                                    isFrameState = false
+                                    isClipping = false
+                                } else {
+                                    isFrameState = true
+                                    isClipping = true
+                                    player.pause()
+                                    isGeneratingFrames = true
+                                    DispatchQueue.global(qos: .userInitiated).async {
+                                        if let currentAsset = player.currentItem?.asset {
+                                            let duration = currentAsset.duration.seconds
+                                            let generator = AVAssetImageGenerator(asset: currentAsset)
+                                            generator.appliesPreferredTrackTransform = true
+                                            generator.requestedTimeToleranceBefore = .zero
+                                            generator.requestedTimeToleranceAfter = .zero
+                                            
+                                            var tempFrames: [(NSImage, String, Double)] = []
+                                            
+                                            let totalSeconds = Int(floor(duration))
+                                            for s in 0...totalSeconds {
+                                                let requestTime = CMTime(seconds: Double(s), preferredTimescale: 600)
+                                                
+                                                do {
+                                                    var actual = CMTime.zero
+                                                    let cg = try generator.copyCGImage(at: requestTime, actualTime: &actual)
+                                                    let mm = s / 60
+                                                    let ss = s % 60
+                                                    let label = String(format: "%02d:%02d", mm, ss)
+                                                    
+                                                    let img = NSImage(cgImage: cg, size: NSSize(width: 80, height: 45))
+                                                    tempFrames.append((img, label, Double(s)))
+                                                } catch {}
+                                            }
+                                            
+                                            DispatchQueue.main.async {
+                                                frames = tempFrames
+                                                isGeneratingFrames = false
+                                            }
+                                        } else {
+                                            DispatchQueue.main.async {
+                                                isGeneratingFrames = false
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            .containerHelper(backgroundColor: Color.clear, borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                            .disabled((isFrameState && !isClipping) ? true : false)
+                            .frame(width: 15, height: 15)
+                            .overlay(
+                                Image(systemName: isClipping ? "xmark.square" : "scissors")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundColor((isFrameState && !isClipping) ? Color.white.opacity(0.4) : Color.white.opacity(0.8))
+                                    .allowsHitTesting(false)
+                            )
+                            .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
+                            
+                            if isClipping {
+                                VideoButtonMain {
+                                    executeClip()
+                                }
+                                .containerHelper(backgroundColor: Color.clear, borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                                .frame(width: 15, height: 15)
+                                .overlay(
+                                    Image(systemName: "checkmark.square")
+                                        .font(.system(size: 12, weight: .semibold))
+                                        .foregroundColor((isFrameState && !isClipping) ? Color.white.opacity(0.4) : Color.white.opacity(0.8))
+                                        .allowsHitTesting(false)
+                                )
+                                .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
+                            }
+                        }
+                        .padding(.horizontal, 12)
+                        
+                        Spacer()
+                        
                         HStack {
                             VideoButtonMain {
                                 let currentSeconds = player.currentTime().seconds
@@ -1051,11 +1332,12 @@ struct VideoView: View {
                                 player.seek(to: CMTime(seconds: newTime, preferredTimescale: player.currentTime().timescale))
                             }
                             .containerHelper(backgroundColor: Color.clear, borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                            .disabled(isFrameState ? true : false)
                             .frame(width: 15, height: 15)
                             .overlay(
                                 Image(systemName: "backward")
                                     .font(.system(size: 9, weight: .semibold))
-                                    .foregroundColor(Color(hex: 0xf5f5f5).opacity(0.8))
+                                    .foregroundColor(isFrameState ? Color.white.opacity(0.4) : Color.white.opacity(0.8))
                                     .allowsHitTesting(false)
                             )
                             .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
@@ -1065,15 +1347,19 @@ struct VideoView: View {
                                     player.pause()
                                 } else {
                                     player.play()
+                                    player.rate = Float(playbackSpeed)
                                 }
                                 isPlaying.toggle()
                             }
-                            .containerHelper(backgroundColor: Color.clear, borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                            .containerHelper(backgroundColor: Color.clear, borderColor: Color.clear, borderWidth: 0,
+                                             topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0,
+                                             shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                            .disabled(isFrameState ? true : false)
                             .frame(width: 15, height: 15)
                             .overlay(
                                 Image(systemName: isPlaying ? "pause.fill" : "play.fill")
                                     .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(Color(hex: 0xf5f5f5).opacity(0.8))
+                                    .foregroundColor(isFrameState ? Color.white.opacity(0.4) : Color.white.opacity(0.8))
                                     .allowsHitTesting(false)
                             )
                             .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
@@ -1085,12 +1371,15 @@ struct VideoView: View {
                                     isLooping = true
                                 }
                             }
-                            .containerHelper(backgroundColor: Color.clear, borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                            .containerHelper(backgroundColor: Color.clear, borderColor: Color.clear, borderWidth: 0,
+                                             topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0,
+                                             shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                            .disabled(isFrameState ? true : false)
                             .frame(width: 15, height: 15)
                             .overlay(
                                 Image(systemName: "repeat")
                                     .font(.system(size: 14, weight: .semibold))
-                                    .foregroundColor(!isLooping ? Color(hex: 0xf5f5f5).opacity(0.8) : Color(hex: 0xAD6ADD))
+                                    .foregroundColor(isFrameState ? Color.white.opacity(0.4) : (!isLooping ? Color.white.opacity(0.8) : Color(hex: 0xAD6ADD)))
                                     .allowsHitTesting(false)
                             )
                             .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
@@ -1101,90 +1390,15 @@ struct VideoView: View {
                                 let newTime = min(currentSeconds + 15, duration)
                                 player.seek(to: CMTime(seconds: newTime, preferredTimescale: player.currentTime().timescale))
                             }
-                            .containerHelper(backgroundColor: Color.clear, borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                            .containerHelper(backgroundColor: Color.clear, borderColor: Color.clear, borderWidth: 0,
+                                             topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0,
+                                             shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                            .disabled(isFrameState ? true : false)
                             .frame(width: 15, height: 15)
                             .overlay(
                                 Image(systemName: "forward")
                                     .font(.system(size: 9, weight: .semibold))
-                                    .foregroundColor(Color(hex: 0xf5f5f5).opacity(0.8))
-                                    .allowsHitTesting(false)
-                            )
-                            .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
-                        }
-                        .padding(.horizontal, 12)
-                        
-                        Spacer()
-                        
-                        HStack(spacing: 12) {
-                            VideoButtonMain {
-                                if isFrameState {
-                                    isFrameState = false
-                                } else {
-                                    isFrameState = true
-                                    player.pause()
-                                    isGeneratingFrames = true
-                                    DispatchQueue.global(qos: .userInitiated).async {
-                                        let asset = AVAsset(url: fileURL)
-                                        let dur = Int(asset.duration.seconds)
-                                        let gen = AVAssetImageGenerator(asset: asset)
-                                        gen.appliesPreferredTrackTransform = true
-                                        var f: [(NSImage, String, Int)] = []
-                                        for s in 0..<dur {
-                                            if let c = try? gen.copyCGImage(at: CMTime(seconds: Double(s), preferredTimescale: 600), actualTime: nil) {
-                                                f.append((NSImage(cgImage: c, size: NSSize(width: 80, height: 45)),
-                                                          String(format: "%02d:%02d", s / 60, s % 60),
-                                                          s))
-                                            }
-                                        }
-                                        DispatchQueue.main.async {
-                                            frames = f
-                                            isGeneratingFrames = false
-                                        }
-                                    }
-                                }
-                            }
-                            .containerHelper(backgroundColor: Color.clear, borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
-                            .frame(width: 15, height: 15)
-                            .overlay(
-                                Image(systemName: "film.stack")
-                                    .font(.system(size: 12, weight: .semibold))
-                                    .foregroundColor(Color(hex: 0xf5f5f5).opacity(0.8))
-                                    .allowsHitTesting(false)
-                            )
-                            .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
-                            
-                            VideoButtonMain {
-                            }
-                            .containerHelper(backgroundColor: Color.clear, borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
-                            .frame(width: 15, height: 15)
-                            .overlay(
-                                Image(systemName: "scissors")
-                                    .font(.system(size: 12, weight: .semibold))
-                                    .foregroundColor(Color(hex: 0xf5f5f5).opacity(0.8))
-                                    .allowsHitTesting(false)
-                            )
-                            .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
-                            
-                            VideoButtonMain {
-                            }
-                            .containerHelper(backgroundColor: Color.clear, borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
-                            .frame(width: 15, height: 15)
-                            .overlay(
-                                Image(systemName: "rectangle.2.swap")
-                                    .font(.system(size: 12, weight: .semibold))
-                                    .foregroundColor(Color(hex: 0xf5f5f5).opacity(0.8))
-                                    .allowsHitTesting(false)
-                            )
-                            .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
-                            
-                            VideoButtonMain {
-                            }
-                            .containerHelper(backgroundColor: Color.clear, borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
-                            .frame(width: 15, height: 15)
-                            .overlay(
-                                Image(systemName: "photo.artframe")
-                                    .font(.system(size: 12, weight: .semibold))
-                                    .foregroundColor(Color(hex: 0xf5f5f5).opacity(0.8))
+                                    .foregroundColor(isFrameState ? Color.white.opacity(0.4) : Color.white.opacity(0.8))
                                     .allowsHitTesting(false)
                             )
                             .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
@@ -1199,10 +1413,10 @@ struct VideoView: View {
                                     toggleWidth: 25,
                                     toggleHeight: 14,
                                     circleSize: 12,
-                                    activeColor: .purple,
-                                    inactiveColor: Color(hex: 0x333333),
-                                    thumbColor: .white,
-                                    textColor: .white.opacity(0.8),
+                                    activeColor: .purple.opacity(isFrameState ? 0.4 : 1.0),
+                                    inactiveColor: Color(hex: 0x333333).opacity(isFrameState ? 0.4 : 1.0),
+                                    thumbColor: .white.opacity(isFrameState ? 0.4 : 1.0),
+                                    textColor: .white.opacity(isFrameState ? 0.4 : 0.8),
                                     fontSize: 9,
                                     fontWeight: .bold,
                                     activeText: "Preserve Aspect Ratio",
@@ -1214,9 +1428,12 @@ struct VideoView: View {
                                 .padding(.trailing, 20)
                         }
                         .padding(.horizontal, 12)
+                        .disabled(isFrameState)
                     }
                     .frame(width: geometry.size.width * (1 - leftPanelWidthRatio) * 0.7, height: 60)
-                    .containerHelper(backgroundColor: Color(hex: 0x171717), borderColor: .clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                    .containerHelper(backgroundColor: Color(hex: 0x171717), borderColor: .clear, borderWidth: 0,
+                                     topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0,
+                                     shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
                     .overlay(
                         Rectangle()
                             .frame(height: 3.0)
@@ -1229,7 +1446,9 @@ struct VideoView: View {
             }
             .frame(width: geometry.size.width * (1 - leftPanelWidthRatio))
             .frame(maxHeight: .infinity)
-            .containerHelper(backgroundColor: Color(hex: 0x242424), borderColor: .clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+            .containerHelper(backgroundColor: Color(hex: 0x242424), borderColor: .clear, borderWidth: 0,
+                             topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0,
+                             shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
             .overlay(
                 Rectangle()
                     .frame(height: 0.5)
@@ -1246,6 +1465,11 @@ struct VideoView: View {
         .onChange(of: isFrameState) { newValue in
             let topLimit = editorSize.height - (newValue ? 100 : 0)
             videoPosition = CGPoint(x: editorSize.width / 2, y: topLimit / 2)
+        }
+        .onChange(of: playbackSpeed) { newValue in
+            if isPlaying {
+                player.rate = Float(newValue)
+            }
         }
         .onAppear {
             NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: player.currentItem, queue: .main) { _ in
@@ -1522,8 +1746,8 @@ struct VideoView: View {
         }
         
         DispatchQueue.global(qos: .userInitiated).async {
-            let asset = AVAsset(url: fileURL)
-            guard let videoTrack = asset.tracks(withMediaType: .video).first else { return }
+            guard let currentAsset = player.currentItem?.asset else { return }
+            guard let videoTrack = currentAsset.tracks(withMediaType: .video).first else { return }
             
             let pixelWidth = currentCropRect.width
             let pixelHeight = currentCropRect.height
@@ -1592,7 +1816,7 @@ struct VideoView: View {
             composition.frameDuration = CMTime(value: 1, timescale: 30)
             
             let instruction = AVMutableVideoCompositionInstruction()
-            instruction.timeRange = CMTimeRange(start: .zero, duration: asset.duration)
+            instruction.timeRange = CMTimeRange(start: .zero, duration: currentAsset.duration)
             
             let layerInstruction = AVMutableVideoCompositionLayerInstruction(assetTrack: videoTrack)
             let transform = CGAffineTransform(translationX: -updatedCropRect.origin.x, y: -updatedCropRect.origin.y)
@@ -1602,7 +1826,7 @@ struct VideoView: View {
             composition.instructions = [instruction]
             
             DispatchQueue.main.async {
-                let playerItem = AVPlayerItem(asset: asset)
+                let playerItem = AVPlayerItem(asset: currentAsset)
                 playerItem.videoComposition = composition
                 player.replaceCurrentItem(with: playerItem)
                 
@@ -1613,9 +1837,125 @@ struct VideoView: View {
             }
         }
     }
+    
+    private func clipOverlayDragGesture() -> some Gesture {
+        DragGesture()
+            .onChanged { value in
+                if initialClipOverlayX == nil {
+                    initialClipOverlayX = clipOverlayX
+                }
+                let newX = (initialClipOverlayX ?? 0) + value.translation.width
+                clipOverlayX = max(0, newX)
+            }
+            .onEnded { _ in
+                initialClipOverlayX = nil
+            }
+    }
+    
+    private func clipOverlayResizeGesture(isLeft: Bool) -> some Gesture {
+        DragGesture()
+            .onChanged { value in
+                if initialClipOverlayX == nil || initialClipOverlayWidth == nil {
+                    initialClipOverlayX = clipOverlayX
+                    initialClipOverlayWidth = clipOverlayWidth
+                }
+                let delta = value.translation.width
+                if isLeft {
+                    let newX = (initialClipOverlayX ?? 0) + delta
+                    let change = (initialClipOverlayX ?? 0) - newX
+                    let newWidth = (initialClipOverlayWidth ?? 0) + change
+                    if newWidth > 10 {
+                        clipOverlayX = max(0, newX)
+                        clipOverlayWidth = newWidth
+                    }
+                } else {
+                    let newWidth = (initialClipOverlayWidth ?? 0) + delta
+                    if newWidth > 10 {
+                        clipOverlayWidth = newWidth
+                    }
+                }
+            }
+            .onEnded { _ in
+                initialClipOverlayX = nil
+                initialClipOverlayWidth = nil
+            }
+    }
+    
+    private func executeClip() {
+        var includedIndices: [Int] = []
+        var currentX: CGFloat = 0
+        let frameWidthPlusPad: CGFloat = 80 + 16
+        for i in frames.indices {
+            let startX = currentX
+            let endX = startX + 80
+            let overlayStart = clipOverlayX
+            let overlayEnd = clipOverlayX + clipOverlayWidth
+            
+            if endX >= overlayStart && startX <= overlayEnd {
+                includedIndices.append(i)
+            }
+            currentX += frameWidthPlusPad
+        }
+        
+        let totalSeconds = player.currentItem?.duration.seconds ?? 0
+        if totalSeconds <= 0 {
+            return
+        }
+        
+        let timelineWidth = (Double(frames.count) * 80.0) + (Double(frames.count - 1) * 8.0)
+        let startSecPrecise = max(0, (Double(clipOverlayX) / timelineWidth) * totalSeconds)
+        let endSecPrecise = min(totalSeconds, ((Double(clipOverlayX + clipOverlayWidth)) / timelineWidth) * totalSeconds)
+        guard endSecPrecise > startSecPrecise else {
+            return
+        }
+        
+        clipVideoTimeRange(startSec: startSecPrecise, endSec: endSecPrecise)
+        isClipping = false
+        isFrameState = false
+    }
+    
+    private func clipVideoTimeRange(startSec: Double, endSec: Double) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            guard let currentAsset = player.currentItem?.asset else { return }
+            let composition = AVMutableComposition()
+            
+            guard let videoTrack = currentAsset.tracks(withMediaType: .video).first else { return }
+            let timeRange = CMTimeRange(
+                start: CMTime(seconds: startSec, preferredTimescale: 600),
+                duration: CMTime(seconds: endSec - startSec, preferredTimescale: 600)
+            )
+            
+            if let compVideoTrack = composition.addMutableTrack(
+                withMediaType: .video,
+                preferredTrackID: kCMPersistentTrackID_Invalid
+            ) {
+                do {
+                    try compVideoTrack.insertTimeRange(timeRange, of: videoTrack, at: .zero)
+                } catch {}
+            }
+            
+            if let audioTrack = currentAsset.tracks(withMediaType: .audio).first {
+                if let compAudioTrack = composition.addMutableTrack(
+                    withMediaType: .audio,
+                    preferredTrackID: kCMPersistentTrackID_Invalid
+                ) {
+                    do {
+                        try compAudioTrack.insertTimeRange(timeRange, of: audioTrack, at: .zero)
+                    } catch {}
+                }
+            }
+            
+            let newItem = AVPlayerItem(asset: composition)
+            
+            DispatchQueue.main.async {
+                player.replaceCurrentItem(with: newItem)
+                player.seek(to: .zero)
+            }
+        }
+    }
 }
 
-struct VideoPlayerView: NSViewRepresentable {
+struct VideoPlayer: NSViewRepresentable {
     let player: AVPlayer
     let preserveAspectRatio: Bool
     
@@ -1635,6 +1975,25 @@ struct VideoPlayerView: NSViewRepresentable {
             playerLayer.videoGravity = .resize
             playerLayer.mask = nil
         }
+    }
+}
+
+struct ClipTimeline: View {
+    let totalDuration: Double
+    var body: some View {
+        HStack(spacing: 12) {
+            ForEach(0..<Int(ceil(totalDuration)) + 1, id: \.self) { second in
+                VStack {
+                    Rectangle()
+                        .frame(width: 1, height: 15)
+                        .foregroundColor(Color.white.opacity(0.7))
+                    Text(String(format: "%02d:%02d", second / 60, second % 60))
+                        .font(.system(size: 8, weight: .regular))
+                        .foregroundColor(Color.white.opacity(0.8))
+                }
+            }
+        }
+        .frame(height: 100)
     }
 }
 
