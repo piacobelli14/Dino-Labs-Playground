@@ -104,39 +104,6 @@ struct ImageView: View {
                                             .allowsHitTesting(false)
                                     )
                                     .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
-                                    
-                                    ImageButtonMain {
-                                        guard let finalImage = generateFinalImage() else { return }
-                                        
-                                        let panel = NSSavePanel()
-                                        panel.nameFieldStringValue = fileURL.lastPathComponent
-                                        panel.allowedFileTypes = ["png", "jpg", "jpeg", "svg"]
-                                        panel.begin { response in
-                                            if response == .OK, let destinationURL = panel.url {
-                                                let ext = destinationURL.pathExtension.lowercased()
-                                                var imageData: Data?
-                                                if ext == "png" {
-                                                    imageData = finalImage.pngData()
-                                                } else if ext == "jpg" || ext == "jpeg" {
-                                                    imageData = finalImage.jpegData(compressionQuality: 1.0)
-                                                } else if ext == "svg" {
-                                                    imageData = finalImage.pngData()
-                                                }
-                                                if let data = imageData {
-                                                    try? data.write(to: destinationURL)
-                                                }
-                                            }
-                                        }
-                                    }
-                                    .containerHelper(backgroundColor: Color(hex: 0x515151), borderColor: Color(hex: 0x616161), borderWidth: 1, topLeft: 2, topRight: 2, bottomLeft: 2, bottomRight: 2, shadowColor: Color.white.opacity(0.5), shadowRadius: 1, shadowX: 0, shadowY: 0)
-                                    .frame(width: 20, height: 20)
-                                    .overlay(
-                                        Image(systemName: "square.and.arrow.up")
-                                            .font(.system(size: 10, weight: .semibold))
-                                            .foregroundColor(Color(hex: 0xf5f5f5).opacity(0.8))
-                                            .allowsHitTesting(false)
-                                    )
-                                    .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
                                 }
                                 .padding(.trailing, 12)
                             }
@@ -894,7 +861,7 @@ struct ImageView: View {
                         Spacer()
                     }
                     .frame(width: geometry.size.width * (1 - leftPanelWidthRatio) * 0.3)
-                    .frame(maxHeight: .infinity)
+                    .frame(minHeight: geometry.size.height - 50 - 10, maxHeight: .infinity)
                     .containerHelper(backgroundColor: Color(hex: 0x171717), borderColor: .clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
                     .overlay(
                         Rectangle()
