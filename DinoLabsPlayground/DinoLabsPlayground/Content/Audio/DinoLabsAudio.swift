@@ -44,7 +44,19 @@ struct AudioView: View {
                                     AudioButtonMain {
                                         
                                     }
-                                    .containerHelper(backgroundColor: Color(hex: 0x515151), borderColor: Color(hex: 0x616161), borderWidth: 1, topLeft: 2, topRight: 2, bottomLeft: 2, bottomRight: 2, shadowColor: Color.white.opacity(0.5), shadowRadius: 1, shadowX: 0, shadowY: 0)
+                                    .containerHelper(
+                                        backgroundColor: Color(hex: 0x515151),
+                                        borderColor: Color(hex: 0x616161),
+                                        borderWidth: 1,
+                                        topLeft: 2,
+                                        topRight: 2,
+                                        bottomLeft: 2,
+                                        bottomRight: 2,
+                                        shadowColor: Color.white.opacity(0.5),
+                                        shadowRadius: 1,
+                                        shadowX: 0,
+                                        shadowY: 0
+                                    )
                                     .frame(width: 20, height: 20)
                                     .overlay(
                                         Image(systemName: "arrow.clockwise")
@@ -58,7 +70,19 @@ struct AudioView: View {
                             }
                             .padding(.top, 15)
                             .padding(.bottom, 12)
-                            .containerHelper(backgroundColor: Color(hex: 0x121212), borderColor: .clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                            .containerHelper(
+                                backgroundColor: Color(hex: 0x121212),
+                                borderColor: .clear,
+                                borderWidth: 0,
+                                topLeft: 0,
+                                topRight: 0,
+                                bottomLeft: 0,
+                                bottomRight: 0,
+                                shadowColor: .clear,
+                                shadowRadius: 0,
+                                shadowX: 0,
+                                shadowY: 0
+                            )
                         
                         }
                         .padding(.bottom, 12)
@@ -73,7 +97,19 @@ struct AudioView: View {
                     }
                     .frame(width: geometry.size.width * (1 - leftPanelWidthRatio) * 0.3)
                     .frame(minHeight: geometry.size.height - 50 - 10, maxHeight: .infinity)
-                    .containerHelper(backgroundColor: Color(hex: 0x171717), borderColor: .clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                    .containerHelper(
+                        backgroundColor: Color(hex: 0x171717),
+                        borderColor: .clear,
+                        borderWidth: 0,
+                        topLeft: 0,
+                        topRight: 0,
+                        bottomLeft: 0,
+                        bottomRight: 0,
+                        shadowColor: .clear,
+                        shadowRadius: 0,
+                        shadowX: 0,
+                        shadowY: 0
+                    )
                     .overlay(
                         Rectangle()
                             .frame(width: 3.0)
@@ -85,10 +121,22 @@ struct AudioView: View {
                     VStack(spacing: 0) {
                         VStack(spacing: 0) {
                             HStack {
-                                WaveformView(fileURL: fileURL)
+                                Waveform(fileURL: fileURL)
                             }
                             .frame(width: geometry.size.width, height: geometry.size.height * 0.25)
-                            .containerHelper(backgroundColor: Color(hex: 0x00FFD7).opacity(0.1), borderColor: .clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                            .containerHelper(
+                                backgroundColor: Color(hex: 0x00FFD7).opacity(0.1),
+                                borderColor: .clear,
+                                borderWidth: 0,
+                                topLeft: 0,
+                                topRight: 0,
+                                bottomLeft: 0,
+                                bottomRight: 0,
+                                shadowColor: .clear,
+                                shadowRadius: 0,
+                                shadowX: 0,
+                                shadowY: 0
+                            )
                             .overlay(
                                 Rectangle()
                                     .frame(height: 1.0)
@@ -104,10 +152,61 @@ struct AudioView: View {
                             )
                             
                             HStack {
-                                OscilloscopeView(fileURL: fileURL, playbackPosition: $playbackPosition)
+                                Oscilloscope(fileURL: fileURL, playbackPosition: $playbackPosition)
                             }
                             .frame(width: geometry.size.width, height: geometry.size.height * 0.2)
-                            .containerHelper(backgroundColor: Color(hex: 0x212121), borderColor: .clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                            .containerHelper(
+                                backgroundColor: Color(hex: 0x212121),
+                                borderColor: .clear,
+                                borderWidth: 0,
+                                topLeft: 0,
+                                topRight: 0,
+                                bottomLeft: 0,
+                                bottomRight: 0,
+                                shadowColor: .clear,
+                                shadowRadius: 0,
+                                shadowX: 0,
+                                shadowY: 0
+                            )
+                            .overlay(
+                                Rectangle()
+                                    .frame(height: 1.0)
+                                    .foregroundColor(Color(hex: 0x414141).opacity(0.8)),
+                                alignment: .bottom
+                            )
+                            
+                            HStack {
+                                HStack {
+                                    FrequencyBars(fileURL: fileURL, playbackPosition: $playbackPosition)
+                                }
+                                .frame(width: geometry.size.width * 0.9, height: geometry.size.height * 0.2)
+                                
+                                HStack {
+                                    VolumeBar(fileURL: fileURL, playbackPosition: $playbackPosition)
+                                }
+                                .frame(width: geometry.size.width * 0.1, height: geometry.size.height * 0.2)
+                                .overlay(
+                                    Rectangle()
+                                        .frame(width: 1.0)
+                                        .foregroundColor(Color(hex: 0x414141).opacity(0.8)),
+                                    alignment: .leading
+                                )
+                                
+                            }
+                            .frame(width: geometry.size.width, height: geometry.size.height * 0.2)
+                            .containerHelper(
+                                backgroundColor: Color(hex: 0x212121),
+                                borderColor: .clear,
+                                borderWidth: 0,
+                                topLeft: 0,
+                                topRight: 0,
+                                bottomLeft: 0,
+                                bottomRight: 0,
+                                shadowColor: .clear,
+                                shadowRadius: 0,
+                                shadowX: 0,
+                                shadowY: 0
+                            )
                             .overlay(
                                 Rectangle()
                                     .frame(height: 1.0)
@@ -119,7 +218,19 @@ struct AudioView: View {
                         }
                         .frame(width: geometry.size.width)
                         .frame(minHeight: geometry.size.height - 60, maxHeight: geometry.size.height - 60)
-                        .containerHelper(backgroundColor: Color(hex: 0x242424), borderColor: .clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                        .containerHelper(
+                            backgroundColor: Color(hex: 0x242424),
+                            borderColor: .clear,
+                            borderWidth: 0,
+                            topLeft: 0,
+                            topRight: 0,
+                            bottomLeft: 0,
+                            bottomRight: 0,
+                            shadowColor: .clear,
+                            shadowRadius: 0,
+                            shadowX: 0,
+                            shadowY: 0
+                        )
                         
                         
                         HStack(spacing: 0) {
@@ -129,7 +240,19 @@ struct AudioView: View {
                                         player.currentTime = max(player.currentTime - 15, 0)
                                     }
                                 }
-                                .containerHelper(backgroundColor: Color.clear, borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                                .containerHelper(
+                                    backgroundColor: Color.clear,
+                                    borderColor: Color.clear,
+                                    borderWidth: 0,
+                                    topLeft: 0,
+                                    topRight: 0,
+                                    bottomLeft: 0,
+                                    bottomRight: 0,
+                                    shadowColor: Color.clear,
+                                    shadowRadius: 0,
+                                    shadowX: 0,
+                                    shadowY: 0
+                                )
                                 .frame(width: 15, height: 15)
                                 .overlay(
                                     Image(systemName: "backward")
@@ -150,9 +273,19 @@ struct AudioView: View {
                                         }
                                     }
                                 }
-                                .containerHelper(backgroundColor: Color.clear, borderColor: Color.clear, borderWidth: 0,
-                                                 topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0,
-                                                 shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                                .containerHelper(
+                                    backgroundColor: Color.clear,
+                                    borderColor: Color.clear,
+                                    borderWidth: 0,
+                                    topLeft: 0,
+                                    topRight: 0,
+                                    bottomLeft: 0,
+                                    bottomRight: 0,
+                                    shadowColor: Color.clear,
+                                    shadowRadius: 0,
+                                    shadowX: 0,
+                                    shadowY: 0
+                                )
                                 .frame(width: 15, height: 15)
                                 .overlay(
                                     Image(systemName: isPlaying ? "pause.fill" : "play.fill")
@@ -168,9 +301,19 @@ struct AudioView: View {
                                         player.numberOfLoops = isLooping ? -1 : 0
                                     }
                                 }
-                                .containerHelper(backgroundColor: Color.clear, borderColor: Color.clear, borderWidth: 0,
-                                                 topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0,
-                                                 shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                                .containerHelper(
+                                    backgroundColor: Color.clear,
+                                    borderColor: Color.clear,
+                                    borderWidth: 0,
+                                    topLeft: 0,
+                                    topRight: 0,
+                                    bottomLeft: 0,
+                                    bottomRight: 0,
+                                    shadowColor: Color.clear,
+                                    shadowRadius: 0,
+                                    shadowX: 0,
+                                    shadowY: 0
+                                )
                                 .frame(width: 15, height: 15)
                                 .overlay(
                                     Image(systemName: "repeat")
@@ -186,9 +329,19 @@ struct AudioView: View {
                                         player.currentTime = min(newTime, player.duration)
                                     }
                                 }
-                                .containerHelper(backgroundColor: Color.clear, borderColor: Color.clear, borderWidth: 0,
-                                                 topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0,
-                                                 shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                                .containerHelper(
+                                    backgroundColor: Color.clear,
+                                    borderColor: Color.clear,
+                                    borderWidth: 0,
+                                    topLeft: 0,
+                                    topRight: 0,
+                                    bottomLeft: 0,
+                                    bottomRight: 0,
+                                    shadowColor: Color.clear,
+                                    shadowRadius: 0,
+                                    shadowX: 0,
+                                    shadowY: 0
+                                )
                                 .frame(width: 15, height: 15)
                                 .overlay(
                                     Image(systemName: "forward")
@@ -218,7 +371,19 @@ struct AudioView: View {
                             .padding(.horizontal, 12)
                         }
                         .frame(width: geometry.size.width, height: 60)
-                        .containerHelper(backgroundColor: Color(hex: 0x171717), borderColor: .clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                        .containerHelper(
+                            backgroundColor: Color(hex: 0x171717),
+                            borderColor: .clear,
+                            borderWidth: 0,
+                            topLeft: 0,
+                            topRight: 0,
+                            bottomLeft: 0,
+                            bottomRight: 0,
+                            shadowColor: .clear,
+                            shadowRadius: 0,
+                            shadowX: 0,
+                            shadowY: 0
+                        )
                         .overlay(
                             Rectangle()
                                 .frame(height: 3.0)
@@ -233,7 +398,19 @@ struct AudioView: View {
             }
             .frame(width: geometry.size.width * (1 - leftPanelWidthRatio))
             .frame(maxHeight: .infinity)
-            .containerHelper(backgroundColor: Color(hex: 0x242424), borderColor: .clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+            .containerHelper(
+                backgroundColor: Color(hex: 0x242424),
+                borderColor: .clear,
+                borderWidth: 0,
+                topLeft: 0,
+                topRight: 0,
+                bottomLeft: 0,
+                bottomRight: 0,
+                shadowColor: .clear,
+                shadowRadius: 0,
+                shadowX: 0,
+                shadowY: 0
+            )
             .overlay(
                 Rectangle()
                     .frame(height: 0.5)
@@ -262,7 +439,32 @@ struct AudioView: View {
     }
 }
 
-struct WaveformView: View {
+struct AudioTrackBar: View {
+    @Binding var playbackPosition: CGFloat
+    var onDrag: (CGFloat) -> Void
+    
+    var body: some View {
+        GeometryReader { geometry in
+            let barX = playbackPosition * geometry.size.width
+            Rectangle()
+                .fill(Color(hex: 0x00FFD7))
+                .frame(width: 2)
+                .hoverEffect(cursor: .openHand)
+                .position(x: barX, y: geometry.size.height / 2)
+                .gesture(
+                    DragGesture()
+                        .onChanged { value in
+                            var newPos = value.location.x / geometry.size.width
+                            newPos = min(max(newPos, 0), 1)
+                            playbackPosition = newPos
+                            onDrag(newPos)
+                        }
+                )
+        }
+    }
+}
+
+struct Waveform: View {
     let fileURL: URL
     @State private var samples: [Float] = []
     private let verticalScale: CGFloat = 1.0
@@ -374,7 +576,7 @@ struct WaveformView: View {
     }
 }
 
-struct OscilloscopeView: View {
+struct Oscilloscope: View {
     let fileURL: URL
     @Binding var playbackPosition: CGFloat
     @State private var samples: [Float] = []
@@ -396,8 +598,10 @@ struct OscilloscopeView: View {
                         path.addLine(to: CGPoint(x: rect.maxX, y: midY + offset))
                     }
                 }
-                .stroke(Color.white.opacity(0.4),
-                        style: StrokeStyle(lineWidth: 0.5, dash: [5, 5]))
+                .stroke(
+                    Color.white.opacity(0.4),
+                    style: StrokeStyle(lineWidth: 0.5, dash: [5, 5])
+                )
                 
                 if !samples.isEmpty {
                     Path { path in
@@ -461,8 +665,7 @@ struct OscilloscopeView: View {
             AVLinearPCMBitDepthKey: 32
         ]
         
-        let trackOutput = AVAssetReaderTrackOutput(track: assetTrack,
-                                                   outputSettings: outputSettings)
+        let trackOutput = AVAssetReaderTrackOutput(track: assetTrack, outputSettings: outputSettings)
         assetReader.add(trackOutput)
         assetReader.startReading()
         
@@ -474,10 +677,12 @@ struct OscilloscopeView: View {
                 var data = Data(count: length)
                 data.withUnsafeMutableBytes { (bytes: UnsafeMutableRawBufferPointer) in
                     if let baseAddress = bytes.baseAddress {
-                        CMBlockBufferCopyDataBytes(blockBuffer,
-                                                   atOffset: 0,
-                                                   dataLength: length,
-                                                   destination: baseAddress)
+                        CMBlockBufferCopyDataBytes(
+                            blockBuffer,
+                            atOffset: 0,
+                            dataLength: length,
+                            destination: baseAddress
+                        )
                     }
                 }
                 
@@ -498,27 +703,291 @@ struct OscilloscopeView: View {
     }
 }
 
-struct AudioTrackBar: View {
+struct FrequencyBars: View {
+    let fileURL: URL
     @Binding var playbackPosition: CGFloat
-    var onDrag: (CGFloat) -> Void
+    
+    private let binCount: Int = 64
+    private let windowSampleCount: Int = 1024
+    @State private var smoothedMagnitudes: [CGFloat] = []
+    @State private var samples: [Float] = []
+    private let smoothingFactor: CGFloat = 0.25
     
     var body: some View {
         GeometryReader { geometry in
-            let barX = playbackPosition * geometry.size.width
-            Rectangle()
-                .fill(Color(hex: 0x00FFD7))
-                .frame(width: 2)
-                .hoverEffect(cursor: .openHand)
-                .position(x: barX, y: geometry.size.height / 2)
-                .gesture(
-                    DragGesture()
-                        .onChanged { value in
-                            var newPos = value.location.x / geometry.size.width
-                            newPos = min(max(newPos, 0), 1)
-                            playbackPosition = newPos
-                            onDrag(newPos)
+            ZStack {
+                if samples.isEmpty {
+                    HStack {
+                        Spacer()
+                        VStack {
+                            Spacer()
+                            ProgressView()
+                            Spacer()
                         }
-                )
+                        Spacer()
+                    }
+                } else {
+                    Canvas { context, size in
+                        let topPadding: CGFloat = 10
+                        let availableHeight = size.height - topPadding
+                        
+                        let maxVal = smoothedMagnitudes.max() ?? 1
+                        let binWidth = size.width / CGFloat(binCount)
+                        
+                        for (i, mag) in smoothedMagnitudes.enumerated() {
+                            let normalized = mag / maxVal
+                            let barHeight = normalized * availableHeight
+                            
+                            let xPos = CGFloat(i) * binWidth + binWidth / 2
+                            let yBot = size.height
+                            let yTop = size.height - barHeight
+                            
+                            let gradient = Gradient(colors: [
+                                Color(hex: 0x0080FF).opacity(1.0),
+                                Color(hex: 0x00FFD7).opacity(1.0)
+                            ])
+                            
+                            var linePath = Path()
+                            linePath.move(to: CGPoint(x: xPos, y: yBot))
+                            linePath.addLine(to: CGPoint(x: xPos, y: max(yTop, topPadding)))
+                            
+                            context.stroke(
+                                linePath,
+                                with: .linearGradient(
+                                    gradient,
+                                    startPoint: CGPoint(x: 0, y: size.height * 0.5),
+                                    endPoint: CGPoint(x: size.width, y: size.height * 0.5)
+                                ),
+                                style: StrokeStyle(lineWidth: binWidth * 0.7, lineCap: .round)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+        .onChange(of: playbackPosition) { _ in
+            updateMagnitudes()
+        }
+        .onAppear {
+            loadSamples()
+            smoothedMagnitudes = Array(repeating: 0, count: binCount)
+        }
+    }
+    
+    private func updateMagnitudes() {
+        guard !samples.isEmpty else { return }
+        
+        let totalCount = samples.count
+        let currentIndex = Int(CGFloat(totalCount) * playbackPosition)
+        let halfWindow = windowSampleCount / 2
+        let startIndex = max(0, currentIndex - halfWindow)
+        let endIndex = min(totalCount - 1, currentIndex + halfWindow)
+        let windowSamples = Array(samples[startIndex...endIndex])
+        
+        let chunkSize = max(1, windowSamples.count / binCount)
+        var rawMagnitudes = [CGFloat](repeating: 0, count: binCount)
+        
+        for bin in 0 ..< binCount {
+            let binStart = bin * chunkSize
+            let binEnd = min(binStart + chunkSize, windowSamples.count)
+            if binStart >= binEnd {
+                rawMagnitudes[bin] = 0
+                continue
+            }
+            var sum: Float = 0
+            for i in binStart ..< binEnd {
+                sum += fabsf(windowSamples[i])
+            }
+            let avg = sum / Float(binEnd - binStart)
+            rawMagnitudes[bin] = CGFloat(avg)
+        }
+        
+        if smoothedMagnitudes.count == binCount {
+            for i in 0..<binCount {
+                smoothedMagnitudes[i] =
+                    (1 - smoothingFactor) * smoothedMagnitudes[i] +
+                    smoothingFactor * rawMagnitudes[i]
+            }
+        }
+    }
+    
+    private func loadSamples() {
+        let asset = AVURLAsset(url: fileURL)
+        guard let assetTrack = asset.tracks(withMediaType: .audio).first else {
+            return
+        }
+        
+        let assetReader: AVAssetReader
+        do {
+            assetReader = try AVAssetReader(asset: asset)
+        } catch {
+            return
+        }
+        
+        let outputSettings: [String: Any] = [
+            AVFormatIDKey: kAudioFormatLinearPCM,
+            AVLinearPCMIsBigEndianKey: false,
+            AVLinearPCMIsFloatKey: true,
+            AVLinearPCMBitDepthKey: 32
+        ]
+        
+        let trackOutput = AVAssetReaderTrackOutput(track: assetTrack, outputSettings: outputSettings)
+        assetReader.add(trackOutput)
+        assetReader.startReading()
+        
+        var sampleData = [Float]()
+        
+        while let sampleBuffer = trackOutput.copyNextSampleBuffer() {
+            if let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) {
+                let length = CMBlockBufferGetDataLength(blockBuffer)
+                var data = Data(count: length)
+                data.withUnsafeMutableBytes { (bytes: UnsafeMutableRawBufferPointer) in
+                    if let baseAddress = bytes.baseAddress {
+                        CMBlockBufferCopyDataBytes(
+                            blockBuffer,
+                            atOffset: 0,
+                            dataLength: length,
+                            destination: baseAddress
+                        )
+                    }
+                }
+                
+                let sampleCount = length / MemoryLayout<Float>.size
+                data.withUnsafeBytes { (samplesPointer: UnsafeRawBufferPointer) in
+                    let floatBuffer = samplesPointer.bindMemory(to: Float.self)
+                    for i in 0 ..< sampleCount {
+                        sampleData.append(floatBuffer[i])
+                    }
+                }
+            }
+            CMSampleBufferInvalidate(sampleBuffer)
+        }
+        
+        DispatchQueue.main.async {
+            self.samples = sampleData
         }
     }
 }
+
+struct VolumeBar: View {
+    let fileURL: URL
+    @Binding var playbackPosition: CGFloat
+    
+    @State private var samples: [Float] = []
+    private let windowSampleCount: Int = 1024
+    private let totalBars = 20
+    
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                Canvas { context, size in
+                    let totalCount = samples.count
+                    let currentIndex = Int(CGFloat(totalCount) * playbackPosition)
+                    let halfWindow = windowSampleCount / 2
+                    let startIndex = max(0, currentIndex - halfWindow)
+                    let endIndex = min(totalCount - 1, currentIndex + halfWindow)
+                    let windowSamples = Array(samples[startIndex...endIndex])
+                    
+                    let rms = computeRMS(windowSamples)
+                    let normalized = min(rms * 4.0, 1.0)
+                    
+                    let activeBars = Int(CGFloat(totalBars) * CGFloat(normalized))
+                    let barHeight = size.height / CGFloat(totalBars)
+                    
+                    for i in 0..<totalBars {
+                        let yPos = size.height - barHeight * CGFloat(i+1)
+                        let rectBar = CGRect(
+                            x: 0,
+                            y: yPos,
+                            width: size.width,
+                            height: barHeight - 1
+                        )
+                        if i < activeBars {
+                            let ratio = Double(i) / Double(totalBars - 1)
+                            let hue = 160.0 + ratio * 20.0
+                            let barColor = Color(
+                                hue: hue / 360.0,
+                                saturation: 1.0,
+                                brightness: 1.0
+                            )
+                            context.fill(Path(rectBar), with: .color(barColor))
+                        } else {
+                            context.fill(Path(rectBar), with: .color(Color(hex: 0x444444)))
+                        }
+                    }
+                }
+            }
+        }
+        .onAppear {
+            loadSamples()
+        }
+    }
+    
+    private func computeRMS(_ array: [Float]) -> Float {
+        guard !array.isEmpty else { return 0 }
+        var sum: Float = 0
+        for val in array {
+            sum += val * val
+        }
+        let mean = sum / Float(array.count)
+        return sqrt(mean)
+    }
+    
+    private func loadSamples() {
+        let asset = AVURLAsset(url: fileURL)
+        guard let assetTrack = asset.tracks(withMediaType: .audio).first else {
+            return
+        }
+        
+        let assetReader: AVAssetReader
+        do {
+            assetReader = try AVAssetReader(asset: asset)
+        } catch {
+            return
+        }
+        
+        let outputSettings: [String: Any] = [
+            AVFormatIDKey: kAudioFormatLinearPCM,
+            AVLinearPCMIsBigEndianKey: false,
+            AVLinearPCMIsFloatKey: true,
+            AVLinearPCMBitDepthKey: 32
+        ]
+        
+        let trackOutput = AVAssetReaderTrackOutput(track: assetTrack, outputSettings: outputSettings)
+        assetReader.add(trackOutput)
+        assetReader.startReading()
+        
+        var sampleData = [Float]()
+        
+        while let sampleBuffer = trackOutput.copyNextSampleBuffer() {
+            if let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) {
+                let length = CMBlockBufferGetDataLength(blockBuffer)
+                var data = Data(count: length)
+                data.withUnsafeMutableBytes { (bytes: UnsafeMutableRawBufferPointer) in
+                    if let baseAddress = bytes.baseAddress {
+                        CMBlockBufferCopyDataBytes(
+                            blockBuffer,
+                            atOffset: 0,
+                            dataLength: length,
+                            destination: baseAddress
+                        )
+                    }
+                }
+                
+                let sampleCount = length / MemoryLayout<Float>.size
+                data.withUnsafeBytes { (samplesPointer: UnsafeRawBufferPointer) in
+                    let floatBuffer = samplesPointer.bindMemory(to: Float.self)
+                    for i in 0 ..< sampleCount {
+                        sampleData.append(floatBuffer[i])
+                    }
+                }
+            }
+            CMSampleBufferInvalidate(sampleBuffer)
+        }
+        
+        DispatchQueue.main.async {
+            self.samples = sampleData
+        }
+    }
+}
+
