@@ -123,7 +123,7 @@ struct AudioView: View {
                             HStack {
                                 Waveform(fileURL: fileURL)
                             }
-                            .frame(width: geometry.size.width, height: geometry.size.height * 0.25)
+                            .frame(width: geometry.size.width, height: (geometry.size.height - 60) * 0.25)
                             .containerHelper(
                                 backgroundColor: Color(hex: 0x00FFD7).opacity(0.1),
                                 borderColor: .clear,
@@ -151,10 +151,10 @@ struct AudioView: View {
                                 })
                             )
                             
-                            HStack {
+                            HStack(spacing: 0) {
                                 Oscilloscope(fileURL: fileURL, playbackPosition: $playbackPosition)
                             }
-                            .frame(width: geometry.size.width, height: geometry.size.height * 0.2)
+                            .frame(width: geometry.size.width, height: (geometry.size.height - 60) * 0.25)
                             .containerHelper(
                                 backgroundColor: Color(hex: 0x212121),
                                 borderColor: .clear,
@@ -175,16 +175,19 @@ struct AudioView: View {
                                 alignment: .bottom
                             )
                             
-                            HStack {
+                            HStack(spacing: 0) {
                                 HStack {
                                     FrequencyBars(fileURL: fileURL, playbackPosition: $playbackPosition)
                                 }
-                                .frame(width: geometry.size.width * 0.9, height: geometry.size.height * 0.2)
+                                .frame(width: geometry.size.width * 0.9, height: (geometry.size.height - 60) * 0.25)
                                 
                                 HStack {
+                                    Spacer()
                                     VolumeBar(fileURL: fileURL, playbackPosition: $playbackPosition)
+                                        .frame(width: geometry.size.width * 0.05, height: (geometry.size.height - 60) * 0.15)
+                                    Spacer()
                                 }
-                                .frame(width: geometry.size.width * 0.1, height: geometry.size.height * 0.2)
+                                .frame(width: geometry.size.width * 0.1, height: (geometry.size.height - 60) * 0.25)
                                 .overlay(
                                     Rectangle()
                                         .frame(width: 1.0)
@@ -193,7 +196,7 @@ struct AudioView: View {
                                 )
                                 
                             }
-                            .frame(width: geometry.size.width, height: geometry.size.height * 0.2)
+                            .frame(width: geometry.size.width, height: (geometry.size.height - 60) * 0.25)
                             .containerHelper(
                                 backgroundColor: Color(hex: 0x212121),
                                 borderColor: .clear,
@@ -214,10 +217,62 @@ struct AudioView: View {
                                 alignment: .bottom
                             )
                             
-                            Spacer()
+                            HStack(spacing: 0) {
+                                HStack {
+                                    PhaseScopeView(fileURL: fileURL, playbackPosition: $playbackPosition)
+                                }
+                                .frame(width: geometry.size.width * 0.8, height:  (geometry.size.height - 60) * 0.25)
+                                
+                                HStack(alignment: .center) {
+                                    Spacer()
+                                    StereoLeftChannelView(fileURL: fileURL, playbackPosition: $playbackPosition)
+                                        .frame(width: geometry.size.width * 0.05, height: (geometry.size.height - 60) * 0.15)
+                                    Spacer()
+                                }
+                                .frame(width: geometry.size.width * 0.1, height:  (geometry.size.height - 60) * 0.25)
+                                .overlay(
+                                    Rectangle()
+                                        .frame(width: 1.0)
+                                        .foregroundColor(Color(hex: 0x414141).opacity(0.8)),
+                                    alignment: .leading
+                                )
+                                
+                                HStack {
+                                    Spacer()
+                                    StereoRightChannelView(fileURL: fileURL, playbackPosition: $playbackPosition)
+                                        .frame(width: geometry.size.width * 0.05, height: (geometry.size.height - 60) * 0.15)
+                                    Spacer()
+                                }
+                                .frame(width: geometry.size.width * 0.1, height: (geometry.size.height - 60) * 0.25)
+                                .overlay(
+                                    Rectangle()
+                                        .frame(width: 1.0)
+                                        .foregroundColor(Color(hex: 0x414141).opacity(0.8)),
+                                    alignment: .leading
+                                )
+                            }
+                            .frame(width: geometry.size.width, height: (geometry.size.height - 60) * 0.25)
+                            .containerHelper(
+                                backgroundColor: Color(hex: 0x212121),
+                                borderColor: .clear,
+                                borderWidth: 0,
+                                topLeft: 0,
+                                topRight: 0,
+                                bottomLeft: 0,
+                                bottomRight: 0,
+                                shadowColor: .clear,
+                                shadowRadius: 0,
+                                shadowX: 0,
+                                shadowY: 0
+                            )
+                            .overlay(
+                                Rectangle()
+                                    .frame(height: 1.0)
+                                    .foregroundColor(Color(hex: 0x414141).opacity(0.8)),
+                                alignment: .bottom
+                            )
                         }
                         .frame(width: geometry.size.width)
-                        .frame(minHeight: geometry.size.height - 60, maxHeight: geometry.size.height - 60)
                         .containerHelper(
                             backgroundColor: Color(hex: 0x242424),
                             borderColor: .clear,
@@ -397,7 +452,6 @@ struct AudioView: View {
                 }
             }
             .frame(width: geometry.size.width * (1 - leftPanelWidthRatio))
-            .frame(maxHeight: .infinity)
             .containerHelper(
                 backgroundColor: Color(hex: 0x242424),
                 borderColor: .clear,
@@ -612,7 +666,9 @@ struct Oscilloscope: View {
                         let halfWindow = windowSampleCount / 2
                         let startIndex = max(0, currentIndex - halfWindow)
                         let endIndex = min(totalSamples - 1, currentIndex + halfWindow)
-                        let windowSamples = Array(samples[startIndex...endIndex])
+                        let windowSamples = startIndex <= endIndex
+                            ? Array(samples[startIndex...endIndex])
+                            : []
                         
                         let pixelCount = Int(rectWidth)
                         guard pixelCount > 0 else { return }
@@ -623,7 +679,7 @@ struct Oscilloscope: View {
                         for x in 0 ..< pixelCount {
                             let ratio = CGFloat(x) / CGFloat(pixelCount - 1)
                             let sampleIndex = Int(ratio * CGFloat(windowSamples.count - 1))
-                            let sample = windowSamples[sampleIndex]
+                            let sample = windowSamples.isEmpty ? 0 : windowSamples[sampleIndex]
                             
                             let rawY = midY - CGFloat(sample) * (midY * verticalScale)
                             
@@ -782,7 +838,12 @@ struct FrequencyBars: View {
         let halfWindow = windowSampleCount / 2
         let startIndex = max(0, currentIndex - halfWindow)
         let endIndex = min(totalCount - 1, currentIndex + halfWindow)
-        let windowSamples = Array(samples[startIndex...endIndex])
+        let windowSamples: [Float]
+        if startIndex <= endIndex {
+            windowSamples = Array(samples[startIndex...endIndex])
+        } else {
+            windowSamples = []
+        }
         
         let chunkSize = max(1, windowSamples.count / binCount)
         var rawMagnitudes = [CGFloat](repeating: 0, count: binCount)
@@ -886,7 +947,12 @@ struct VolumeBar: View {
                     let halfWindow = windowSampleCount / 2
                     let startIndex = max(0, currentIndex - halfWindow)
                     let endIndex = min(totalCount - 1, currentIndex + halfWindow)
-                    let windowSamples = Array(samples[startIndex...endIndex])
+                    let windowSamples: [Float]
+                    if startIndex <= endIndex {
+                        windowSamples = Array(samples[startIndex...endIndex])
+                    } else {
+                        windowSamples = []
+                    }
                     
                     let rms = computeRMS(windowSamples)
                     let normalized = min(rms * 4.0, 1.0)
@@ -987,6 +1053,373 @@ struct VolumeBar: View {
         
         DispatchQueue.main.async {
             self.samples = sampleData
+        }
+    }
+}
+
+struct PhaseScopeView: View {
+    let fileURL: URL
+    @Binding var playbackPosition: CGFloat
+    
+    @State private var leftSamples: [Float] = []
+    @State private var rightSamples: [Float] = []
+    private let windowSampleCount: Int = 1024
+    
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                Path { path in
+                    let rect = geometry.frame(in: .local)
+                    path.move(to: CGPoint(x: rect.midX, y: rect.minY))
+                    path.addLine(to: CGPoint(x: rect.midX, y: rect.maxY))
+                    path.move(to: CGPoint(x: rect.minX, y: rect.midY))
+                    path.addLine(to: CGPoint(x: rect.maxX, y: rect.midY))
+                }
+                .stroke(Color.gray.opacity(0.2), lineWidth: 1)
+                
+                Canvas { context, size in
+                    guard !leftSamples.isEmpty && !rightSamples.isEmpty else { return }
+                    
+                    let totalLeft = leftSamples.count
+                    let totalRight = rightSamples.count
+                    let totalCount = min(totalLeft, totalRight)
+                    
+                    let currentIndex = Int(CGFloat(totalCount) * playbackPosition)
+                    let halfWindow = windowSampleCount / 2
+                    let startIndex = max(0, currentIndex - halfWindow)
+                    let endIndex = min(totalCount - 1, currentIndex + halfWindow)
+                    
+                    let windowLeft = startIndex <= endIndex ? Array(leftSamples[startIndex...endIndex]) : []
+                    let windowRight = startIndex <= endIndex ? Array(rightSamples[startIndex...endIndex]) : []
+                    
+                    let centerX = size.width / 2
+                    let centerY = size.height / 2
+                    let halfWidth = size.width / 2
+                    let halfHeight = size.height / 2
+                    
+                    for i in stride(from: 0, to: windowLeft.count, by: 4) {
+                        let xVal = CGFloat(windowLeft[i])
+                        let yVal = CGFloat(windowRight[i])
+                        
+                        var xPos = centerX + xVal * halfWidth
+                        var yPos = centerY + yVal * halfHeight
+                        
+                        xPos = max(0, min(xPos, size.width))
+                        yPos = max(0, min(yPos, size.height))
+                        
+                        let rectDot = CGRect(x: xPos, y: yPos, width: 2, height: 2)
+                        context.fill(Path(rectDot), with: .color(Color(hex: 0x00FFD7).opacity(0.7)))
+                    }
+                }
+            }
+            .clipped()
+        }
+        .onAppear {
+            loadSamples()
+        }
+    }
+    
+    private func loadSamples() {
+        let asset = AVURLAsset(url: fileURL)
+        guard let assetTrack = asset.tracks(withMediaType: .audio).first else {
+            return
+        }
+        
+        let assetReader: AVAssetReader
+        do {
+            assetReader = try AVAssetReader(asset: asset)
+        } catch {
+            return
+        }
+        
+        let outputSettings: [String: Any] = [
+            AVFormatIDKey: kAudioFormatLinearPCM,
+            AVLinearPCMIsBigEndianKey: false,
+            AVLinearPCMIsFloatKey: true,
+            AVLinearPCMBitDepthKey: 32
+        ]
+        
+        let trackOutput = AVAssetReaderTrackOutput(track: assetTrack, outputSettings: outputSettings)
+        assetReader.add(trackOutput)
+        assetReader.startReading()
+        
+        var leftData = [Float]()
+        var rightData = [Float]()
+        
+        while let sampleBuffer = trackOutput.copyNextSampleBuffer() {
+            if let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) {
+                let length = CMBlockBufferGetDataLength(blockBuffer)
+                var data = Data(count: length)
+                data.withUnsafeMutableBytes { (bytes: UnsafeMutableRawBufferPointer) in
+                    if let baseAddress = bytes.baseAddress {
+                        CMBlockBufferCopyDataBytes(
+                            blockBuffer,
+                            atOffset: 0,
+                            dataLength: length,
+                            destination: baseAddress
+                        )
+                    }
+                }
+                
+                let sampleCount = length / MemoryLayout<Float>.size
+                data.withUnsafeBytes { (samplesPointer: UnsafeRawBufferPointer) in
+                    let floatBuffer = samplesPointer.bindMemory(to: Float.self)
+                    for i in stride(from: 0, to: sampleCount, by: 2) {
+                        leftData.append(floatBuffer[i])
+                        if i + 1 < sampleCount {
+                            rightData.append(floatBuffer[i+1])
+                        }
+                    }
+                }
+            }
+            CMSampleBufferInvalidate(sampleBuffer)
+        }
+        
+        DispatchQueue.main.async {
+            self.leftSamples = leftData
+            self.rightSamples = rightData
+        }
+    }
+}
+
+struct StereoLeftChannelView: View {
+    let fileURL: URL
+    @Binding var playbackPosition: CGFloat
+    
+    @State private var leftSamples: [Float] = []
+    private let windowSampleCount: Int = 1024
+    private let totalBars = 20
+    
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                Canvas { context, size in
+                    let totalCount = leftSamples.count
+                    let currentIndex = Int(CGFloat(totalCount) * playbackPosition)
+                    let halfWindow = windowSampleCount / 2
+                    let startIndex = max(0, currentIndex - halfWindow)
+                    let endIndex = min(totalCount - 1, currentIndex + halfWindow)
+                    let windowData: [Float]
+                    if startIndex <= endIndex {
+                        windowData = Array(leftSamples[startIndex...endIndex])
+                    } else {
+                        windowData = []
+                    }
+                    
+                    let rmsLeft = computeRMS(windowData)
+                    let normalized = min(rmsLeft * 4.0, 1.0)
+                    
+                    let activeBarsLeft = Int(CGFloat(totalBars) * CGFloat(normalized))
+                    let barHeight = size.height / CGFloat(totalBars)
+                    
+                    for i in 0..<totalBars {
+                        let yPos = size.height - barHeight * CGFloat(i + 1)
+                        let rectBar = CGRect(x: 0, y: yPos, width: size.width, height: barHeight - 1)
+                        if i < activeBarsLeft {
+                            let ratio = Double(i) / Double(totalBars - 1)
+                            let hue = 150.0 + ratio * 20.0
+                            let barColor = Color(
+                                hue: hue / 360.0,
+                                saturation: 1.0,
+                                brightness: 1.0
+                            )
+                            context.fill(Path(rectBar), with: .color(barColor))
+                        } else {
+                            context.fill(Path(rectBar), with: .color(Color(hex: 0x444444)))
+                        }
+                    }
+                }
+            }
+        }
+        .onAppear {
+            loadLeftSamples()
+        }
+    }
+    
+    private func computeRMS(_ array: [Float]) -> Float {
+        guard !array.isEmpty else { return 0 }
+        var sum: Float = 0
+        for val in array {
+            sum += val * val
+        }
+        let mean = sum / Float(array.count)
+        return sqrt(mean)
+    }
+    
+    private func loadLeftSamples() {
+        let asset = AVURLAsset(url: fileURL)
+        guard let assetTrack = asset.tracks(withMediaType: .audio).first else {
+            return
+        }
+        
+        let assetReader: AVAssetReader
+        do {
+            assetReader = try AVAssetReader(asset: asset)
+        } catch {
+            return
+        }
+        
+        let outputSettings: [String: Any] = [
+            AVFormatIDKey: kAudioFormatLinearPCM,
+            AVLinearPCMIsBigEndianKey: false,
+            AVLinearPCMIsFloatKey: true,
+            AVLinearPCMBitDepthKey: 32
+        ]
+        
+        let trackOutput = AVAssetReaderTrackOutput(track: assetTrack, outputSettings: outputSettings)
+        assetReader.add(trackOutput)
+        assetReader.startReading()
+        
+        var tempLeft = [Float]()
+        
+        while let sampleBuffer = trackOutput.copyNextSampleBuffer() {
+            if let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) {
+                let length = CMBlockBufferGetDataLength(blockBuffer)
+                var data = Data(count: length)
+                data.withUnsafeMutableBytes { (bytes: UnsafeMutableRawBufferPointer) in
+                    if let baseAddress = bytes.baseAddress {
+                        CMBlockBufferCopyDataBytes(
+                            blockBuffer,
+                            atOffset: 0,
+                            dataLength: length,
+                            destination: baseAddress
+                        )
+                    }
+                }
+                let sampleCount = length / MemoryLayout<Float>.size
+                data.withUnsafeBytes { (samplesPointer: UnsafeRawBufferPointer) in
+                    let floatBuffer = samplesPointer.bindMemory(to: Float.self)
+                    for i in stride(from: 0, to: sampleCount, by: 2) {
+                        tempLeft.append(floatBuffer[i])
+                    }
+                }
+            }
+            CMSampleBufferInvalidate(sampleBuffer)
+        }
+        
+        DispatchQueue.main.async {
+            self.leftSamples = tempLeft
+        }
+    }
+}
+
+struct StereoRightChannelView: View {
+    let fileURL: URL
+    @Binding var playbackPosition: CGFloat
+    
+    @State private var rightSamples: [Float] = []
+    private let windowSampleCount: Int = 1024
+    private let totalBars = 20
+    
+    var body: some View {
+        GeometryReader { geometry in
+            ZStack {
+                Canvas { context, size in
+                    let totalCount = rightSamples.count
+                    let currentIndex = Int(CGFloat(totalCount) * playbackPosition)
+                    let halfWindow = windowSampleCount / 2
+                    let startIndex = max(0, currentIndex - halfWindow)
+                    let endIndex = min(totalCount - 1, currentIndex + halfWindow)
+                    let windowData: [Float]
+                    if startIndex <= endIndex {
+                        windowData = Array(rightSamples[startIndex...endIndex])
+                    } else {
+                        windowData = []
+                    }
+                    
+                    let rmsRight = computeRMS(windowData)
+                    let normalized = min(rmsRight * 4.0, 1.0)
+                    
+                    let activeBarsRight = Int(CGFloat(totalBars) * CGFloat(normalized))
+                    let barHeight = size.height / CGFloat(totalBars)
+                    
+                    for i in 0..<totalBars {
+                        let yPos = size.height - barHeight * CGFloat(i + 1)
+                        let rectBar = CGRect(x: 0, y: yPos, width: size.width, height: barHeight - 1)
+                        if i < activeBarsRight {
+                            let ratio = Double(i) / Double(totalBars - 1)
+                            let hue = 170.0 + ratio * 20.0
+                            let barColor = Color(
+                                hue: hue / 360.0,
+                                saturation: 1.0,
+                                brightness: 1.0
+                            )
+                            context.fill(Path(rectBar), with: .color(barColor))
+                        } else {
+                            context.fill(Path(rectBar), with: .color(Color(hex: 0x444444)))
+                        }
+                    }
+                }
+            }
+        }
+        .onAppear {
+            loadRightSamples()
+        }
+    }
+    
+    private func computeRMS(_ array: [Float]) -> Float {
+        guard !array.isEmpty else { return 0 }
+        var sum: Float = 0
+        for val in array {
+            sum += val * val
+        }
+        let mean = sum / Float(array.count)
+        return sqrt(mean)
+    }
+    
+    private func loadRightSamples() {
+        let asset = AVURLAsset(url: fileURL)
+        guard let assetTrack = asset.tracks(withMediaType: .audio).first else {
+            return
+        }
+        
+        let assetReader: AVAssetReader
+        do {
+            assetReader = try AVAssetReader(asset: asset)
+        } catch {
+            return
+        }
+        
+        let outputSettings: [String: Any] = [
+            AVFormatIDKey: kAudioFormatLinearPCM,
+            AVLinearPCMIsBigEndianKey: false,
+            AVLinearPCMIsFloatKey: true,
+            AVLinearPCMBitDepthKey: 32
+        ]
+        
+        let trackOutput = AVAssetReaderTrackOutput(track: assetTrack, outputSettings: outputSettings)
+        assetReader.add(trackOutput)
+        assetReader.startReading()
+        
+        var tempRight = [Float]()
+        
+        while let sampleBuffer = trackOutput.copyNextSampleBuffer() {
+            if let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) {
+                let length = CMBlockBufferGetDataLength(blockBuffer)
+                var data = Data(count: length)
+                data.withUnsafeMutableBytes { (bytes: UnsafeMutableRawBufferPointer) in
+                    if let baseAddress = bytes.baseAddress {
+                        CMBlockBufferCopyDataBytes(
+                            blockBuffer,
+                            atOffset: 0,
+                            dataLength: length,
+                            destination: baseAddress
+                        )
+                    }
+                }
+                let sampleCount = length / MemoryLayout<Float>.size
+                data.withUnsafeBytes { (samplesPointer: UnsafeRawBufferPointer) in
+                    let floatBuffer = samplesPointer.bindMemory(to: Float.self)
+                    for i in stride(from: 1, to: sampleCount, by: 2) {
+                        tempRight.append(floatBuffer[i])
+                    }
+                }
+            }
+            CMSampleBufferInvalidate(sampleBuffer)
+        }
+        
+        DispatchQueue.main.async {
+            self.rightSamples = tempRight
         }
     }
 }
