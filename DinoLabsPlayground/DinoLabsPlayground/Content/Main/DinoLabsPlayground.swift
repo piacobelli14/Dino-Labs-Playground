@@ -338,15 +338,14 @@ struct DinoLabsPlayground: View {
     @Binding var currentView: AppView
     @Binding var authenticatedUsername: String
     @Binding var authenticatedOrgID: String
-    @Binding var openTabs: [FileTab]
-    @Binding var activeTabId: UUID?
     @Binding var directoryURL: URL? {
         didSet {
             DinoLabsPlayground.loadedRootURL = directoryURL
         }
     }
     @Binding var displayedChildren: [FileItem]
-    
+    @State private var openTabs: [FileTab] = []
+    @State private var activeTabId: UUID? 
     @State private var hasUnsavedChanges: Bool = false
     @State private var dataDragOverError: Bool = false
     @State private var leftPanelWidthRatio: CGFloat = 0.25
@@ -461,13 +460,11 @@ struct DinoLabsPlayground: View {
         if ext == "csv" {
             if let existingTab = openTabs.first(where: { $0.fileURL == url }) {
                 activeTabId = existingTab.id
-                SessionStateManager.shared.updateActiveTab(id: existingTab.id)
                 noFileSelected = false
             } else {
                 let newTab = FileTab(fileName: url.lastPathComponent, fileURL: url)
                 openTabs.append(newTab)
                 activeTabId = newTab.id
-                SessionStateManager.shared.updateActiveTab(id: newTab.id)
                 noFileSelected = false
             }
             return
@@ -475,13 +472,11 @@ struct DinoLabsPlayground: View {
         else if ["txt", "md"].contains(ext) {
             if let existingTab = openTabs.first(where: { $0.fileURL == url }) {
                 activeTabId = existingTab.id
-                SessionStateManager.shared.updateActiveTab(id: existingTab.id)
                 noFileSelected = false
             } else {
                 let newTab = FileTab(fileName: url.lastPathComponent, fileURL: url)
                 openTabs.append(newTab)
                 activeTabId = newTab.id
-                SessionStateManager.shared.updateActiveTab(id: newTab.id)
                 noFileSelected = false
             }
             return
@@ -489,13 +484,11 @@ struct DinoLabsPlayground: View {
         else if ["png", "jpg", "jpeg", "svg"].contains(ext) {
             if let existingTab = openTabs.first(where: { $0.fileURL == url }) {
                 activeTabId = existingTab.id
-                SessionStateManager.shared.updateActiveTab(id: existingTab.id)
                 noFileSelected = false
             } else {
                 let newTab = FileTab(fileName: url.lastPathComponent, fileURL: url)
                 openTabs.append(newTab)
                 activeTabId = newTab.id
-                SessionStateManager.shared.updateActiveTab(id: newTab.id)
                 noFileSelected = false
             }
             return
@@ -503,13 +496,11 @@ struct DinoLabsPlayground: View {
         else if ["mp4", "mkv", "avi", "mov", "webm"].contains(ext) {
             if let existingTab = openTabs.first(where: { $0.fileURL == url }) {
                 activeTabId = existingTab.id
-                SessionStateManager.shared.updateActiveTab(id: existingTab.id)
                 noFileSelected = false
             } else {
                 let newTab = FileTab(fileName: url.lastPathComponent, fileURL: url)
                 openTabs.append(newTab)
                 activeTabId = newTab.id
-                SessionStateManager.shared.updateActiveTab(id: newTab.id)
                 noFileSelected = false
             }
             return
@@ -517,13 +508,11 @@ struct DinoLabsPlayground: View {
         else if ["mp3", "wav", "flac"].contains(ext) {
             if let existingTab = openTabs.first(where: { $0.fileURL == url }) {
                 activeTabId = existingTab.id
-                SessionStateManager.shared.updateActiveTab(id: existingTab.id)
                 noFileSelected = false
             } else {
                 let newTab = FileTab(fileName: url.lastPathComponent, fileURL: url)
                 openTabs.append(newTab)
                 activeTabId = newTab.id
-                SessionStateManager.shared.updateActiveTab(id: newTab.id)
                 noFileSelected = false
             }
             return
@@ -539,7 +528,6 @@ struct DinoLabsPlayground: View {
         
         if let existingTab = openTabs.first(where: { $0.fileURL == url }) {
             activeTabId = existingTab.id
-            SessionStateManager.shared.updateActiveTab(id: existingTab.id)
             noFileSelected = false
             if let lineNumber = lineNumber {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
@@ -554,7 +542,6 @@ struct DinoLabsPlayground: View {
             let newTab = FileTab(fileName: url.lastPathComponent, fileURL: url)
             openTabs.append(newTab)
             activeTabId = newTab.id
-            SessionStateManager.shared.updateActiveTab(id: newTab.id)
             noFileSelected = false
             if let lineNumber = lineNumber {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
@@ -580,11 +567,9 @@ struct DinoLabsPlayground: View {
                 
                 if openTabs.isEmpty {
                     activeTabId = nil
-                    SessionStateManager.shared.updateActiveTab(id: nil)
                     noFileSelected = true
                 } else {
                     activeTabId = openTabs.last?.id
-                    SessionStateManager.shared.updateActiveTab(id: openTabs.last?.id)
                     noFileSelected = false
                 }
             }
@@ -593,11 +578,9 @@ struct DinoLabsPlayground: View {
             openTabs.removeAll { $0.id == tab.id }
             if openTabs.isEmpty {
                 activeTabId = nil
-                SessionStateManager.shared.updateActiveTab(id: nil)
                 noFileSelected = true
             } else {
                 activeTabId = openTabs.last?.id
-                SessionStateManager.shared.updateActiveTab(id: openTabs.last?.id)
                 noFileSelected = false
             }
         }
@@ -1648,6 +1631,64 @@ struct DinoLabsPlayground: View {
                                     .foregroundColor(Color(hex: 0xc1c1c1).opacity(0.4)),
                                 alignment: .bottom
                             )
+                            .contextMenu {
+                                if let root = fileItems.first {
+                                    Button("Add File") {
+                                        addFile(to: root)
+                                    }
+                                    Button("Add Folder") {
+                                        addFolder(to: root)
+                                    }
+                                    Button("Delete") {
+                                        deleteItem(root)
+                                    }
+                                    Divider()
+                                    Button("Cut") {
+                                        cutItem(root)
+                                    }
+                                    .disabled(true)
+                                    Button("Copy") {
+                                        copyItem(root)
+                                    }
+                                    .disabled(true)
+                                    Button("Paste") {
+                                        pasteItem(root)
+                                    }
+                                    .disabled(clipboardItem == nil || !root.isDirectory)
+                                    Button("Rename") {
+                                        renameItem(root)
+                                    }
+                                    .disabled(true)
+                                    Button("Reveal in Finder") {
+                                        revealInFinder(root)
+                                    }
+                                    .disabled(true)
+                                    Divider()
+                                    Button("Copy Relative Path") {
+                                        let relative = relativePath(itemURL: root.url)
+                                        NSPasteboard.general.clearContents()
+                                        NSPasteboard.general.setString(relative, forType: .string)
+                                    }
+                                    Button("Copy Full Path") {
+                                        NSPasteboard.general.clearContents()
+                                        NSPasteboard.general.setString(root.url.path, forType: .string)
+                                    }
+                                } else {
+                                    Button("Add File") {}.disabled(true)
+                                    Button("Add Folder") {}.disabled(true)
+                                    Button("Delete") {}.disabled(true)
+                                    Divider()
+                                    Button("Cut") {}.disabled(true)
+                                    Button("Copy") {}.disabled(true)
+                                    Button("Paste") {}.disabled(true)
+                                    Button("Rename") {}.disabled(true)
+                                    Button("Reveal in Finder") {}.disabled(true)
+                                    Divider()
+                                    Button("Copy Relative Path") {}.disabled(true)
+                                    Button("Copy Full Path") {}.disabled(true)
+                                }
+                            }
+                            
                             HStack {
                                 HStack {
                                     MainButtonMain {
@@ -1689,63 +1730,8 @@ struct DinoLabsPlayground: View {
                                 alignment: .bottom
                             )
                         }
-                        .contextMenu {
-                            if let root = fileItems.first {
-                                Button("Add File") {
-                                    addFile(to: root)
-                                }
-                                Button("Add Folder") {
-                                    addFolder(to: root)
-                                }
-                                Button("Delete") {
-                                    deleteItem(root)
-                                }
-                                Divider()
-                                Button("Cut") {
-                                    cutItem(root)
-                                }
-                                .disabled(true)
-                                Button("Copy") {
-                                    copyItem(root)
-                                }
-                                .disabled(true)
-                                Button("Paste") {
-                                    pasteItem(root)
-                                }
-                                .disabled(clipboardItem == nil || !root.isDirectory)
-                                Button("Rename") {
-                                    renameItem(root)
-                                }
-                                .disabled(true)
-                                Button("Reveal in Finder") {
-                                    revealInFinder(root)
-                                }
-                                .disabled(true)
-                                Divider()
-                                Button("Copy Relative Path") {
-                                    let relative = relativePath(itemURL: root.url)
-                                    NSPasteboard.general.clearContents()
-                                    NSPasteboard.general.setString(relative, forType: .string)
-                                }
-                                Button("Copy Full Path") {
-                                    NSPasteboard.general.clearContents()
-                                    NSPasteboard.general.setString(root.url.path, forType: .string)
-                                }
-                            } else {
-                                Button("Add File") {}.disabled(true)
-                                Button("Add Folder") {}.disabled(true)
-                                Button("Delete") {}.disabled(true)
-                                Divider()
-                                Button("Cut") {}.disabled(true)
-                                Button("Copy") {}.disabled(true)
-                                Button("Paste") {}.disabled(true)
-                                Button("Rename") {}.disabled(true)
-                                Button("Reveal in Finder") {}.disabled(true)
-                                Divider()
-                                Button("Copy Relative Path") {}.disabled(true)
-                                Button("Copy Full Path") {}.disabled(true)
-                            }
-                        }
+                        
+                        
                         Rectangle()
                             .foregroundColor(Color(hex: 0xc1c1c1).opacity(0.1))
                             .frame(width: 2)
@@ -1758,6 +1744,7 @@ struct DinoLabsPlayground: View {
                             )
                             .hoverEffect(opacity: 0.5, cursor: .resizeLeftRight)
                             .clickEffect(opacity: 1.0, cursor: .resizeLeftRight)
+                        
                         VStack(spacing: 0) {
                             ScrollView(.horizontal, showsIndicators: false) {
                                 HStack(spacing: 0) {
@@ -1854,7 +1841,6 @@ struct DinoLabsPlayground: View {
                                                 )
                                                 .onTapGesture {
                                                     activeTabId = tab.id
-                                                    SessionStateManager.shared.updateActiveTab(id: tab.id)
                                                     noFileSelected = false
                                                 }
                                                 .onDrag {
@@ -1890,6 +1876,7 @@ struct DinoLabsPlayground: View {
                                     .foregroundColor(Color(hex: 0xc1c1c1).opacity(0.4)),
                                 alignment: .bottom
                             )
+                            
                             VStack {
                                 if isAccount {
                                     Spacer()
@@ -2291,63 +2278,7 @@ struct DinoLabsPlayground: View {
                                 alignment: .bottom
                             )
                         }
-                        .contextMenu {
-                            if let root = fileItems.first {
-                                Button("Add File") {
-                                    addFile(to: root)
-                                }
-                                Button("Add Folder") {
-                                    addFolder(to: root)
-                                }
-                                Button("Delete") {
-                                    deleteItem(root)
-                                }
-                                Divider()
-                                Button("Cut") {
-                                    cutItem(root)
-                                }
-                                .disabled(true)
-                                Button("Copy") {
-                                    copyItem(root)
-                                }
-                                .disabled(true)
-                                Button("Paste") {
-                                    pasteItem(root)
-                                }
-                                .disabled(clipboardItem == nil || !root.isDirectory)
-                                Button("Rename") {
-                                    renameItem(root)
-                                }
-                                .disabled(true)
-                                Button("Reveal in Finder") {
-                                    revealInFinder(root)
-                                }
-                                .disabled(true)
-                                Divider()
-                                Button("Copy Relative Path") {
-                                    let relative = relativePath(itemURL: root.url)
-                                    NSPasteboard.general.clearContents()
-                                    NSPasteboard.general.setString(relative, forType: .string)
-                                }
-                                Button("Copy Full Path") {
-                                    NSPasteboard.general.clearContents()
-                                    NSPasteboard.general.setString(root.url.path, forType: .string)
-                                }
-                            } else {
-                                Button("Add File") {}.disabled(true)
-                                Button("Add Folder") {}.disabled(true)
-                                Button("Delete") {}.disabled(true)
-                                Divider()
-                                Button("Cut") {}.disabled(true)
-                                Button("Copy") {}.disabled(true)
-                                Button("Paste") {}.disabled(true)
-                                Button("Rename") {}.disabled(true)
-                                Button("Reveal in Finder") {}.disabled(true)
-                                Divider()
-                                Button("Copy Relative Path") {}.disabled(true)
-                                Button("Copy Full Path") {}.disabled(true)
-                            }
-                        }
+                        
                         Rectangle()
                             .foregroundColor(Color(hex: 0xc1c1c1).opacity(0.1))
                             .frame(width: 2)
@@ -2390,9 +2321,7 @@ struct DinoLabsPlayground: View {
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.willTerminateNotification)) { _ in
-            let sessionData = SessionData(openTabs: openTabs,
-                                          activeTabId: activeTabId,
-                                          directoryURL: directoryURL,
+            let sessionData = SessionData(directoryURL: directoryURL,
                                           displayedChildren: displayedChildren)
             if let encodedData = try? JSONEncoder().encode(sessionData) {
                 UserDefaults.standard.set(encodedData, forKey: "sessionData")

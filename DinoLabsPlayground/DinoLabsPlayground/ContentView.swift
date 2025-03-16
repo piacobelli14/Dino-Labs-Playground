@@ -19,7 +19,9 @@ struct ContentView: View {
             Group {
                 switch currentView {
                 case .Loading:
-                    VStack {}
+                    VStack {
+                        Spacer()
+                    }
                 case .LoginAuth:
                     LoginAuth(currentView: $currentView,
                               authenticatedUsername: $authenticatedUsername,
@@ -36,8 +38,6 @@ struct ContentView: View {
                     DinoLabsPlayground(currentView: $currentView,
                                        authenticatedUsername: $authenticatedUsername,
                                        authenticatedOrgID: $authenticatedOrgID,
-                                       openTabs: $sessionManager.openTabs,
-                                       activeTabId: $sessionManager.activeTabId,
                                        directoryURL: $sessionManager.directoryURL,
                                        displayedChildren: $sessionManager.displayedChildren)
                     .onAppear {

@@ -9,8 +9,6 @@ import AppKit
 import Combine
 
 struct SessionData: Codable {
-    var openTabs: [FileTab]
-    var activeTabId: UUID?
     var directoryURL: URL?
     var displayedChildren: [FileItem]
     var directoryBookmark: Data?
@@ -18,8 +16,6 @@ struct SessionData: Codable {
 
 class SessionStateManager: ObservableObject {
     static let shared = SessionStateManager()
-    @Published var openTabs: [FileTab] = []
-    @Published var activeTabId: UUID?
     @Published var directoryURL: URL?
     @Published var displayedChildren: [FileItem] = []
     private var subscriptions = Set<AnyCancellable>()
@@ -28,17 +24,6 @@ class SessionStateManager: ObservableObject {
         setupAutoSave()
     }
     private func setupAutoSave() {
-        $openTabs
-            .debounce(for: .seconds(0.5), scheduler: RunLoop.main)
-            .sink { [weak self] _ in
-                self?.saveSessionData()
-            }
-            .store(in: &subscriptions)
-        $activeTabId
-            .sink { [weak self] _ in
-                self?.saveSessionData()
-            }
-            .store(in: &subscriptions)
         $directoryURL
             .debounce(for: .seconds(0.5), scheduler: RunLoop.main)
             .sink { [weak self] _ in
@@ -57,13 +42,7 @@ class SessionStateManager: ObservableObject {
         if let directoryURL = directoryURL {
             bookmark = try? directoryURL.bookmarkData(options: [.withSecurityScope], includingResourceValuesForKeys: nil, relativeTo: nil)
         }
-        let sessionData = SessionData(
-            openTabs: self.openTabs,
-            activeTabId: self.activeTabId,
-            directoryURL: self.directoryURL,
-            displayedChildren: self.displayedChildren,
-            directoryBookmark: bookmark
-        )
+        let sessionData = SessionData(directoryURL: directoryURL, displayedChildren: displayedChildren, directoryBookmark: bookmark)
         do {
             let encodedData = try JSONEncoder().encode(sessionData)
             UserDefaults.standard.set(encodedData, forKey: "sessionData")
@@ -75,29 +54,23 @@ class SessionStateManager: ObservableObject {
         if let savedData = UserDefaults.standard.data(forKey: "sessionData") {
             do {
                 let sessionData = try JSONDecoder().decode(SessionData.self, from: savedData)
-                self.openTabs = sessionData.openTabs
-                self.activeTabId = sessionData.activeTabId
                 if let directoryBookmark = sessionData.directoryBookmark {
                     var stale = false
                     if let resolvedURL = try? URL(resolvingBookmarkData: directoryBookmark, options: [.withSecurityScope], relativeTo: nil, bookmarkDataIsStale: &stale), FileManager.default.fileExists(atPath: resolvedURL.path) {
                         if !stale {
                             resolvedURL.startAccessingSecurityScopedResource()
-                            self.directoryURL = resolvedURL
-                            self.displayedChildren = sessionData.displayedChildren
+                            directoryURL = resolvedURL
+                            displayedChildren = sessionData.displayedChildren
                             return
                         }
                     }
                 }
-                self.directoryURL = nil
-                self.displayedChildren = []
+                directoryURL = nil
+                displayedChildren = []
             } catch {
                 return
             }
         }
-    }
-    func updateActiveTab(id: UUID?) {
-        self.activeTabId = id
-        saveSessionData()
     }
 }
 
