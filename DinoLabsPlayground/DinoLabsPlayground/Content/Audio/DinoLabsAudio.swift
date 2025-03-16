@@ -7,6 +7,79 @@
 import SwiftUI
 import AVFoundation
 
+class AudioDataCache {
+    static let shared = AudioDataCache()
+    private var cache: [String: (all: [Float], left: [Float], right: [Float])] = [:]
+    
+    private init() {
+        setenv("OS_ACTIVITY_MODE", "disable", 1)
+    }
+    
+    func loadAudioData(for url: URL) -> (all: [Float], left: [Float], right: [Float])? {
+        return cache[url.absoluteString]
+    }
+
+    func setAudioData(for url: URL, all: [Float], left: [Float], right: [Float]) {
+        cache[url.absoluteString] = (all: all, left: left, right: right)
+    }
+
+    func loadAudioData(from url: URL) -> (all: [Float], left: [Float], right: [Float])? {
+        if let data = loadAudioData(for: url) {
+            return data
+        }
+        let asset = AVURLAsset(url: url)
+        guard let assetTrack = asset.tracks(withMediaType: .audio).first else {
+            return nil
+        }
+        let assetReader: AVAssetReader
+        do {
+            assetReader = try AVAssetReader(asset: asset)
+        } catch {
+            return nil
+        }
+        let outputSettings: [String: Any] = [
+            AVFormatIDKey: kAudioFormatLinearPCM,
+            AVLinearPCMIsBigEndianKey: false,
+            AVLinearPCMIsFloatKey: true,
+            AVLinearPCMBitDepthKey: 32
+        ]
+        let trackOutput = AVAssetReaderTrackOutput(track: assetTrack, outputSettings: outputSettings)
+        assetReader.add(trackOutput)
+        assetReader.startReading()
+        var allSamples = [Float]()
+        while let sampleBuffer = trackOutput.copyNextSampleBuffer() {
+            if let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) {
+                let length = CMBlockBufferGetDataLength(blockBuffer)
+                var data = Data(count: length)
+                data.withUnsafeMutableBytes { (bytes: UnsafeMutableRawBufferPointer) in
+                    if let baseAddress = bytes.baseAddress {
+                        CMBlockBufferCopyDataBytes(blockBuffer, atOffset: 0, dataLength: length, destination: baseAddress)
+                    }
+                }
+                let sampleCount = length / MemoryLayout<Float>.size
+                data.withUnsafeBytes { (samplesPointer: UnsafeRawBufferPointer) in
+                    let floatBuffer = samplesPointer.bindMemory(to: Float.self)
+                    for i in 0..<sampleCount {
+                        allSamples.append(floatBuffer[i])
+                    }
+                }
+            }
+            CMSampleBufferInvalidate(sampleBuffer)
+        }
+        var leftSamples = [Float]()
+        var rightSamples = [Float]()
+        for i in stride(from: 0, to: allSamples.count, by: 2) {
+            leftSamples.append(allSamples[i])
+            if i + 1 < allSamples.count {
+                rightSamples.append(allSamples[i + 1])
+            }
+        }
+        let result = (all: allSamples, left: leftSamples, right: rightSamples)
+        setAudioData(for: url, all: allSamples, left: leftSamples, right: rightSamples)
+        return result
+    }
+}
+
 struct AudioView: View {
     let geometry: GeometryProxy
     let fileURL: URL
@@ -18,6 +91,17 @@ struct AudioView: View {
     @State private var audioPlayer: AVAudioPlayer? = nil
     @State private var playbackSpeed: Float = 1.0
     @State private var playbackPosition: CGFloat = 0.0
+    @State private var volume: CGFloat = 1.0
+    @State private var pitch: CGFloat = 0.5
+    @State private var bass: CGFloat = 0.5
+    @State private var mid: CGFloat = 0.5
+    @State private var treble: CGFloat = 0.5
+    @State private var vocalBoost: CGFloat = 0.5
+    @State private var vocalIsolation: CGFloat = 1.0
+    @State private var audioEngine: AVAudioEngine? = nil
+    @State private var audioFilePlayer: AVAudioPlayerNode? = nil
+    @State private var eqNode: AVAudioUnitEQ? = nil
+    @State private var audioFileRef: AVAudioFile? = nil
     
     var body: some View {
         VStack(spacing: 0) {
@@ -83,6 +167,48 @@ struct AudioView: View {
                                 shadowX: 0,
                                 shadowY: 0
                             )
+                            
+                            HStack {
+                                Spacer()
+                                VStack(alignment: .leading, spacing: 0) {
+                                    HStack {
+                                        Text("Volume")
+                                            .font(.system(size: 9, weight: .semibold))
+                                            .foregroundColor(Color(hex: 0xc1c1c1))
+                                            .padding(.leading, 2)
+                                        Spacer()
+                                    }
+                                    .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.9)
+                                    .padding(.bottom, 12)
+                                    
+                                    HStack(spacing: 0) {
+                                        Slider(
+                                            value: Binding<Double>(
+                                                get: { Double(volume) },
+                                                set: { volume = CGFloat($0) }
+                                            ),
+                                            range: 0.0...1.0,
+                                            step: 0.1,
+                                            sliderWidth: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.8,
+                                            sliderHeight: 8,
+                                            thumbSize: 12,
+                                            activeColor: .purple,
+                                            inactiveColor: Color(white: 0.3),
+                                            thumbColor: .white,
+                                            showText: false,
+                                            animationDuration: 0.2,
+                                            animationDamping: 0.7
+                                        )
+                                        .padding(.horizontal, 2)
+                                        Spacer()
+                                    }
+                                    .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.9)
+                                    .padding(.bottom, 16)
+                                }
+                                Spacer()
+                            }
+                            .frame(width: geometry.size.width * (1 - leftPanelWidthRatio) * 0.3)
+                            .padding(.top, 12)
                         
                         }
                         .padding(.bottom, 12)
@@ -93,23 +219,352 @@ struct AudioView: View {
                             alignment: .bottom
                         )
                         
+                        VStack(spacing: 0) {
+                            HStack(spacing: 0) {
+                                Image(systemName: "mic.and.signal.meter.fill")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 15, height: 15)
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .padding(.leading, 12)
+                                    .padding(.trailing, 8)
+                                
+                                Text("Pitch")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundColor(Color(hex: 0xc1c1c1))
+                                
+                                Spacer()
+                            }
+                            .padding(.top, 15)
+                            .padding(.bottom, 12)
+                            .containerHelper(backgroundColor: Color(hex: 0x121212), borderColor: .clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                            
+                            
+                            HStack {
+                                Spacer()
+                                VStack(alignment: .leading, spacing: 0) {
+                                    HStack {
+                                        Text("Pitch Shift (semitones)")
+                                            .font(.system(size: 9, weight: .semibold))
+                                            .foregroundColor(Color(hex: 0xc1c1c1))
+                                            .padding(.leading, 2)
+                                        Spacer()
+                                    }
+                                    .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.9)
+                                    .padding(.bottom, 12)
+                                    
+                                    HStack(spacing: 0) {
+                                        Slider(
+                                            value: Binding<Double>(
+                                                get: { Double(pitch) },
+                                                set: { pitch = CGFloat($0) }
+                                            ),
+                                            range: 0.0...1.0,
+                                            step: 0.1,
+                                            sliderWidth: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.8,
+                                            sliderHeight: 8,
+                                            thumbSize: 12,
+                                            activeColor: .purple,
+                                            inactiveColor: Color(white: 0.3),
+                                            thumbColor: .white,
+                                            showText: false,
+                                            animationDuration: 0.2,
+                                            animationDamping: 0.7
+                                        )
+                                        .padding(.horizontal, 2)
+                                        Spacer()
+                                    }
+                                    .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.9)
+                                    .padding(.bottom, 16)
+                                }
+                                Spacer()
+                            }
+                            .frame(width: geometry.size.width * (1 - leftPanelWidthRatio) * 0.3)
+                            .padding(.top, 12)
+                        
+                        }
+                        .padding(.bottom, 12)
+                        .overlay(
+                            Rectangle()
+                                .frame(height: 0.5)
+                                .foregroundColor(Color(hex: 0xc1c1c1).opacity(0.4)),
+                            alignment: .bottom
+                        )
+                        
+                        VStack(spacing: 0) {
+                            HStack(spacing: 0) {
+                                Image(systemName: "keyboard")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 15, height: 15)
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .padding(.leading, 12)
+                                    .padding(.trailing, 8)
+                                
+                                Text("EQ")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundColor(Color(hex: 0xc1c1c1))
+                                
+                                Spacer()
+                            }
+                            .padding(.top, 15)
+                            .padding(.bottom, 12)
+                            .containerHelper(backgroundColor: Color(hex: 0x121212), borderColor: .clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                            
+                            
+                            HStack {
+                                Spacer()
+                                VStack(alignment: .leading, spacing: 0) {
+                                    HStack {
+                                        Text("Bass")
+                                            .font(.system(size: 9, weight: .semibold))
+                                            .foregroundColor(Color(hex: 0xc1c1c1))
+                                            .padding(.leading, 2)
+                                        Spacer()
+                                    }
+                                    .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.9)
+                                    .padding(.bottom, 12)
+                                    
+                                    HStack(spacing: 0) {
+                                        Slider(
+                                            value: Binding<Double>(
+                                                get: { Double(bass) },
+                                                set: { bass = CGFloat($0) }
+                                            ),
+                                            range: 0.0...1.0,
+                                            step: 0.1,
+                                            sliderWidth: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.8,
+                                            sliderHeight: 8,
+                                            thumbSize: 12,
+                                            activeColor: .purple,
+                                            inactiveColor: Color(white: 0.3),
+                                            thumbColor: .white,
+                                            showText: false,
+                                            animationDuration: 0.2,
+                                            animationDamping: 0.7
+                                        )
+                                        .padding(.horizontal, 2)
+                                        Spacer()
+                                    }
+                                    .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.9)
+                                    .padding(.bottom, 16)
+                                }
+                                Spacer()
+                            }
+                            .frame(width: geometry.size.width * (1 - leftPanelWidthRatio) * 0.3)
+                            .padding(.top, 12)
+                            
+                            HStack {
+                                Spacer()
+                                VStack(alignment: .leading, spacing: 0) {
+                                    HStack {
+                                        Text("Mid")
+                                            .font(.system(size: 9, weight: .semibold))
+                                            .foregroundColor(Color(hex: 0xc1c1c1))
+                                            .padding(.leading, 2)
+                                        Spacer()
+                                    }
+                                    .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.9)
+                                    .padding(.bottom, 12)
+                                    
+                                    HStack(spacing: 0) {
+                                        Slider(
+                                            value: Binding<Double>(
+                                                get: { Double(mid) },
+                                                set: { mid = CGFloat($0) }
+                                            ),
+                                            range: 0.0...1.0,
+                                            step: 0.1,
+                                            sliderWidth: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.8,
+                                            sliderHeight: 8,
+                                            thumbSize: 12,
+                                            activeColor: .purple,
+                                            inactiveColor: Color(white: 0.3),
+                                            thumbColor: .white,
+                                            showText: false,
+                                            animationDuration: 0.2,
+                                            animationDamping: 0.7
+                                        )
+                                        .padding(.horizontal, 2)
+                                        Spacer()
+                                    }
+                                    .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.9)
+                                    .padding(.bottom, 16)
+                                }
+                                Spacer()
+                            }
+                            .frame(width: geometry.size.width * (1 - leftPanelWidthRatio) * 0.3)
+                            .padding(.top, 12)
+                            
+                            HStack {
+                                Spacer()
+                                VStack(alignment: .leading, spacing: 0) {
+                                    HStack {
+                                        Text("Treble")
+                                            .font(.system(size: 9, weight: .semibold))
+                                            .foregroundColor(Color(hex: 0xc1c1c1))
+                                            .padding(.leading, 2)
+                                        Spacer()
+                                    }
+                                    .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.9)
+                                    .padding(.bottom, 12)
+                                    
+                                    HStack(spacing: 0) {
+                                        Slider(
+                                            value: Binding<Double>(
+                                                get: { Double(treble) },
+                                                set: { treble = CGFloat($0) }
+                                            ),
+                                            range: 0.0...1.0,
+                                            step: 0.1,
+                                            sliderWidth: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.8,
+                                            sliderHeight: 8,
+                                            thumbSize: 12,
+                                            activeColor: .purple,
+                                            inactiveColor: Color(white: 0.3),
+                                            thumbColor: .white,
+                                            showText: false,
+                                            animationDuration: 0.2,
+                                            animationDamping: 0.7
+                                        )
+                                        .padding(.horizontal, 2)
+                                        Spacer()
+                                    }
+                                    .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.9)
+                                    .padding(.bottom, 16)
+                                }
+                                Spacer()
+                            }
+                            .frame(width: geometry.size.width * (1 - leftPanelWidthRatio) * 0.3)
+                            .padding(.top, 12)
+                        
+                        }
+                        .padding(.bottom, 12)
+                        .overlay(
+                            Rectangle()
+                                .frame(height: 0.5)
+                                .foregroundColor(Color(hex: 0xc1c1c1).opacity(0.4)),
+                            alignment: .bottom
+                        )
+                        
+                        VStack(spacing: 0) {
+                            HStack(spacing: 0) {
+                                Image(systemName: "waveform")
+                                    .resizable()
+                                    .scaledToFit()
+                                    .frame(width: 15, height: 15)
+                                    .font(.system(size: 15, weight: .semibold))
+                                    .padding(.leading, 12)
+                                    .padding(.trailing, 8)
+                                
+                                Text("Vocals")
+                                    .font(.system(size: 12, weight: .semibold))
+                                    .foregroundColor(Color(hex: 0xc1c1c1))
+                                
+                                Spacer()
+                            }
+                            .padding(.top, 15)
+                            .padding(.bottom, 12)
+                            .containerHelper(backgroundColor: Color(hex: 0x121212), borderColor: .clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                            
+                            HStack {
+                                Spacer()
+                                VStack(alignment: .leading, spacing: 0) {
+                                    HStack {
+                                        Text("Vocal Boost (db)")
+                                            .font(.system(size: 9, weight: .semibold))
+                                            .foregroundColor(Color(hex: 0xc1c1c1))
+                                            .padding(.leading, 2)
+                                        Spacer()
+                                    }
+                                    .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.9)
+                                    .padding(.bottom, 12)
+                                    
+                                    HStack(spacing: 0) {
+                                        Slider(
+                                            value: Binding<Double>(
+                                                get: { Double(vocalBoost) },
+                                                set: { vocalBoost = CGFloat($0) }
+                                            ),
+                                            range: 0.0...1.0,
+                                            step: 0.1,
+                                            sliderWidth: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.8,
+                                            sliderHeight: 8,
+                                            thumbSize: 12,
+                                            activeColor: .purple,
+                                            inactiveColor: Color(white: 0.3),
+                                            thumbColor: .white,
+                                            showText: false,
+                                            animationDuration: 0.2,
+                                            animationDamping: 0.7
+                                        )
+                                        .padding(.horizontal, 2)
+                                        Spacer()
+                                    }
+                                    .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.9)
+                                    .padding(.bottom, 16)
+                                }
+                                Spacer()
+                            }
+                            .frame(width: geometry.size.width * (1 - leftPanelWidthRatio) * 0.3)
+                            .padding(.top, 12)
+                            
+                            HStack {
+                                Spacer()
+                                VStack(alignment: .leading, spacing: 0) {
+                                    HStack {
+                                        Text("Vocal Isolation (Q)")
+                                            .font(.system(size: 9, weight: .semibold))
+                                            .foregroundColor(Color(hex: 0xc1c1c1))
+                                            .padding(.leading, 2)
+                                        Spacer()
+                                    }
+                                    .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.9)
+                                    .padding(.bottom, 12)
+                                    
+                                    HStack(spacing: 0) {
+                                        Slider(
+                                            value: Binding<Double>(
+                                                get: { Double(vocalIsolation) },
+                                                set: { vocalIsolation = CGFloat($0) }
+                                            ),
+                                            range: 0.0...1.0,
+                                            step: 0.1,
+                                            sliderWidth: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.8,
+                                            sliderHeight: 8,
+                                            thumbSize: 12,
+                                            activeColor: .purple,
+                                            inactiveColor: Color(white: 0.3),
+                                            thumbColor: .white,
+                                            showText: false,
+                                            animationDuration: 0.2,
+                                            animationDamping: 0.7
+                                        )
+                                        .padding(.horizontal, 2)
+                                        Spacer()
+                                    }
+                                    .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.9)
+                                    .padding(.bottom, 16)
+                                }
+                                Spacer()
+                            }
+                            .frame(width: geometry.size.width * (1 - leftPanelWidthRatio) * 0.3)
+                            .padding(.top, 12)
+                        }
+                        .padding(.bottom, 12)
+                        .overlay(
+                            Rectangle()
+                                .frame(height: 0.5)
+                                .foregroundColor(Color(hex: 0xc1c1c1).opacity(0.4)),
+                            alignment: .bottom
+                        )
+                          
+                        
                         Spacer()
                     }
                     .frame(width: geometry.size.width * (1 - leftPanelWidthRatio) * 0.3)
                     .frame(minHeight: geometry.size.height - 50 - 10, maxHeight: .infinity)
-                    .containerHelper(
-                        backgroundColor: Color(hex: 0x171717),
-                        borderColor: .clear,
-                        borderWidth: 0,
-                        topLeft: 0,
-                        topRight: 0,
-                        bottomLeft: 0,
-                        bottomRight: 0,
-                        shadowColor: .clear,
-                        shadowRadius: 0,
-                        shadowX: 0,
-                        shadowY: 0
-                    )
+                    .containerHelper(backgroundColor: Color(hex: 0x171717), borderColor: .clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
                     .overlay(
                         Rectangle()
                             .frame(width: 3.0)
@@ -147,6 +602,19 @@ struct AudioView: View {
                                 AudioTrackBar(playbackPosition: $playbackPosition, onDrag: { newPos in
                                     if let player = audioPlayer {
                                         player.currentTime = TimeInterval(newPos) * player.duration
+                                        audioFilePlayer?.pause()
+                                        if let node = audioFilePlayer, let file = audioFileRef {
+                                            node.stop()
+                                            let newTime = Double(player.currentTime)
+                                            let startFrame = AVAudioFramePosition(newTime * file.fileFormat.sampleRate)
+                                            let frameCount = AVAudioFrameCount(file.length - startFrame)
+                                            if frameCount > 0 {
+                                                node.scheduleSegment(file, startingFrame: startFrame, frameCount: frameCount, at: nil)
+                                            }
+                                            if isPlaying {
+                                                node.play()
+                                            }
+                                        }
                                     }
                                 })
                             )
@@ -184,7 +652,7 @@ struct AudioView: View {
                                 HStack {
                                     Spacer()
                                     VolumeBar(fileURL: fileURL, playbackPosition: $playbackPosition)
-                                        .frame(width: geometry.size.width * 0.05, height: (geometry.size.height - 60) * 0.15)
+                                        .frame(width: geometry.size.width * 0.04, height: (geometry.size.height - 60) * 0.18)
                                     Spacer()
                                 }
                                 .frame(width: geometry.size.width * 0.1, height: (geometry.size.height - 60) * 0.25)
@@ -226,7 +694,7 @@ struct AudioView: View {
                                 HStack(alignment: .center) {
                                     Spacer()
                                     StereoLeftChannelView(fileURL: fileURL, playbackPosition: $playbackPosition)
-                                        .frame(width: geometry.size.width * 0.05, height: (geometry.size.height - 60) * 0.15)
+                                        .frame(width: geometry.size.width * 0.04, height: (geometry.size.height - 60) * 0.18)
                                     Spacer()
                                 }
                                 .frame(width: geometry.size.width * 0.1, height:  (geometry.size.height - 60) * 0.25)
@@ -240,7 +708,7 @@ struct AudioView: View {
                                 HStack {
                                     Spacer()
                                     StereoRightChannelView(fileURL: fileURL, playbackPosition: $playbackPosition)
-                                        .frame(width: geometry.size.width * 0.05, height: (geometry.size.height - 60) * 0.15)
+                                        .frame(width: geometry.size.width * 0.04, height: (geometry.size.height - 60) * 0.18)
                                     Spacer()
                                 }
                                 .frame(width: geometry.size.width * 0.1, height: (geometry.size.height - 60) * 0.25)
@@ -294,6 +762,19 @@ struct AudioView: View {
                                     if let player = audioPlayer {
                                         player.currentTime = max(player.currentTime - 15, 0)
                                     }
+                                    audioFilePlayer?.pause()
+                                    if let node = audioFilePlayer, let file = audioFileRef {
+                                        node.stop()
+                                        let newTime = max(Double(audioPlayer?.currentTime ?? 0), 0.0)
+                                        let startFrame = AVAudioFramePosition(newTime * file.fileFormat.sampleRate)
+                                        let frameCount = AVAudioFrameCount(file.length - startFrame)
+                                        if frameCount > 0 {
+                                            node.scheduleSegment(file, startingFrame: startFrame, frameCount: frameCount, at: nil)
+                                        }
+                                        if isPlaying {
+                                            node.play()
+                                        }
+                                    }
                                 }
                                 .containerHelper(
                                     backgroundColor: Color.clear,
@@ -321,9 +802,11 @@ struct AudioView: View {
                                     if let player = audioPlayer {
                                         if player.isPlaying {
                                             player.pause()
+                                            audioFilePlayer?.pause()
                                             isPlaying = false
                                         } else {
                                             player.play()
+                                            audioFilePlayer?.play()
                                             isPlaying = true
                                         }
                                     }
@@ -382,6 +865,19 @@ struct AudioView: View {
                                     if let player = audioPlayer {
                                         let newTime = player.currentTime + 15
                                         player.currentTime = min(newTime, player.duration)
+                                    }
+                                    audioFilePlayer?.pause()
+                                    if let node = audioFilePlayer, let file = audioFileRef {
+                                        node.stop()
+                                        let newTime = min(Double(audioPlayer?.currentTime ?? 0), Double(audioPlayer?.duration ?? 0))
+                                        let startFrame = AVAudioFramePosition(newTime * file.fileFormat.sampleRate)
+                                        let frameCount = AVAudioFrameCount(file.length - startFrame)
+                                        if frameCount > 0 {
+                                            node.scheduleSegment(file, startingFrame: startFrame, frameCount: frameCount, at: nil)
+                                        }
+                                        if isPlaying {
+                                            node.play()
+                                        }
                                     }
                                 }
                                 .containerHelper(
@@ -481,14 +977,90 @@ struct AudioView: View {
                 playbackPosition = CGFloat(player.currentTime / player.duration)
             }
         }
+        .onChange(of: volume) { newValue in
+            audioEngine?.mainMixerNode.outputVolume = Float(newValue)
+        }
+        .onChange(of: pitch) { newValue in
+            if let player = audioPlayer {
+                player.enableRate = true
+                let semitones = (Float(newValue) * 24.0) - 12.0
+                let newRate = pow(2.0, semitones / 12.0)
+                player.rate = newRate
+            }
+        }
+        .onChange(of: bass) { newValue in
+            let eqGain = Float(newValue * 24.0 - 12.0)
+            eqNode?.bands[0].gain = eqGain
+        }
+        .onChange(of: mid) { newValue in
+            let eqGain = Float(newValue * 24.0 - 12.0)
+            eqNode?.bands[1].gain = eqGain
+        }
+        .onChange(of: treble) { newValue in
+            let eqGain = Float(newValue * 24.0 - 12.0)
+            eqNode?.bands[2].gain = eqGain
+        }
+        .onChange(of: vocalBoost) { newValue in
+            let eqGain = Float(newValue * 24.0 - 12.0)
+            eqNode?.bands[3].gain = eqGain
+        }
+        .onChange(of: vocalIsolation) { newValue in
+            let minQ: Float = 0.1
+            let maxQ: Float = 5.0
+            let range = maxQ - minQ
+            let qFactor = minQ + Float(newValue) * range
+            eqNode?.bands[4].bandwidth = qFactor
+        }
     }
     
     private func setupAudioPlayer() {
         do {
+            let engine = AVAudioEngine()
+            let playerNode = AVAudioPlayerNode()
+            let eq = AVAudioUnitEQ(numberOfBands: 5)
+            
+            eq.bypass = false
+            eq.bands[0].bypass = false
+            eq.bands[1].bypass = false
+            eq.bands[2].bypass = false
+            
+            eq.bands[0].filterType = .lowShelf
+            eq.bands[0].frequency = 200
+            eq.bands[1].filterType = .parametric
+            eq.bands[1].frequency = 1000
+            eq.bands[2].filterType = .highShelf
+            eq.bands[2].frequency = 5000
+            eq.bands[3].bypass = false
+            eq.bands[3].filterType = .parametric
+            eq.bands[3].frequency = 2000
+            eq.bands[3].bandwidth = 1.0
+            eq.bands[4].bypass = false
+            eq.bands[4].filterType = .bandPass
+            eq.bands[4].frequency = 1500
+            let minQ: Float = 0.1
+            let maxQ: Float = 5.0
+            let range = maxQ - minQ
+            eq.bands[4].bandwidth = minQ + Float(vocalIsolation) * range
+            
+            engine.attach(playerNode)
+            engine.attach(eq)
+            let file = try AVAudioFile(forReading: fileURL)
+            let format = file.processingFormat
+            engine.connect(playerNode, to: eq, format: format)
+            engine.connect(eq, to: engine.mainMixerNode, format: format)
+            try engine.start()
+            playerNode.scheduleFile(file, at: nil)
+            
+            self.audioEngine = engine
+            self.audioFilePlayer = playerNode
+            self.eqNode = eq
+            self.audioFileRef = file
+            
             audioPlayer = try AVAudioPlayer(contentsOf: fileURL)
             audioPlayer?.enableRate = true
             audioPlayer?.prepareToPlay()
             audioPlayer?.rate = playbackSpeed
+            audioPlayer?.volume = 0
         } catch {}
     }
 }
@@ -579,53 +1151,8 @@ struct Waveform: View {
     }
     
     func loadSamples() {
-        let asset = AVURLAsset(url: fileURL)
-        guard let assetTrack = asset.tracks(withMediaType: .audio).first else {
-            return
-        }
-        
-        let assetReader: AVAssetReader
-        do {
-            assetReader = try AVAssetReader(asset: asset)
-        } catch {
-            return
-        }
-        
-        let outputSettings: [String: Any] = [
-            AVFormatIDKey: kAudioFormatLinearPCM,
-            AVLinearPCMIsBigEndianKey: false,
-            AVLinearPCMIsFloatKey: true,
-            AVLinearPCMBitDepthKey: 32
-        ]
-        
-        let trackOutput = AVAssetReaderTrackOutput(track: assetTrack, outputSettings: outputSettings)
-        assetReader.add(trackOutput)
-        assetReader.startReading()
-        
-        var sampleData = [Float]()
-        
-        while let sampleBuffer = trackOutput.copyNextSampleBuffer() {
-            if let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) {
-                let length = CMBlockBufferGetDataLength(blockBuffer)
-                var data = Data(count: length)
-                data.withUnsafeMutableBytes { (bytes: UnsafeMutableRawBufferPointer) in
-                    if let baseAddress = bytes.baseAddress {
-                        CMBlockBufferCopyDataBytes(blockBuffer, atOffset: 0, dataLength: length, destination: baseAddress)
-                    }
-                }
-                let sampleCount = length / MemoryLayout<Float>.size
-                data.withUnsafeBytes { (samplesPointer: UnsafeRawBufferPointer) in
-                    let samplesBuffer = samplesPointer.bindMemory(to: Float.self)
-                    for i in 0..<sampleCount {
-                        sampleData.append(samplesBuffer[i])
-                    }
-                }
-            }
-            CMSampleBufferInvalidate(sampleBuffer)
-        }
-        
-        DispatchQueue.main.async {
-            self.samples = sampleData
+        if let audioData = AudioDataCache.shared.loadAudioData(from: fileURL) {
+            self.samples = audioData.all
         }
     }
 }
@@ -702,59 +1229,8 @@ struct Oscilloscope: View {
     }
     
     func loadSamples() {
-        let asset = AVURLAsset(url: fileURL)
-        guard let assetTrack = asset.tracks(withMediaType: .audio).first else {
-            return
-        }
-        
-        let assetReader: AVAssetReader
-        do {
-            assetReader = try AVAssetReader(asset: asset)
-        } catch {
-            return
-        }
-        
-        let outputSettings: [String: Any] = [
-            AVFormatIDKey: kAudioFormatLinearPCM,
-            AVLinearPCMIsBigEndianKey: false,
-            AVLinearPCMIsFloatKey: true,
-            AVLinearPCMBitDepthKey: 32
-        ]
-        
-        let trackOutput = AVAssetReaderTrackOutput(track: assetTrack, outputSettings: outputSettings)
-        assetReader.add(trackOutput)
-        assetReader.startReading()
-        
-        var sampleData = [Float]()
-        
-        while let sampleBuffer = trackOutput.copyNextSampleBuffer() {
-            if let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) {
-                let length = CMBlockBufferGetDataLength(blockBuffer)
-                var data = Data(count: length)
-                data.withUnsafeMutableBytes { (bytes: UnsafeMutableRawBufferPointer) in
-                    if let baseAddress = bytes.baseAddress {
-                        CMBlockBufferCopyDataBytes(
-                            blockBuffer,
-                            atOffset: 0,
-                            dataLength: length,
-                            destination: baseAddress
-                        )
-                    }
-                }
-                
-                let sampleCount = length / MemoryLayout<Float>.size
-                data.withUnsafeBytes { (samplesPointer: UnsafeRawBufferPointer) in
-                    let floatBuffer = samplesPointer.bindMemory(to: Float.self)
-                    for i in 0 ..< sampleCount {
-                        sampleData.append(floatBuffer[i])
-                    }
-                }
-            }
-            CMSampleBufferInvalidate(sampleBuffer)
-        }
-        
-        DispatchQueue.main.async {
-            self.samples = sampleData
+        if let audioData = AudioDataCache.shared.loadAudioData(from: fileURL) {
+            self.samples = audioData.all
         }
     }
 }
@@ -873,59 +1349,8 @@ struct FrequencyBars: View {
     }
     
     private func loadSamples() {
-        let asset = AVURLAsset(url: fileURL)
-        guard let assetTrack = asset.tracks(withMediaType: .audio).first else {
-            return
-        }
-        
-        let assetReader: AVAssetReader
-        do {
-            assetReader = try AVAssetReader(asset: asset)
-        } catch {
-            return
-        }
-        
-        let outputSettings: [String: Any] = [
-            AVFormatIDKey: kAudioFormatLinearPCM,
-            AVLinearPCMIsBigEndianKey: false,
-            AVLinearPCMIsFloatKey: true,
-            AVLinearPCMBitDepthKey: 32
-        ]
-        
-        let trackOutput = AVAssetReaderTrackOutput(track: assetTrack, outputSettings: outputSettings)
-        assetReader.add(trackOutput)
-        assetReader.startReading()
-        
-        var sampleData = [Float]()
-        
-        while let sampleBuffer = trackOutput.copyNextSampleBuffer() {
-            if let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) {
-                let length = CMBlockBufferGetDataLength(blockBuffer)
-                var data = Data(count: length)
-                data.withUnsafeMutableBytes { (bytes: UnsafeMutableRawBufferPointer) in
-                    if let baseAddress = bytes.baseAddress {
-                        CMBlockBufferCopyDataBytes(
-                            blockBuffer,
-                            atOffset: 0,
-                            dataLength: length,
-                            destination: baseAddress
-                        )
-                    }
-                }
-                
-                let sampleCount = length / MemoryLayout<Float>.size
-                data.withUnsafeBytes { (samplesPointer: UnsafeRawBufferPointer) in
-                    let floatBuffer = samplesPointer.bindMemory(to: Float.self)
-                    for i in 0 ..< sampleCount {
-                        sampleData.append(floatBuffer[i])
-                    }
-                }
-            }
-            CMSampleBufferInvalidate(sampleBuffer)
-        }
-        
-        DispatchQueue.main.async {
-            self.samples = sampleData
+        if let audioData = AudioDataCache.shared.loadAudioData(from: fileURL) {
+            self.samples = audioData.all
         }
     }
 }
@@ -1000,59 +1425,8 @@ struct VolumeBar: View {
     }
     
     private func loadSamples() {
-        let asset = AVURLAsset(url: fileURL)
-        guard let assetTrack = asset.tracks(withMediaType: .audio).first else {
-            return
-        }
-        
-        let assetReader: AVAssetReader
-        do {
-            assetReader = try AVAssetReader(asset: asset)
-        } catch {
-            return
-        }
-        
-        let outputSettings: [String: Any] = [
-            AVFormatIDKey: kAudioFormatLinearPCM,
-            AVLinearPCMIsBigEndianKey: false,
-            AVLinearPCMIsFloatKey: true,
-            AVLinearPCMBitDepthKey: 32
-        ]
-        
-        let trackOutput = AVAssetReaderTrackOutput(track: assetTrack, outputSettings: outputSettings)
-        assetReader.add(trackOutput)
-        assetReader.startReading()
-        
-        var sampleData = [Float]()
-        
-        while let sampleBuffer = trackOutput.copyNextSampleBuffer() {
-            if let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) {
-                let length = CMBlockBufferGetDataLength(blockBuffer)
-                var data = Data(count: length)
-                data.withUnsafeMutableBytes { (bytes: UnsafeMutableRawBufferPointer) in
-                    if let baseAddress = bytes.baseAddress {
-                        CMBlockBufferCopyDataBytes(
-                            blockBuffer,
-                            atOffset: 0,
-                            dataLength: length,
-                            destination: baseAddress
-                        )
-                    }
-                }
-                
-                let sampleCount = length / MemoryLayout<Float>.size
-                data.withUnsafeBytes { (samplesPointer: UnsafeRawBufferPointer) in
-                    let floatBuffer = samplesPointer.bindMemory(to: Float.self)
-                    for i in 0 ..< sampleCount {
-                        sampleData.append(floatBuffer[i])
-                    }
-                }
-            }
-            CMSampleBufferInvalidate(sampleBuffer)
-        }
-        
-        DispatchQueue.main.async {
-            self.samples = sampleData
+        if let audioData = AudioDataCache.shared.loadAudioData(from: fileURL) {
+            self.samples = audioData.all
         }
     }
 }
@@ -1120,64 +1494,9 @@ struct PhaseScopeView: View {
     }
     
     private func loadSamples() {
-        let asset = AVURLAsset(url: fileURL)
-        guard let assetTrack = asset.tracks(withMediaType: .audio).first else {
-            return
-        }
-        
-        let assetReader: AVAssetReader
-        do {
-            assetReader = try AVAssetReader(asset: asset)
-        } catch {
-            return
-        }
-        
-        let outputSettings: [String: Any] = [
-            AVFormatIDKey: kAudioFormatLinearPCM,
-            AVLinearPCMIsBigEndianKey: false,
-            AVLinearPCMIsFloatKey: true,
-            AVLinearPCMBitDepthKey: 32
-        ]
-        
-        let trackOutput = AVAssetReaderTrackOutput(track: assetTrack, outputSettings: outputSettings)
-        assetReader.add(trackOutput)
-        assetReader.startReading()
-        
-        var leftData = [Float]()
-        var rightData = [Float]()
-        
-        while let sampleBuffer = trackOutput.copyNextSampleBuffer() {
-            if let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) {
-                let length = CMBlockBufferGetDataLength(blockBuffer)
-                var data = Data(count: length)
-                data.withUnsafeMutableBytes { (bytes: UnsafeMutableRawBufferPointer) in
-                    if let baseAddress = bytes.baseAddress {
-                        CMBlockBufferCopyDataBytes(
-                            blockBuffer,
-                            atOffset: 0,
-                            dataLength: length,
-                            destination: baseAddress
-                        )
-                    }
-                }
-                
-                let sampleCount = length / MemoryLayout<Float>.size
-                data.withUnsafeBytes { (samplesPointer: UnsafeRawBufferPointer) in
-                    let floatBuffer = samplesPointer.bindMemory(to: Float.self)
-                    for i in stride(from: 0, to: sampleCount, by: 2) {
-                        leftData.append(floatBuffer[i])
-                        if i + 1 < sampleCount {
-                            rightData.append(floatBuffer[i+1])
-                        }
-                    }
-                }
-            }
-            CMSampleBufferInvalidate(sampleBuffer)
-        }
-        
-        DispatchQueue.main.async {
-            self.leftSamples = leftData
-            self.rightSamples = rightData
+        if let audioData = AudioDataCache.shared.loadAudioData(from: fileURL) {
+            self.leftSamples = audioData.left
+            self.rightSamples = audioData.right
         }
     }
 }
@@ -1218,11 +1537,7 @@ struct StereoLeftChannelView: View {
                         if i < activeBarsLeft {
                             let ratio = Double(i) / Double(totalBars - 1)
                             let hue = 150.0 + ratio * 20.0
-                            let barColor = Color(
-                                hue: hue / 360.0,
-                                saturation: 1.0,
-                                brightness: 1.0
-                            )
+                            let barColor = Color(hue: hue / 360.0, saturation: 1.0, brightness: 1.0)
                             context.fill(Path(rectBar), with: .color(barColor))
                         } else {
                             context.fill(Path(rectBar), with: .color(Color(hex: 0x444444)))
@@ -1247,58 +1562,8 @@ struct StereoLeftChannelView: View {
     }
     
     private func loadLeftSamples() {
-        let asset = AVURLAsset(url: fileURL)
-        guard let assetTrack = asset.tracks(withMediaType: .audio).first else {
-            return
-        }
-        
-        let assetReader: AVAssetReader
-        do {
-            assetReader = try AVAssetReader(asset: asset)
-        } catch {
-            return
-        }
-        
-        let outputSettings: [String: Any] = [
-            AVFormatIDKey: kAudioFormatLinearPCM,
-            AVLinearPCMIsBigEndianKey: false,
-            AVLinearPCMIsFloatKey: true,
-            AVLinearPCMBitDepthKey: 32
-        ]
-        
-        let trackOutput = AVAssetReaderTrackOutput(track: assetTrack, outputSettings: outputSettings)
-        assetReader.add(trackOutput)
-        assetReader.startReading()
-        
-        var tempLeft = [Float]()
-        
-        while let sampleBuffer = trackOutput.copyNextSampleBuffer() {
-            if let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) {
-                let length = CMBlockBufferGetDataLength(blockBuffer)
-                var data = Data(count: length)
-                data.withUnsafeMutableBytes { (bytes: UnsafeMutableRawBufferPointer) in
-                    if let baseAddress = bytes.baseAddress {
-                        CMBlockBufferCopyDataBytes(
-                            blockBuffer,
-                            atOffset: 0,
-                            dataLength: length,
-                            destination: baseAddress
-                        )
-                    }
-                }
-                let sampleCount = length / MemoryLayout<Float>.size
-                data.withUnsafeBytes { (samplesPointer: UnsafeRawBufferPointer) in
-                    let floatBuffer = samplesPointer.bindMemory(to: Float.self)
-                    for i in stride(from: 0, to: sampleCount, by: 2) {
-                        tempLeft.append(floatBuffer[i])
-                    }
-                }
-            }
-            CMSampleBufferInvalidate(sampleBuffer)
-        }
-        
-        DispatchQueue.main.async {
-            self.leftSamples = tempLeft
+        if let audioData = AudioDataCache.shared.loadAudioData(from: fileURL) {
+            self.leftSamples = audioData.left
         }
     }
 }
@@ -1339,11 +1604,7 @@ struct StereoRightChannelView: View {
                         if i < activeBarsRight {
                             let ratio = Double(i) / Double(totalBars - 1)
                             let hue = 170.0 + ratio * 20.0
-                            let barColor = Color(
-                                hue: hue / 360.0,
-                                saturation: 1.0,
-                                brightness: 1.0
-                            )
+                            let barColor = Color(hue: hue / 360.0, saturation: 1.0, brightness: 1.0)
                             context.fill(Path(rectBar), with: .color(barColor))
                         } else {
                             context.fill(Path(rectBar), with: .color(Color(hex: 0x444444)))
@@ -1368,59 +1629,8 @@ struct StereoRightChannelView: View {
     }
     
     private func loadRightSamples() {
-        let asset = AVURLAsset(url: fileURL)
-        guard let assetTrack = asset.tracks(withMediaType: .audio).first else {
-            return
-        }
-        
-        let assetReader: AVAssetReader
-        do {
-            assetReader = try AVAssetReader(asset: asset)
-        } catch {
-            return
-        }
-        
-        let outputSettings: [String: Any] = [
-            AVFormatIDKey: kAudioFormatLinearPCM,
-            AVLinearPCMIsBigEndianKey: false,
-            AVLinearPCMIsFloatKey: true,
-            AVLinearPCMBitDepthKey: 32
-        ]
-        
-        let trackOutput = AVAssetReaderTrackOutput(track: assetTrack, outputSettings: outputSettings)
-        assetReader.add(trackOutput)
-        assetReader.startReading()
-        
-        var tempRight = [Float]()
-        
-        while let sampleBuffer = trackOutput.copyNextSampleBuffer() {
-            if let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) {
-                let length = CMBlockBufferGetDataLength(blockBuffer)
-                var data = Data(count: length)
-                data.withUnsafeMutableBytes { (bytes: UnsafeMutableRawBufferPointer) in
-                    if let baseAddress = bytes.baseAddress {
-                        CMBlockBufferCopyDataBytes(
-                            blockBuffer,
-                            atOffset: 0,
-                            dataLength: length,
-                            destination: baseAddress
-                        )
-                    }
-                }
-                let sampleCount = length / MemoryLayout<Float>.size
-                data.withUnsafeBytes { (samplesPointer: UnsafeRawBufferPointer) in
-                    let floatBuffer = samplesPointer.bindMemory(to: Float.self)
-                    for i in stride(from: 1, to: sampleCount, by: 2) {
-                        tempRight.append(floatBuffer[i])
-                    }
-                }
-            }
-            CMSampleBufferInvalidate(sampleBuffer)
-        }
-        
-        DispatchQueue.main.async {
-            self.rightSamples = tempRight
+        if let audioData = AudioDataCache.shared.loadAudioData(from: fileURL) {
+            self.rightSamples = audioData.right
         }
     }
 }
-
