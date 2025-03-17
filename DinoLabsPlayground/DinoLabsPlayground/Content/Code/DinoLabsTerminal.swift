@@ -35,6 +35,33 @@ struct TerminalView: View {
                 .font(.system(size: 10, weight: .semibold, design: .monospaced))
                 .foregroundColor(.white.opacity(0.8))
                 .onAppear {
+                    self.pty = PTY()
+                    if let pty = self.pty {
+                        let task = Process()
+                        task.launchPath = "/bin/bash"
+                        task.arguments = ["-l"]
+                        let slaveFileHandle = FileHandle(fileDescriptor: pty.slaveFD, closeOnDealloc: false)
+                        task.standardInput = slaveFileHandle
+                        task.standardOutput = slaveFileHandle
+                        task.standardError = slaveFileHandle
+                        do {
+                            try task.run()
+                            self.process = task
+                        } catch {
+                            self.textBuffer.append("Error launching shell: \(error)\n")
+                        }
+                        pty.masterFileHandle?.readabilityHandler = { handle in
+                            let data = handle.availableData
+                            if !data.isEmpty {
+                                let output = String(data: data, encoding: .utf8) ?? ""
+                                DispatchQueue.main.async {
+                                    self.textBuffer.append(output)
+                                    self.oldTextBuffer = self.textBuffer
+                                    self.lastPromptLocation = self.textBuffer.count
+                                }
+                            }
+                        }
+                    }
                     textBuffer = prompt
                     oldTextBuffer = textBuffer
                     lastPromptLocation = textBuffer.count
@@ -76,24 +103,14 @@ struct TerminalView: View {
     }
     
     private func runCommand(_ command: String) {
-        guard !command.isEmpty else {
-            textBuffer.append(prompt)
+        guard let pty = self.pty else {
+            textBuffer.append("PTY not initialized.\n" + prompt)
             oldTextBuffer = textBuffer
             lastPromptLocation = textBuffer.count
             return
         }
-        
-        DispatchQueue.global(qos: .userInitiated).async {
-            let output = runShellCommand(command)
-            DispatchQueue.main.async {
-                self.textBuffer.append(output)
-                if !self.textBuffer.hasSuffix("\n") {
-                    self.textBuffer.append("\n")
-                }
-                self.textBuffer.append(self.prompt)
-                self.oldTextBuffer = self.textBuffer
-                self.lastPromptLocation = self.textBuffer.count
-            }
+        if let data = (command + "\n").data(using: .utf8) {
+            pty.write(data)
         }
     }
 }
@@ -183,6 +200,14 @@ class PTY {
     
     func write(_ data: Data) {
         fileHandle?.write(data)
+    }
+    
+    var masterFileHandle: FileHandle? {
+        return fileHandle
+    }
+    
+    var slaveFD: Int32 {
+        return slave
     }
     
     deinit {
