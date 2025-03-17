@@ -65,7 +65,6 @@ struct IDEView: View {
                                         .hoverEffect(opacity: 0.8)
                                         .onChange(of: searchQuery) { _ in
                                             NotificationCenter.default.post(name: Notification.Name("SearchQueryChanged"), object: nil)
-                                            NotificationCenter.default.post(name: Notification.Name("JumpToNextSearchMatch"), object: nil)
                                         }
                                     HStack {
                                         CodeButtonMain {
@@ -1053,6 +1052,9 @@ struct IDEEditorView: NSViewRepresentable {
                     }
                 }
             }
+            
+            expandedRange = NSIntersectionRange(expandedRange, NSRange(location: 0, length: fullText.length))
+            
             return expandedRange
         }
         
@@ -1576,7 +1578,6 @@ class IDECenteredLineNumberRuler: NSRulerView {
 
 class InvisibleScroller: NSScroller {
     override func draw(_ dirtyRect: NSRect) {}
-    
     override var alphaValue: CGFloat {
         get { 0 }
         set { }
