@@ -1,10 +1,10 @@
 import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-dom";
 import ProtectedRoute from "./ProtectedRoute";
-import Login from "./pages/DinoLabsIDEAuthnetication/DinoLabsAuthLogin"; 
-import Register from "./pages/DinoLabsIDEAuthnetication/DinoLabsAuthRegister"; 
-import Reset from "./pages/DinoLabsIDEAuthnetication/DinoLabsAuthReset";
-import Verification from "./pages/DinoLabsIDEAuthnetication/DinoLabsAuthVerifyEmail";
-import DinoLabsIDE from "./pages/DinoLabsIDE"; 
+import Login from "./pages/DinoLabsAuthentication/DinoLabsAuthLogin"; 
+import Register from "./pages/DinoLabsAuthentication/DinoLabsAuthRegister"; 
+import Reset from "./pages/DinoLabsAuthentication/DinoLabsAuthReset";
+import Verification from "./pages/DinoLabsAuthentication/DinoLabsAuthVerifyEmail";
+import DinoLabsMain from "./pages/DinoLabsMain/DinoLabsMain";
 import { useEffect, useState } from "react";
 
 import "./styles/App.css";
@@ -35,12 +35,7 @@ function App() {
           <Route path="/register" element={<Register/>}/>
           <Route path="/reset" element={<Reset/>}/>
           <Route path="/verify" element={<Verification/>}/>
-          <Route path="/dinolabs-ide" element={
-            <ProtectedRoute>
-              <DinoLabsIDE />
-            </ProtectedRoute>
-          } />
-
+          <Route path="/dinolabs" element={<DinoLabsMain/>}/>
           <Route index element={<Navigate to="/login" replace />} />
         </Routes>
       </div>

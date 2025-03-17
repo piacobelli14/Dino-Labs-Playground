@@ -8,8 +8,9 @@ import {
   faIdCard,
   faRightFromBracket,
   faCode,
+  faArrowUpRightFromSquare,
 } from "@fortawesome/free-solid-svg-icons";
-import "../styles/helperStyles/DinoLabsNav.css";
+import "../styles/helperStyles/NavBar.css";
 import useAuth from "../UseAuth.jsx";
 import useIsTouchDevice from "../TouchDevice.jsx";
 
@@ -74,7 +75,7 @@ const DinoLabsNav = ({ activePage }) => {
 
   return (
     <div>
-      <div className="homeHeaderContainer" style={{ background: "#000" }}>
+      <div className="homeHeaderContainer">
         <div className="homeTopNavBarContainer">
           <div className="homeSkipToContent">
             <img
@@ -83,7 +84,7 @@ const DinoLabsNav = ({ activePage }) => {
               alt="Logo"
             />
             <label className="homeHeader" style={{ color: "#c0c0c0" }}>
-              Dino Labs Web IDE
+              Dino Labs
             </label>
           </div>
 
@@ -108,7 +109,6 @@ const DinoLabsNav = ({ activePage }) => {
         !isAdmin ? (
           <div
             className="homeHamburgerPopout"
-            style={{ backgroundColor: "#000" }}
           >
             <div className="homeHamburgerContent">
               {token && !isTokenExpired && (
@@ -120,9 +120,10 @@ const DinoLabsNav = ({ activePage }) => {
                     <FontAwesomeIcon icon={faCode} className="navigationButtonIcon" />
                     DinoLabs IDE
                   </div>
-                  <div
-                    className="navigationButtonDivider"
-                    style={{ backgroundColor: "#ced6dd" }}
+
+                  <FontAwesomeIcon
+                      icon={faArrowUpRightFromSquare}
+                      className="navigationButtonIconTrailer"
                   />
                 </button>
               )}
@@ -136,9 +137,10 @@ const DinoLabsNav = ({ activePage }) => {
                     <FontAwesomeIcon icon={faIdCard} className="navigationButtonIcon" />
                     Sign Up
                   </div>
-                  <div
-                    className="navigationButtonDivider"
-                    style={{ backgroundColor: "#ced6dd" }}
+
+                  <FontAwesomeIcon
+                      icon={faArrowUpRightFromSquare}
+                      className="navigationButtonIconTrailer"
                   />
                 </button>
               )}
@@ -155,9 +157,10 @@ const DinoLabsNav = ({ activePage }) => {
                     />
                     Login
                   </div>
-                  <div
-                    className="navigationButtonDivider"
-                    style={{ backgroundColor: "#ced6dd" }}
+
+                  <FontAwesomeIcon
+                      icon={faArrowUpRightFromSquare}
+                      className="navigationButtonIconTrailer"
                   />
                 </button>
               ) : (
@@ -169,9 +172,10 @@ const DinoLabsNav = ({ activePage }) => {
                     />
                     Sign Out
                   </div>
-                  <div
-                    className="navigationButtonDivider"
-                    style={{ backgroundColor: "#ced6dd" }}
+
+                  <FontAwesomeIcon
+                      icon={faArrowUpRightFromSquare}
+                      className="navigationButtonIconTrailer"
                   />
                 </button>
               )}
@@ -180,7 +184,6 @@ const DinoLabsNav = ({ activePage }) => {
         ) : (
           <div
             className="homeHamburgerPopout"
-            style={{ backgroundColor: "#000" }}
           >
             <div className="homeHamburgerContent">
               {isAdmin && token && !isTokenExpired && (
@@ -192,9 +195,10 @@ const DinoLabsNav = ({ activePage }) => {
                     <FontAwesomeIcon icon={faCode} className="navigationButtonIcon" />
                     DinoLabs IDE
                   </div>
-                  <div
-                    className="navigationButtonDivider"
-                    style={{ backgroundColor: "#ced6dd" }}
+
+                  <FontAwesomeIcon
+                      icon={faArrowUpRightFromSquare}
+                      className="navigationButtonIconTrailer"
                   />
                 </button>
               )}
@@ -206,10 +210,11 @@ const DinoLabsNav = ({ activePage }) => {
                   />
                   Sign Out
                 </div>
-                <div
-                  className="navigationButtonDivider"
-                  style={{ backgroundColor: "#ced6dd" }}
-                />
+
+                <FontAwesomeIcon
+                      icon={faArrowUpRightFromSquare}
+                      className="navigationButtonIconTrailer"
+                  />
               </button>
             </div>
           </div>

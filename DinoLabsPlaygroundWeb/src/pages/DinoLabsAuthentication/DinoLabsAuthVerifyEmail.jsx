@@ -1,6 +1,6 @@
 import {  Suspense, lazy, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import "../../styles/mainStyles/AuthenticationStyles/DinoLabsAuthVerifyEmail.css"
+import "../../styles/mainStyles/DinoLabsAuthenticationStyles/DinoLabsAuthVerifyEmail.css"
 
 
 const VerifyEmail = () => {

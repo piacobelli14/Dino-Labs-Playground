@@ -2,8 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faEnvelope, faPerson, faEye, faEyeSlash, faUserCircle, faPersonCirclePlus, faEnvelopeCircleCheck } from "@fortawesome/free-solid-svg-icons";
-
-import "../../styles/mainStyles/AuthenticationStyles/DinoLabsAuthLogin.css";
+import "../../styles/mainStyles/DinoLabsAuthenticationStyles/DinoLabsAuthLogin.css";
 import DinoLabsNav from "../../helpers/DinoLabsNav";
 import useAuth from "../../UseAuth"; 
 
@@ -34,13 +33,13 @@ const Login = () => {
             if (response.status === 200) {
                 setToken(data.token);
                 if (data.isadmin === true) {
-                    navigate("/dinolabs-ide");
+                    navigate("/dinolabs");
                     {/* 
                         Will come back to this later. 
                         For now everyone is routed to the IDE but I plan to build some system admin dashboards. 
                     */}
                 } else {
-                    navigate("/dinolabs-ide");
+                    navigate("/dinolabs");
                 }
             } else if (response.status === 429) {
                 setLoginError("Too many login attempts. Please try again in 10 minutes.")
