@@ -473,7 +473,6 @@ struct IDEView: View {
                                     .background(Color.clear)
                                     .frame(width: geometry.size.width * (1 - leftPanelWidthRatio))
                             }
-                            
                         }
                         .frame(width: geometry.size.width * (1 - leftPanelWidthRatio), alignment: .leading)
                     
@@ -543,7 +542,6 @@ struct IDEView: View {
         }
     }
 
-    
     private func loadFileContent() {
         isLoading = true
         DispatchQueue.global(qos: .userInitiated).async {
@@ -688,15 +686,18 @@ struct IDEEditorView: NSViewRepresentable {
         let ruler = IDECenteredLineNumberRuler(textView: textView, theme: theme, zoomLevel: zoomLevel)
         scrollView.verticalRulerView = ruler
         scrollView.contentView.postsBoundsChangedNotifications = true
+        
         NotificationCenter.default.addObserver(
             forName: NSView.boundsDidChangeNotification,
             object: scrollView.contentView,
             queue: .main
         ) { _ in
             if let textView = scrollView.documentView as? IDETextView {
-                context.coordinator.applySyntaxHighlightingInternal(on: textView, withReferenceText: textView.string)
+                context.coordinator.applySyntaxHighlighting(to: textView)
             }
+            scrollView.verticalRulerView?.needsDisplay = true
         }
+        
         context.coordinator.textView = textView
         return scrollView
     }
@@ -815,7 +816,7 @@ struct IDEEditorView: NSViewRepresentable {
             parent.text = textView.string
             parent.hasUnsavedChanges = true
             pendingHighlightWorkItem?.cancel()
-            applySyntaxHighlightingInternal(on: textView, withReferenceText: textView.string)
+            applySyntaxHighlighting(to: textView)
             updateSearchIndicator()
         }
         
@@ -829,7 +830,12 @@ struct IDEEditorView: NSViewRepresentable {
                 }
             }
             pendingHighlightWorkItem = workItem
-            DispatchQueue.main.async(execute: workItem)
+            
+            if textView.window?.firstResponder == textView {
+                workItem.perform()
+            } else {
+                DispatchQueue.main.async(execute: workItem)
+            }
         }
         
         func applySyntaxHighlightingInternal(on textView: NSTextView, withReferenceText currentText: String) {
@@ -837,6 +843,7 @@ struct IDEEditorView: NSViewRepresentable {
                   let layoutManager = textView.layoutManager,
                   let textContainer = textView.textContainer else { return }
             layoutManager.ensureLayout(for: textContainer)
+            
             let visibleRect = textView.visibleRect
             let glyphRange = layoutManager.glyphRange(forBoundingRect: visibleRect, in: textContainer)
             let visibleCharRange = layoutManager.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
@@ -844,14 +851,17 @@ struct IDEEditorView: NSViewRepresentable {
             let visibleLineRange = fullText.lineRange(for: visibleCharRange)
             let expandedRange = expandRangeToIncludeFullContext(visibleLineRange, in: fullText)
             let expandedText = fullText.substring(with: expandedRange)
+            
             let paragraphStyle = textView.defaultParagraphStyle ?? NSParagraphStyle()
             let font = NSFont.monospacedSystemFont(ofSize: 11 * CGFloat(parent.zoomLevel), weight: .semibold)
             let lineHeight: CGFloat = 20.0
             let actualLineHeight = layoutManager.defaultLineHeight(for: font)
             let baselineOffset = (lineHeight - actualLineHeight) / 2.0
             let selRange = textView.selectedRange()
+            
             let tokens = SwiftParser.tokenize(expandedText, language: parent.programmingLanguage)
             let newVisibleAttributed = NSMutableAttributedString()
+            
             var currentLine = 1
             for token in tokens {
                 if token.lineNumber > currentLine {
@@ -879,11 +889,13 @@ struct IDEEditorView: NSViewRepresentable {
                     newVisibleAttributed.append(newlineAttr)
                 }
             }
+            
             if !parent.isReplacing && !parent.searchQuery.isEmpty {
                 let searchText = parent.searchQuery
                 let options: NSString.CompareOptions = parent.searchCaseSensitive ? [] : [.caseInsensitive]
                 let nsNewVisibleText = newVisibleAttributed.string as NSString
                 var searchRange = NSRange(location: 0, length: nsNewVisibleText.length)
+                
                 let baseFontSize = 11 * CGFloat(parent.zoomLevel)
                 let highlightFont = NSFont.monospacedSystemFont(ofSize: baseFontSize * 1.05, weight: .semibold)
                 let highlightColor = NSColor(hex: 0xAD6ADD)
@@ -891,6 +903,7 @@ struct IDEEditorView: NSViewRepresentable {
                 shadow.shadowOffset = NSSize(width: 1, height: -1)
                 shadow.shadowBlurRadius = 2
                 shadow.shadowColor = NSColor.black.withAlphaComponent(0.7)
+                
                 var foundMatch = false
                 while true {
                     let foundRange = nsNewVisibleText.range(of: searchText, options: options, range: searchRange)
@@ -928,6 +941,7 @@ struct IDEEditorView: NSViewRepresentable {
                     }
                 }
             }
+            
             if let lineRange = lineHighlightRange {
                 let baseFontSize = 11 * CGFloat(parent.zoomLevel)
                 let highlightFont = NSFont.monospacedSystemFont(ofSize: baseFontSize * 1.05, weight: .semibold)
@@ -936,6 +950,7 @@ struct IDEEditorView: NSViewRepresentable {
                 shadow.shadowOffset = NSSize(width: 1, height: -1)
                 shadow.shadowBlurRadius = 2
                 shadow.shadowColor = NSColor.black.withAlphaComponent(0.7)
+                
                 let intersection = NSIntersectionRange(NSRange(location: expandedRange.location, length: newVisibleAttributed.length), lineRange)
                 if intersection.length > 0 {
                     let localRange = NSRange(location: intersection.location - expandedRange.location, length: intersection.length)
@@ -945,9 +960,12 @@ struct IDEEditorView: NSViewRepresentable {
                     newVisibleAttributed.removeAttribute(.backgroundColor, range: localRange)
                 }
             }
-            if let currentAttributed = textView.textStorage?.attributedSubstring(from: expandedRange), currentAttributed.isEqual(to: newVisibleAttributed) {
+            
+            if let currentAttributed = textView.textStorage?.attributedSubstring(from: expandedRange),
+               currentAttributed.isEqual(to: newVisibleAttributed) {
                 return
             }
+            
             CATransaction.begin()
             CATransaction.setDisableActions(true)
             textView.textStorage?.beginEditing()
@@ -955,6 +973,7 @@ struct IDEEditorView: NSViewRepresentable {
             textView.textStorage?.endEditing()
             textView.setSelectedRange(selRange)
             CATransaction.commit()
+            
             textView.layer?.removeAllAnimations()
         }
         
@@ -1514,15 +1533,30 @@ class IDECenteredLineNumberRuler: NSRulerView {
         NSColor(hex: 0x333333).setFill()
         rect.fill()
         
-        guard let tv = textView, let layoutManager = tv.layoutManager else { return }
-        let fullGlyphRange = NSRange(location: 0, length: layoutManager.numberOfGlyphs)
+        guard let tv = textView,
+              let layoutManager = tv.layoutManager,
+              let container = tv.textContainer else { return }
+        
+        let visibleRectInTextView = tv.convert(tv.visibleRect, from: tv)
+        let visibleGlyphRange = layoutManager.glyphRange(forBoundingRect: visibleRectInTextView, in: container)
+        
         var lineIndex = 1
-        layoutManager.enumerateLineFragments(forGlyphRange: fullGlyphRange) { lineRect, _, _, _, _ in
+        if visibleGlyphRange.location > 0 {
+            let charRangeUpToVisible = layoutManager.characterRange(
+                forGlyphRange: NSRange(location: 0, length: visibleGlyphRange.location),
+                actualGlyphRange: nil
+            )
+            let textUpToVisible = (tv.string as NSString).substring(with: charRangeUpToVisible)
+            lineIndex = textUpToVisible.components(separatedBy: "\n").count
+        }
+        
+        layoutManager.enumerateLineFragments(forGlyphRange: visibleGlyphRange) { lineRect, _, _, _, _ in
             var lineRectInTextView = lineRect
             lineRectInTextView.origin.x += tv.textContainerOrigin.x
             lineRectInTextView.origin.y += tv.textContainerOrigin.y
             let lineRectInRuler = self.convert(lineRectInTextView, from: tv)
             let yCenter = lineRectInRuler.midY
+            
             let numberString = "\(lineIndex)"
             let font = NSFont.monospacedSystemFont(ofSize: 10 * CGFloat(self.zoomLevel), weight: .semibold)
             let attrs: [NSAttributedString.Key: Any] = [
@@ -1534,25 +1568,26 @@ class IDECenteredLineNumberRuler: NSRulerView {
             let xPos = self.ruleThickness - size.width - 35
             let yPos = yCenter - (size.height / 2.5)
             numAttr.draw(at: NSPoint(x: xPos, y: yPos))
+            
             lineIndex += 1
         }
     }
 }
 
 class InvisibleScroller: NSScroller {
-    override func draw(_ dirtyRect: NSRect) {
-    }
+    override func draw(_ dirtyRect: NSRect) {}
+    
     override var alphaValue: CGFloat {
         get { 0 }
         set { }
     }
     override func hitTest(_ point: NSPoint) -> NSView? {
-        return nil
+        nil
     }
 }
 
 extension NSRange {
     func contains(_ location: Int) -> Bool {
-        return location >= self.location && location < self.location + self.length
+        return (location >= self.location) && (location < (self.location + self.length))
     }
 }
