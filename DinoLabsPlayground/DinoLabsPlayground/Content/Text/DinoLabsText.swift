@@ -1,5 +1,3 @@
-
-
 //
 //  DinoLabsText.swift
 //
@@ -381,6 +379,7 @@ struct TextView: View {
                                     searchQuery = ""
                                     replaceQuery = ""
                                     clearSearchResults()
+                                    NotificationCenter.default.post(name: .updateSearchHighlighting, object: nil, userInfo: ["searchQuery": "", "searchCaseSensitive": searchCaseSensitive])
                                 }
                             }
                             .containerHelper(backgroundColor: replaceState ? Color(hex: 0xAD6ADD) : Color(hex: 0x414141),
@@ -818,10 +817,17 @@ struct TextView: View {
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: .requestSearch)) { _ in
-            searchState = true
+            if !searchState && !replaceState {
+                searchState = true
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .requestSave)) { _ in
             saveFile()
+        }
+        .onChange(of: fileContent) { _ in
+            if !searchQuery.isEmpty {
+                performSearch()
+            }
         }
     }
     
@@ -1039,7 +1045,7 @@ struct TextViewWrapper: NSViewRepresentable {
             }
             
             DispatchQueue.main.async {
-                NotificationCenter.default.post(name: .reSearchAfterReplacement, object: nil)
+                NotificationCenter.default.post(name: .updateSearchHighlighting, object: nil, userInfo: ["searchQuery": "", "searchCaseSensitive": caseSensitive])
             }
         }
         

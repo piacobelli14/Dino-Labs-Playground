@@ -62,6 +62,10 @@ struct AuthenticationTextField: NSViewRepresentable {
         if nsView.stringValue != text {
             nsView.stringValue = text
         }
+        if nsView.window?.firstResponder == nsView,
+           let editor = nsView.window?.fieldEditor(true, for: nsView) as? NSTextView {
+            editor.insertionPointColor = NSColor.black
+        }
     }
     
     class Coordinator: NSObject, NSTextFieldDelegate {
@@ -78,3 +82,4 @@ struct AuthenticationTextField: NSViewRepresentable {
         }
     }
 }
+

@@ -66,6 +66,10 @@ struct AudioTextField: NSViewRepresentable {
         if nsView.stringValue != text {
             nsView.stringValue = text
         }
+        if nsView.window?.firstResponder == nsView,
+           let editor = nsView.window?.fieldEditor(true, for: nsView) as? NSTextView {
+            editor.insertionPointColor = NSColor.white
+        }
     }
     
     class Coordinator: NSObject, NSTextFieldDelegate {
@@ -104,7 +108,9 @@ class AudioNSTextField: NSTextField {
     
     override func becomeFirstResponder() -> Bool {
         let success = super.becomeFirstResponder()
-        if let fieldEditor = self.window?.fieldEditor(true, for: self) as? NSTextView {
+        if success,
+           let fieldEditor = self.window?.fieldEditor(true, for: self) as? NSTextView {
+            fieldEditor.insertionPointColor = NSColor.white
             fieldEditor.delegate = self
         }
         return success

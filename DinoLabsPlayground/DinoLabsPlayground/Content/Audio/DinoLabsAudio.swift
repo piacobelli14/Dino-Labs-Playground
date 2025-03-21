@@ -49,19 +49,13 @@ class AudioDataCache {
         var allSamples = [Float]()
         while let sampleBuffer = trackOutput.copyNextSampleBuffer() {
             if let blockBuffer = CMSampleBufferGetDataBuffer(sampleBuffer) {
-                let length = CMBlockBufferGetDataLength(blockBuffer)
-                var data = Data(count: length)
-                data.withUnsafeMutableBytes { (bytes: UnsafeMutableRawBufferPointer) in
-                    if let baseAddress = bytes.baseAddress {
-                        CMBlockBufferCopyDataBytes(blockBuffer, atOffset: 0, dataLength: length, destination: baseAddress)
-                    }
-                }
-                let sampleCount = length / MemoryLayout<Float>.size
-                data.withUnsafeBytes { (samplesPointer: UnsafeRawBufferPointer) in
-                    let floatBuffer = samplesPointer.bindMemory(to: Float.self)
-                    for i in 0..<sampleCount {
-                        allSamples.append(floatBuffer[i])
-                    }
+                var dataPointer: UnsafeMutablePointer<Int8>? = nil
+                let status = CMBlockBufferGetDataPointer(blockBuffer, atOffset: 0, lengthAtOffsetOut: nil, totalLengthOut: nil, dataPointerOut: &dataPointer)
+                if status == noErr, let dataPointer = dataPointer {
+                    let length = CMBlockBufferGetDataLength(blockBuffer)
+                    let sampleCount = length / MemoryLayout<Float>.size
+                    let floatPointer = dataPointer.withMemoryRebound(to: Float.self, capacity: sampleCount) { $0 }
+                    allSamples.append(contentsOf: UnsafeBufferPointer(start: floatPointer, count: sampleCount))
                 }
             }
             CMSampleBufferInvalidate(sampleBuffer)
@@ -102,6 +96,8 @@ struct AudioView: View {
     @State private var audioFilePlayer: AVAudioPlayerNode? = nil
     @State private var eqNode: AVAudioUnitEQ? = nil
     @State private var audioFileRef: AVAudioFile? = nil
+    @State private var varispeedNode: AVAudioUnitVarispeed? = nil
+    @State private var timePitchNode: AVAudioUnitTimePitch? = nil
     
     var body: some View {
         VStack(spacing: 0) {
@@ -908,12 +904,10 @@ struct AudioView: View {
                             
                             HStack {
                                 Menu("\(playbackSpeed, specifier: "%.1fx")") {
-                                    Button("0.5x") { playbackSpeed = 0.5; audioPlayer?.rate = 0.5 }
-                                    Button("1.0x") { playbackSpeed = 1.0; audioPlayer?.rate = 1.0 }
-                                    Button("1.5x") { playbackSpeed = 1.5; audioPlayer?.rate = 1.5 }
-                                    Button("2.0x") { playbackSpeed = 2.0; audioPlayer?.rate = 2.0 }
-                                    Button("2.5x") { playbackSpeed = 2.5; audioPlayer?.rate = 2.5 }
-                                    Button("3.0x") { playbackSpeed = 3.0; audioPlayer?.rate = 3.0 }
+                                    Button("0.5x") { playbackSpeed = 0.5; updatePlayerRate() }
+                                    Button("1.0x") { playbackSpeed = 1.0; updatePlayerRate() }
+                                    Button("1.5x") { playbackSpeed = 1.5; updatePlayerRate() }
+                                    Button("2.0x") { playbackSpeed = 2.0; updatePlayerRate() }
                                 }
                                 .font(.system(size: 8, weight: .semibold))
                                 .frame(width: 70)
@@ -981,12 +975,7 @@ struct AudioView: View {
             audioEngine?.mainMixerNode.outputVolume = Float(newValue)
         }
         .onChange(of: pitch) { newValue in
-            if let player = audioPlayer {
-                player.enableRate = true
-                let semitones = (Float(newValue) * 24.0) - 12.0
-                let newRate = pow(2.0, semitones / 12.0)
-                player.rate = newRate
-            }
+            updatePlayerRate()
         }
         .onChange(of: bass) { newValue in
             let eqGain = Float(newValue * 24.0 - 12.0)
@@ -1018,6 +1007,12 @@ struct AudioView: View {
             let engine = AVAudioEngine()
             let playerNode = AVAudioPlayerNode()
             let eq = AVAudioUnitEQ(numberOfBands: 5)
+            let varispeed = AVAudioUnitVarispeed()
+            let timePitch = AVAudioUnitTimePitch()
+            engine.attach(playerNode)
+            engine.attach(varispeed)
+            engine.attach(timePitch)
+            engine.attach(eq)
             
             eq.bypass = false
             eq.bands[0].bypass = false
@@ -1042,11 +1037,11 @@ struct AudioView: View {
             let range = maxQ - minQ
             eq.bands[4].bandwidth = minQ + Float(vocalIsolation) * range
             
-            engine.attach(playerNode)
-            engine.attach(eq)
             let file = try AVAudioFile(forReading: fileURL)
             let format = file.processingFormat
-            engine.connect(playerNode, to: eq, format: format)
+            engine.connect(playerNode, to: varispeed, format: format)
+            engine.connect(varispeed, to: timePitch, format: format)
+            engine.connect(timePitch, to: eq, format: format)
             engine.connect(eq, to: engine.mainMixerNode, format: format)
             try engine.start()
             playerNode.scheduleFile(file, at: nil)
@@ -1055,6 +1050,8 @@ struct AudioView: View {
             self.audioFilePlayer = playerNode
             self.eqNode = eq
             self.audioFileRef = file
+            self.varispeedNode = varispeed
+            self.timePitchNode = timePitch
             
             audioPlayer = try AVAudioPlayer(contentsOf: fileURL)
             audioPlayer?.enableRate = true
@@ -1062,6 +1059,19 @@ struct AudioView: View {
             audioPlayer?.rate = playbackSpeed
             audioPlayer?.volume = 0
         } catch {}
+    }
+    
+    private func updatePlayerRate() {
+        if let player = audioPlayer {
+            player.rate = playbackSpeed
+        }
+        if let varispeed = varispeedNode {
+            varispeed.rate = playbackSpeed
+        }
+        if let timePitch = timePitchNode {
+            let semitones = (Float(pitch) * 24.0) - 12.0
+            timePitch.pitch = semitones * 100 
+        }
     }
 }
 

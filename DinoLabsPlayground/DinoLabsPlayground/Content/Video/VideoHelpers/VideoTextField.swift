@@ -104,7 +104,8 @@ class VideoNSTextField: NSTextField {
     
     override func becomeFirstResponder() -> Bool {
         let success = super.becomeFirstResponder()
-        if let fieldEditor = self.window?.fieldEditor(true, for: self) as? NSTextView {
+        if success, let fieldEditor = self.window?.fieldEditor(true, for: self) as? NSTextView {
+            fieldEditor.insertionPointColor = NSColor.white
             fieldEditor.delegate = self
         }
         return success

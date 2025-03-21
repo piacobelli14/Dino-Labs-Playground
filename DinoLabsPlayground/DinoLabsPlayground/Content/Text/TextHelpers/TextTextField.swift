@@ -21,7 +21,7 @@ struct TextTextField: NSViewRepresentable {
         let textField: NSTextField
         
         if isSecure {
-            let secureField = NSSecureTextField()
+            let secureField = TextNSecureTextField()
             secureField.isBordered = false
             secureField.drawsBackground = false
             secureField.backgroundColor = .clear
@@ -103,6 +103,20 @@ class TextNSTextField: NSTextField, NSTextViewDelegate {
     }
     
     override func becomeFirstResponder() -> Bool {
-        return super.becomeFirstResponder()
+        let became = super.becomeFirstResponder()
+        if became, let editor = self.window?.fieldEditor(true, for: self) as? NSTextView {
+            editor.insertionPointColor = NSColor.white
+        }
+        return became
+    }
+}
+
+class TextNSecureTextField: NSSecureTextField {
+    override func becomeFirstResponder() -> Bool {
+        let became = super.becomeFirstResponder()
+        if became, let editor = self.window?.fieldEditor(true, for: self) as? NSTextView {
+            editor.insertionPointColor = NSColor.white
+        }
+        return became
     }
 }

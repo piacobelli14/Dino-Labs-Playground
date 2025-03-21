@@ -1,9 +1,3 @@
-//
-//  HoverHelper.swift
-//
-//  Created by Peter Iacobelli on 2/13/25.
-//
-
 import SwiftUI
 
 struct HoverEffectModifier: ViewModifier {
@@ -21,11 +15,8 @@ struct HoverEffectModifier: ViewModifier {
             .overlay(
                 GeometryReader { proxy in
                     if let cursor = cursor {
-                        Color.clear
+                        CursorAreaRepresentable(cursor: cursor)
                             .frame(width: proxy.size.width, height: proxy.size.height)
-                            .overlay(
-                                CursorAreaRepresentable(cursor: cursor)
-                            )
                     }
                 }
             )
@@ -57,5 +48,50 @@ extension View {
                 cursor: cursor
             )
         )
+    }
+}
+
+struct CursorAreaRepresentable: NSViewRepresentable {
+    let cursor: NSCursor
+    
+    func makeNSView(context: Context) -> NSView {
+        let view = TrackingView(cursor: cursor)
+        return view
+    }
+    
+    func updateNSView(_ nsView: NSView, context: Context) {
+    }
+    
+    class TrackingView: NSView {
+        let cursor: NSCursor
+        
+        init(cursor: NSCursor) {
+            self.cursor = cursor
+            super.init(frame: .zero)
+        }
+        
+        required init?(coder: NSCoder) {
+            fatalError("init(coder:) has not been implemented")
+        }
+        
+        override func updateTrackingAreas() {
+            super.updateTrackingAreas()
+            trackingAreas.forEach { removeTrackingArea($0) }
+            let options: NSTrackingArea.Options = [.mouseEnteredAndExited, .activeInActiveApp, .inVisibleRect]
+            let trackingArea = NSTrackingArea(rect: bounds, options: options, owner: self, userInfo: nil)
+            addTrackingArea(trackingArea)
+        }
+        
+        override func mouseEntered(with event: NSEvent) {
+            cursor.push()
+        }
+        
+        override func mouseExited(with event: NSEvent) {
+            NSCursor.pop()
+        }
+        
+        override func hitTest(_ point: NSPoint) -> NSView? {
+            return nil
+        }
     }
 }

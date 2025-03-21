@@ -89,12 +89,12 @@
 		CB5B4AE52D601B5F00492970 /* NavigatorButtonMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = NavigatorButtonMain.swift; sourceTree = "<group>"; };
 		CB6331742D66ACD300DBA508 /* DinoLabsAccount.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinoLabsAccount.swift; sourceTree = "<group>"; wrapsLines = 0; };
 		CB82E61D2D7002EC00AB6412 /* TabularButtonMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabularButtonMain.swift; sourceTree = "<group>"; };
-		CB9A90A62D73A13E00AA034A /* TabularTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabularTextField.swift; sourceTree = "<group>"; };
+		CB9A90A62D73A13E00AA034A /* TabularTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TabularTextField.swift; sourceTree = "<group>"; wrapsLines = 0; };
 		CB9A90A82D74A20F00AA034A /* DinoLabsTabularConstructors.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinoLabsTabularConstructors.swift; sourceTree = "<group>"; };
 		CB9A90AA2D76770A00AA034A /* DinoLabsText.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinoLabsText.swift; sourceTree = "<group>"; };
 		CB9A90AD2D76857D00AA034A /* TextTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextTextField.swift; sourceTree = "<group>"; };
 		CB9A90AF2D76858C00AA034A /* TextButtonMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = TextButtonMain.swift; sourceTree = "<group>"; };
-		CB9A90B12D77BE7800AA034A /* DinoLabsImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinoLabsImage.swift; sourceTree = "<group>"; wrapsLines = 1; };
+		CB9A90B12D77BE7800AA034A /* DinoLabsImage.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinoLabsImage.swift; sourceTree = "<group>"; wrapsLines = 0; };
 		CB9A90B42D77DCBF00AA034A /* ImageTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageTextField.swift; sourceTree = "<group>"; };
 		CB9A90B62D77DCCB00AA034A /* ImageButtonMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ImageButtonMain.swift; sourceTree = "<group>"; };
 		CB9A90B92D7BB6DA00AA034A /* DinoLabsVideo.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinoLabsVideo.swift; sourceTree = "<group>"; };
@@ -741,7 +741,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"DinoLabsPlayground/Preview Content\"";
-				DEVELOPMENT_TEAM = 3UP33MD4NA;
+				DEVELOPMENT_TEAM = PN37Y74W92;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
@@ -777,7 +777,7 @@
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"DinoLabsPlayground/Preview Content\"";
-				DEVELOPMENT_TEAM = 3UP33MD4NA;
+				DEVELOPMENT_TEAM = PN37Y74W92;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;

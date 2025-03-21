@@ -182,7 +182,7 @@ struct AnimatedPieChart: View {
                     return
                 }
                 
-                var pointerAngle = atan2(dy, dx) * 180 / -Double.pi
+                var pointerAngle = atan2(dy, dx) * 180.00 / -Double.pi
                 pointerAngle = normalized(pointerAngle)
                 mouseAngle = pointerAngle
                 

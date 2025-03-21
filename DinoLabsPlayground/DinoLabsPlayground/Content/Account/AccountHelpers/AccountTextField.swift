@@ -1,6 +1,5 @@
 //
 //  AccountTextField.swift
-//  Dino Labs Playground
 //
 //  Created by Peter Iacobelli on 2/20/25.
 //
@@ -62,6 +61,10 @@ struct AccountTextField: NSViewRepresentable {
     func updateNSView(_ nsView: NSTextField, context: Context) {
         if nsView.stringValue != text {
             nsView.stringValue = text
+        }
+        if nsView.window?.firstResponder == nsView,
+           let editor = nsView.window?.fieldEditor(true, for: nsView) as? NSTextView {
+            editor.insertionPointColor = NSColor.white
         }
     }
     

@@ -14,15 +14,14 @@ struct VideoButtonMain: NSViewRepresentable {
         Coordinator(action: action)
     }
 
-    func makeNSView(context: Context) -> PlainNSButton {
-        let button = PlainNSButton()
-        button.target = context.coordinator
-        button.action = #selector(Coordinator.buttonAction)
-        
+    func makeNSView(context: Context) -> NSButton {
+        let button = NSButton(title: "", target: context.coordinator, action: #selector(Coordinator.buttonAction))
+        button.isBordered = false
+        button.frame = CGRect(x: 0, y: 0, width: 100, height: 30)
         return button
     }
 
-    func updateNSView(_ nsView: PlainNSButton, context: Context) {
+    func updateNSView(_ nsView: NSButton, context: Context) {
     }
 
     class Coordinator: NSObject {

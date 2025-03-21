@@ -18,7 +18,6 @@ struct ImageView: View {
     @State private var imageHeight: String = "0.0"
     @State private var preserveAspectRatio: Bool = true
     @State private var isCropping: Bool = false
-    @State private var isCircleCropping: Bool = false
     @State private var imageSize: CGSize = .zero
     @State private var originalAspectRatio: CGFloat = 1.0
     @State private var lastDragPosition: CGPoint?
@@ -48,7 +47,6 @@ struct ImageView: View {
     @State private var contrastValue: CGFloat = 1.0
     @State private var blurValue: CGFloat = 0.0
     @State private var grayscaleValue: CGFloat = 0.0
-    @State private var sepiaValue: CGFloat = 0.0
     @State private var imageScaleFactor: CGFloat = 1.0
 
     var body: some View {
@@ -80,7 +78,6 @@ struct ImageView: View {
                                         flipHorizontal = false
                                         flipVertical = false
                                         isCropping = false
-                                        isCircleCropping = false
                                         cropRectSize = .zero
                                         cropRectPosition = .zero
                                         currentImage = NSImage(contentsOf: fileURL)
@@ -92,7 +89,6 @@ struct ImageView: View {
                                         contrastValue = 1.0
                                         blurValue = 0.0
                                         grayscaleValue = 0.0
-                                        sepiaValue = 0.0
                                         updateTextFields()
                                     }
                                     .containerHelper(backgroundColor: Color(hex: 0x515151), borderColor: Color(hex: 0x616161), borderWidth: 1, topLeft: 2, topRight: 2, bottomLeft: 2, bottomRight: 2, shadowColor: Color.white.opacity(0.5), shadowRadius: 1, shadowX: 0, shadowY: 0)
@@ -376,10 +372,8 @@ struct ImageView: View {
                                             if isCropping {
                                                 cropImage()
                                                 isCropping = false
-                                                isCircleCropping = false
                                             } else {
                                                 isCropping = true
-                                                isCircleCropping = false
                                                 cropRectPosition = imagePosition
                                                 cropRectSize = imageSize
                                             }
@@ -394,26 +388,6 @@ struct ImageView: View {
                                         )
                                         .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
                                         
-                                        if isCropping {
-                                            ImageButtonMain {
-                                                if isCircleCropping {
-                                                    isCircleCropping = false
-                                                } else {
-                                                    isCircleCropping = true
-                                                    cropRectSize = imageSize
-                                                    cropRectPosition = imagePosition
-                                                }
-                                            }
-                                            .containerHelper(backgroundColor: isCircleCropping ? Color(hex: 0xAD6ADD) : Color(hex: 0x515151), borderColor: Color(hex: 0x616161), borderWidth: 1, topLeft: 2, topRight: 2, bottomLeft: 2, bottomRight: 2, shadowColor: Color.white.opacity(0.5), shadowRadius: 1, shadowX: 0, shadowY: 0)
-                                            .frame(width: geometry.size.width * 0.02, height: 20)
-                                            .overlay(
-                                                Image(systemName: "circle.dotted")
-                                                    .font(.system(size: 10, weight: .semibold))
-                                                    .foregroundColor(Color(hex: 0xf5f5f5).opacity(0.8))
-                                                    .allowsHitTesting(false)
-                                            )
-                                            .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
-                                        }
                                         
                                         if isCropping {
                                             ImageButtonMain {
@@ -632,7 +606,7 @@ struct ImageView: View {
                                                 get: { hueValue },
                                                 set: { hueValue = $0 }
                                             ),
-                                            range: 0.0...1.0, step: 0.1, sliderWidth: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.8, sliderHeight: 8, thumbSize: 12, activeColor: .purple, inactiveColor: Color(white: 0.3), thumbColor: .white, showText: false, animationDuration: 0.2, animationDamping: 0.7
+                                            range: -180.0...180.0, step: 1.0, sliderWidth: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.8, sliderHeight: 8, thumbSize: 12, activeColor: .purple, inactiveColor: Color(white: 0.3), thumbColor: .white, showText: false, animationDuration: 0.2, animationDamping: 0.7
                                         )
                                         .padding(.horizontal, 2)
                                         Spacer()
@@ -815,40 +789,6 @@ struct ImageView: View {
                             }
                             .frame(width: geometry.size.width * (1 - leftPanelWidthRatio) * 0.3)
                             .padding(.top, 12)
-                            
-                            HStack {
-                                Spacer()
-                                VStack(alignment: .leading, spacing: 0) {
-                                    HStack {
-                                        Text("Sepia")
-                                            .font(.system(size: 9, weight: .semibold))
-                                            .foregroundColor(Color(hex: 0xc1c1c1))
-                                            .padding(.leading, 2)
-                                        Spacer()
-                                    }
-                                    .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.9)
-                                    .padding(.bottom, 12)
-                                    
-                                    HStack(spacing: 0) {
-                                        
-                                        Slider(
-                                            value: Binding<Double>(
-                                                get: { Double(sepiaValue) },
-                                                set: { sepiaValue = CGFloat($0) }
-                                            ),
-                                            range: 0.0...0.5, step: 0.1, sliderWidth: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.8, sliderHeight: 8, thumbSize: 12, activeColor: .purple, inactiveColor: Color(white: 0.3), thumbColor: .white, showText: false, animationDuration: 0.2, animationDamping: 0.7
-                                        )
-                                        .padding(.horizontal, 2)
-                                        Spacer()
-                                    }
-                                    .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.9)
-                                    .padding(.bottom, 16)
-                                }
-                                
-                                Spacer()
-                            }
-                            .frame(width: geometry.size.width * (1 - leftPanelWidthRatio) * 0.3)
-                            .padding(.top, 12)
                         }
                         .padding(.bottom, 12)
                         .overlay(
@@ -888,10 +828,6 @@ struct ImageView: View {
                                         .contrast(contrastValue)
                                         .blur(radius: blurValue)
                                         .grayscale(grayscaleValue)
-                                        .overlay(
-                                            Color(red: 89/255, green: 77/255, blue: 51/255)
-                                                .opacity(Double(sepiaValue))
-                                        )
                                         .position(imagePosition)
                                         .gesture(isCropping ? nil : imageDragGesture())
                                     
@@ -924,28 +860,16 @@ struct ImageView: View {
                                     }
                                     
                                     if isCropping {
-                                        if isCircleCropping {
-                                            Ellipse()
-                                                .fill(Color.black.opacity(0.3))
-                                                .frame(width: cropRectSize.width, height: cropRectSize.height)
-                                                .overlay(
-                                                    Ellipse()
-                                                        .stroke(Color.white.opacity(0.8), lineWidth: 2)
-                                                )
-                                                .rotationEffect(cropRotationAngle + rotationAngle)
-                                                .scaleEffect(x: flipHorizontal ? -1 : 1, y: flipVertical ? -1 : 1)
-                                                .position(cropRectPosition)
-                                                .gesture(cropDragGesture())
-                                        } else {
-                                            Rectangle()
-                                                .fill(Color.black.opacity(0.3))
-                                                .frame(width: cropRectSize.width, height: cropRectSize.height)
-                                                .border(Color.white.opacity(0.8), width: 2)
-                                                .rotationEffect(cropRotationAngle + rotationAngle)
-                                                .scaleEffect(x: flipHorizontal ? -1 : 1, y: flipVertical ? -1 : 1)
-                                                .position(cropRectPosition)
-                                                .gesture(cropDragGesture())
-                                        }
+                                        
+                                        Rectangle()
+                                            .fill(Color.black.opacity(0.3))
+                                            .frame(width: cropRectSize.width, height: cropRectSize.height)
+                                            .border(Color.white.opacity(0.8), width: 2)
+                                            .rotationEffect(cropRotationAngle + rotationAngle)
+                                            .scaleEffect(x: flipHorizontal ? -1 : 1, y: flipVertical ? -1 : 1)
+                                            .position(cropRectPosition)
+                                            .gesture(cropDragGesture())
+                                        
                                         
                                         Group {
                                             RoundedRectangle(cornerRadius: 2)
@@ -1309,7 +1233,6 @@ struct ImageView: View {
     }
     
     private func cropImage() {
-        let isCircleCrop = isCircleCropping
         DispatchQueue.global(qos: .userInitiated).async {
             guard let image = currentImage ?? NSImage(contentsOf: fileURL),
                   let cgImage = image.cgImage(forProposedRect: nil, context: nil, hints: nil) else { return }
@@ -1370,49 +1293,17 @@ struct ImageView: View {
                 height: min(pixelHeight - max(0, minY), maxY - minY)
             )
             
-            if isCircleCrop {
-                guard let rectCroppedCG = cgImage.cropping(to: cropRect),
-                      let ctx = CGContext(
-                        data: nil,
-                        width: Int(cropRect.width),
-                        height: Int(cropRect.height),
-                        bitsPerComponent: cgImage.bitsPerComponent,
-                        bytesPerRow: 0,
-                        space: cgImage.colorSpace ?? CGColorSpaceCreateDeviceRGB(),
-                        bitmapInfo: CGImageAlphaInfo.premultipliedFirst.rawValue
-                      ) else { return }
-                
-                ctx.setFillColor(NSColor.clear.cgColor)
-                ctx.fill(CGRect(origin: .zero, size: cropRect.size))
-                
-                ctx.addEllipse(in: CGRect(origin: .zero, size: cropRect.size))
-                ctx.clip()
-                ctx.draw(rectCroppedCG, in: CGRect(origin: .zero, size: cropRect.size))
-                
-                if let newCG = ctx.makeImage() {
-                    let newImage = NSImage(cgImage: newCG, size: cropRect.size)
-                    DispatchQueue.main.async {
-                        cropHistory.append((image: currentImage ?? image, size: imageSize, position: imagePosition))
-                        currentImage = newImage
-                        imageSize = cropRectSize
-                        imagePosition = cropRectPosition
-                        cropRectSize = .zero
-                        cropRectPosition = .zero
-                        updateTextFields()
-                    }
-                }
-            } else {
-                if let croppedCG = cgImage.cropping(to: cropRect) {
-                    let newImage = NSImage(cgImage: croppedCG, size: cropRect.size)
-                    DispatchQueue.main.async {
-                        cropHistory.append((image: currentImage ?? image, size: imageSize, position: imagePosition))
-                        currentImage = newImage
-                        imageSize = cropRectSize
-                        imagePosition = cropRectPosition
-                        cropRectSize = .zero
-                        cropRectPosition = .zero
-                        updateTextFields()
-                    }
+            
+            if let croppedCG = cgImage.cropping(to: cropRect) {
+                let newImage = NSImage(cgImage: croppedCG, size: cropRect.size)
+                DispatchQueue.main.async {
+                    cropHistory.append((image: currentImage ?? image, size: imageSize, position: imagePosition))
+                    currentImage = newImage
+                    imageSize = cropRectSize
+                    imagePosition = cropRectPosition
+                    cropRectSize = .zero
+                    cropRectPosition = .zero
+                    updateTextFields()
                 }
             }
         }
@@ -1456,14 +1347,6 @@ struct ImageView: View {
             blurFilter.setValue(outputImage, forKey: kCIInputImageKey)
             blurFilter.setValue(blurValue, forKey: kCIInputRadiusKey)
             if let result = blurFilter.outputImage {
-                outputImage = result
-            }
-        }
-        
-        if sepiaValue > 0, let sepia = CIFilter(name: "CISepiaTone") {
-            sepia.setValue(outputImage, forKey: kCIInputImageKey)
-            sepia.setValue(sepiaValue, forKey: kCIInputIntensityKey)
-            if let result = sepia.outputImage {
                 outputImage = result
             }
         }

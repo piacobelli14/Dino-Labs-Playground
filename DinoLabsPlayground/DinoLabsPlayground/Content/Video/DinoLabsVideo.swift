@@ -48,7 +48,6 @@ struct VideoView: View {
     @State private var contrastValue: CGFloat = 1.0
     @State private var blurValue: CGFloat = 0.0
     @State private var grayscaleValue: CGFloat = 0.0
-    @State private var sepiaValue: CGFloat = 0.0
     @State private var videoScaleFactor: CGFloat = 1.0
     @State private var isPlaying: Bool = false
     @State private var isLooping: Bool = false
@@ -109,7 +108,6 @@ struct VideoView: View {
                                         contrastValue = 1.0
                                         blurValue = 0.0
                                         grayscaleValue = 0.0
-                                        sepiaValue = 0.0
                                         currentCropRect = initialCropRect
                                         updateTextFields()
                                         let originalItem = AVPlayerItem(url: fileURL)
@@ -641,7 +639,10 @@ struct VideoView: View {
                                             value: Binding<Double>(
                                                 get: { hueValue },
                                                 set: { hueValue = $0 }
-                                            ), range: 0.0...1.0, step: 0.1, sliderWidth: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.8,
+                                            ),
+                                            range: -180.0...180.0,
+                                            step: 1.0,
+                                            sliderWidth: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.8,
                                             sliderHeight: 8,
                                             thumbSize: 12,
                                             activeColor: .purple,
@@ -871,48 +872,6 @@ struct VideoView: View {
                             }
                             .frame(width: geometry.size.width * (1 - leftPanelWidthRatio) * 0.3)
                             .padding(.top, 12)
-                            
-                            HStack {
-                                Spacer()
-                                VStack(alignment: .leading, spacing: 0) {
-                                    HStack {
-                                        Text("Sepia")
-                                            .font(.system(size: 9, weight: .semibold))
-                                            .foregroundColor(Color(hex: 0xc1c1c1))
-                                            .padding(.leading, 2)
-                                        Spacer()
-                                    }
-                                    .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.9)
-                                    .padding(.bottom, 12)
-                                    
-                                    HStack(spacing: 0) {
-                                        Slider(
-                                            value: Binding<Double>(
-                                                get: { Double(sepiaValue) },
-                                                set: { sepiaValue = CGFloat($0) }
-                                            ),
-                                            range: 0.0...0.5,
-                                            step: 0.1,
-                                            sliderWidth: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.8,
-                                            sliderHeight: 8,
-                                            thumbSize: 12,
-                                            activeColor: .purple,
-                                            inactiveColor: Color(white: 0.3),
-                                            thumbColor: .white,
-                                            showText: false,
-                                            animationDuration: 0.2,
-                                            animationDamping: 0.7
-                                        )
-                                        .padding(.horizontal, 2)
-                                        Spacer()
-                                    }
-                                    .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.9)
-                                    .padding(.bottom, 16)
-                                }
-                                Spacer()
-                            }
-                            .frame(width: geometry.size.width * (1 - leftPanelWidthRatio) * 0.3)
-                            .padding(.top, 12)
                         }
                         .padding(.bottom, 12)
                         .overlay(
@@ -960,10 +919,6 @@ struct VideoView: View {
                                     .contrast(contrastValue)
                                     .blur(radius: blurValue)
                                     .grayscale(grayscaleValue)
-                                    .overlay(
-                                        Color(red: 89/255, green: 77/255, blue: 51/255)
-                                            .opacity(Double(sepiaValue))
-                                    )
                                     .position(videoPosition)
                                     .gesture(isCropping ? nil : videoDragGesture())
                                 
@@ -1190,12 +1145,11 @@ struct VideoView: View {
                             .containerHelper(backgroundColor: Color.clear, borderColor: Color.clear, borderWidth: 0,
                                              topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0,
                                              shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
-                            .disabled(isFrameState ? true : false)
                             .frame(width: 15, height: 15)
                             .overlay(
                                 Image(systemName: isFrameState ? "xmark.square" : "film.stack")
                                     .font(.system(size: 12, weight: .semibold))
-                                    .foregroundColor(isFrameState ? Color.white.opacity(0.4) : Color.white.opacity(0.9))
+                                    .foregroundColor(Color.white.opacity(0.9))
                                     .allowsHitTesting(false)
                             )
                             .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)

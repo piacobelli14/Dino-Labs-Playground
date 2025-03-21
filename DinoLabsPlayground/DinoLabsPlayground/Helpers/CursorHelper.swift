@@ -16,21 +16,6 @@ class CursorView: NSView {
     }
 }
 
-struct CursorAreaRepresentable: NSViewRepresentable {
-    let cursor: NSCursor
-    
-    func makeNSView(context: Context) -> CursorView {
-        let view = CursorView()
-        view.cursor = cursor
-        return view
-    }
-    
-    func updateNSView(_ nsView: CursorView, context: Context) {
-        nsView.cursor = cursor
-        nsView.resetCursorRects()
-    }
-}
-
 struct MouseTrackingView: NSViewRepresentable {
     var onMouseMove: (CGPoint) -> Void
     
