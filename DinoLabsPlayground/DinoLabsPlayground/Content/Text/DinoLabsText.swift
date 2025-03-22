@@ -464,7 +464,7 @@ struct TextView: View {
                     Spacer()
                     TextViewWrapper(
                         text: $fileContent,
-                        isEditable: !(showAlert || showFileMenu || showEditMenu),
+                        isEditable: !(showAlert || showFileMenu || showEditMenu || searchState || replaceState),
                         onTextChange: { newValue in
                             if newValue != initialContent {
                                 hasUnsavedChanges = true
@@ -997,6 +997,9 @@ struct TextViewWrapper: NSViewRepresentable {
                   let replacement = userInfo["replacement"] as? String,
                   let caseSensitive = userInfo["caseSensitive"] as? Bool else { return }
             
+            let originalEditable = textView.isEditable
+            textView.isEditable = true
+            
             let selRange = textView.selectedRange()
             if selRange.length > 0 {
                 let selectedText = (textView.string as NSString).substring(with: selRange)
@@ -1008,6 +1011,8 @@ struct TextViewWrapper: NSViewRepresentable {
                     }
                 }
             }
+            
+            textView.isEditable = originalEditable
             
             DispatchQueue.main.async {
                 NotificationCenter.default.post(name: .reSearchAfterReplacement, object: nil)
@@ -1027,6 +1032,9 @@ struct TextViewWrapper: NSViewRepresentable {
             let options: NSString.CompareOptions = caseSensitive ? [] : [.caseInsensitive]
             var searchRange = NSRange(location: 0, length: nsText.length)
             
+            let originalEditable = textView.isEditable
+            textView.isEditable = true
+            
             while true {
                 let foundRange = nsText.range(of: search, options: options, range: searchRange)
                 if foundRange.location == NSNotFound {
@@ -1044,6 +1052,8 @@ struct TextViewWrapper: NSViewRepresentable {
                 }
             }
             
+            textView.isEditable = originalEditable
+            
             DispatchQueue.main.async {
                 NotificationCenter.default.post(name: .updateSearchHighlighting, object: nil, userInfo: ["searchQuery": "", "searchCaseSensitive": caseSensitive])
             }
@@ -1055,6 +1065,9 @@ struct TextViewWrapper: NSViewRepresentable {
             queue: .main
         ) { [weak textView] _ in
             textView?.undoManager?.undo()
+            DispatchQueue.main.async {
+                NotificationCenter.default.post(name: .updateSearchHighlighting, object: nil, userInfo: ["searchQuery": "", "searchCaseSensitive": true])
+            }
         }
         
         NotificationCenter.default.addObserver(
@@ -1221,6 +1234,7 @@ class TextViewModel: NSTextView {
             return true
         } else if event.modifierFlags.contains(.command) && event.charactersIgnoringModifiers == "z" {
             undoManager?.undo()
+            NotificationCenter.default.post(name: .updateSearchHighlighting, object: nil, userInfo: ["searchQuery": "", "searchCaseSensitive": true])
             return true
         } else if event.modifierFlags.contains(.command) && event.charactersIgnoringModifiers == "y" {
             undoManager?.redo()
