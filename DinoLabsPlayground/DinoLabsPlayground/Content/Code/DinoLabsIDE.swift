@@ -1265,15 +1265,17 @@ class IDETextView: NSTextView {
                 let nsString = self.string as NSString
                 let sel = self.selectedRange()
                 let currentLineRange = nsString.lineRange(for: sel)
-                let currentLineText = nsString.substring(with: currentLineRange)
-                let currentLineTrimmed = currentLineText.trimmingCharacters(in: .whitespacesAndNewlines)
-                if currentLineTrimmed.isEmpty && currentLineRange.location > 0 {
+                if sel.location == currentLineRange.location && currentLineRange.location > 0 {
                     let previousLineRange = nsString.lineRange(for: NSRange(location: currentLineRange.location - 1, length: 0))
                     let previousLineText = nsString.substring(with: previousLineRange)
-                    let indentation = previousLineText.prefix { $0 == " " || $0 == "\t" }
-                    if !indentation.isEmpty {
-                        self.replaceCharacters(in: currentLineRange, with: String(indentation))
-                        self.setSelectedRange(NSRange(location: currentLineRange.location + String(indentation).count, length: 0))
+                    let previousIndentation = previousLineText.prefix { $0 == " " || $0 == "\t" }
+                    if !previousIndentation.isEmpty {
+                        let currentLineText = nsString.substring(with: currentLineRange)
+                        let currentIndentation = currentLineText.prefix { $0 == " " || $0 == "\t" }
+                        let restOfLine = currentLineText.dropFirst(currentIndentation.count)
+                        let newLine = String(previousIndentation) + restOfLine
+                        self.replaceCharacters(in: currentLineRange, with: newLine)
+                        self.setSelectedRange(NSRange(location: currentLineRange.location + previousIndentation.count, length: 0))
                         return
                     }
                 }
@@ -1344,23 +1346,22 @@ class IDETextView: NSTextView {
     override func insertBacktab(_ sender: Any?) {
         let selRange = self.selectedRange()
         let nsString = self.string as NSString
-        let startLineRange = nsString.lineRange(for: NSRange(location: selRange.location, length: 0))
-        var endLoc = selRange.location + selRange.length - 1
-        if endLoc < 0 { endLoc = 0 }
-        let endLineRange = nsString.lineRange(for: NSRange(location: endLoc, length: 0))
-        let rangeToModify = NSRange(location: startLineRange.location, length: endLineRange.location + endLineRange.length - startLineRange.location)
-        if rangeToModify.length == 0 { return }
-        let pattern = "^(\\t| {1,4})"
-        if let regex = try? NSRegularExpression(pattern: pattern, options: [.anchorsMatchLines]) {
-            let originalText = nsString.substring(with: rangeToModify)
-            let newText = regex.stringByReplacingMatches(in: originalText, options: [], range: NSRange(location: 0, length: (originalText as NSString).length), withTemplate: "")
-            self.shouldChangeText(in: rangeToModify, replacementString: newText)
-            self.replaceCharacters(in: rangeToModify, with: newText)
-            self.didChangeText()
-            self.setSelectedRange(NSRange(location: startLineRange.location, length: (newText as NSString).length))
-            if let coordinator = self.delegate as? IDEEditorView.Coordinator {
-                coordinator.applySyntaxHighlighting(to: self)
+        if selRange.length == 0 {
+            let currentLineRange = nsString.lineRange(for: selRange)
+            let currentLineText = nsString.substring(with: currentLineRange)
+            let whitespacePrefix = currentLineText.prefix { $0 == " " || $0 == "\t" }
+            let whitespaceRange = NSRange(location: currentLineRange.location, length: whitespacePrefix.count)
+            if whitespaceRange.length > 0 {
+                unindentSingleLine(selectionRange: whitespaceRange)
             }
+            return
+        }
+        let selectionText = nsString.substring(with: selRange)
+        let isMultiline = selectionText.contains("\n")
+        if isMultiline {
+            unindentSelectedLines()
+        } else {
+            unindentSingleLine(selectionRange: selRange)
         }
     }
     
@@ -1379,12 +1380,7 @@ class IDETextView: NSTextView {
     private func indentSelectedLines() {
         let selRange = self.selectedRange()
         let nsString = self.string as NSString
-        let startLine = nsString.lineRange(for: NSRange(location: selRange.location, length: 0))
-        var endLoc = selRange.location + selRange.length - 1
-        if endLoc < 0 { endLoc = 0 }
-        let endLine = nsString.lineRange(for: NSRange(location: endLoc, length: 0))
-        let rangeToModify = NSRange(location: startLine.location, length: endLine.location + endLine.length - startLine.location)
-        let originalText = nsString.substring(with: rangeToModify)
+        let originalText = nsString.substring(with: selRange)
         var lines = originalText.components(separatedBy: "\n")
         let hadTrailingNewline = originalText.hasSuffix("\n")
         if hadTrailingNewline, let last = lines.last, last.isEmpty {
@@ -1393,11 +1389,11 @@ class IDETextView: NSTextView {
         lines = lines.map { "\t" + $0 }
         var newText = lines.joined(separator: "\n")
         if hadTrailingNewline { newText += "\n" }
-        self.shouldChangeText(in: rangeToModify, replacementString: newText)
-        self.replaceCharacters(in: rangeToModify, with: newText)
+        self.shouldChangeText(in: selRange, replacementString: newText)
+        self.replaceCharacters(in: selRange, with: newText)
         self.didChangeText()
         let newLength = (newText as NSString).length
-        self.setSelectedRange(NSRange(location: startLine.location, length: newLength))
+        self.setSelectedRange(NSRange(location: selRange.location, length: newLength))
         if let coordinator = self.delegate as? IDEEditorView.Coordinator {
             coordinator.applySyntaxHighlighting(to: self)
         }
@@ -1416,21 +1412,68 @@ class IDETextView: NSTextView {
         }
     }
     
+    private func unindentSelectedLines() {
+        let selRange = self.selectedRange()
+        let nsString = self.string as NSString
+        let originalText = nsString.substring(with: selRange)
+        var lines = originalText.components(separatedBy: "\n")
+        let hadTrailingNewline = originalText.hasSuffix("\n")
+        for i in 0..<lines.count {
+            let line = lines[i]
+            var removalCount = 0
+            if let firstChar = line.first {
+                if firstChar == "\t" {
+                    removalCount = 1
+                } else if firstChar == " " {
+                    for char in line {
+                        if char == " " {
+                            removalCount += 1
+                        } else {
+                            break
+                        }
+                    }
+                    removalCount = min(removalCount, 4)
+                }
+            }
+            lines[i] = String(line.dropFirst(removalCount))
+        }
+        var newText = lines.joined(separator: "\n")
+        if hadTrailingNewline { newText += "\n" }
+        self.shouldChangeText(in: selRange, replacementString: newText)
+        self.replaceCharacters(in: selRange, with: newText)
+        self.didChangeText()
+        self.setSelectedRange(NSRange(location: selRange.location, length: (newText as NSString).length))
+        if let coordinator = self.delegate as? IDEEditorView.Coordinator {
+            coordinator.applySyntaxHighlighting(to: self)
+        }
+    }
+    
     private func unindentSingleLine(selectionRange: NSRange) {
         let nsString = self.string as NSString
-        let fullLineRange = nsString.lineRange(for: selectionRange)
-        let lineText = nsString.substring(with: fullLineRange)
-        let pattern = "^(\\t| {1,4})"
-        if let regex = try? NSRegularExpression(pattern: pattern, options: []) {
-            let newText = regex.stringByReplacingMatches(in: lineText, options: [], range: NSRange(location: 0, length: (lineText as NSString).length), withTemplate: "")
-            self.shouldChangeText(in: fullLineRange, replacementString: newText)
-            self.replaceCharacters(in: fullLineRange, with: newText)
-            self.didChangeText()
-            let newRange = NSRange(location: fullLineRange.location, length: (newText as NSString).length)
-            self.setSelectedRange(newRange)
-            if let coordinator = self.delegate as? IDEEditorView.Coordinator {
-                coordinator.applySyntaxHighlighting(to: self)
+        let selectedText = nsString.substring(with: selectionRange)
+        var removalCount = 0
+        if let firstChar = selectedText.first {
+            if firstChar == "\t" {
+                removalCount = 1
+            } else if firstChar == " " {
+                for char in selectedText {
+                    if char == " " {
+                        removalCount += 1
+                    } else {
+                        break
+                    }
+                }
+                removalCount = min(removalCount, 4)
             }
+        }
+        let newText = String(selectedText.dropFirst(removalCount))
+        self.shouldChangeText(in: selectionRange, replacementString: newText)
+        self.replaceCharacters(in: selectionRange, with: newText)
+        self.didChangeText()
+        let newRange = NSRange(location: selectionRange.location, length: (newText as NSString).length)
+        self.setSelectedRange(newRange)
+        if let coordinator = self.delegate as? IDEEditorView.Coordinator {
+            coordinator.applySyntaxHighlighting(to: self)
         }
     }
     
