@@ -1,4 +1,3 @@
-
 //
 //  DinoLabsTabular.swift
 //
@@ -8,16 +7,225 @@
 import SwiftUI
 import AppKit
 
+class RawCSV: ObservableObject {
+    @Published var rows: [[String]] = []
+    var fileURL: URL
+
+    init(fileURL: URL) {
+        self.fileURL = fileURL
+        loadFile()
+    }
+
+    func loadFile() {
+        DispatchQueue.global(qos: .background).async {
+            guard let fileHandle = try? FileHandle(forReadingFrom: self.fileURL) else { return }
+            defer { try? fileHandle.close() }
+            let delimiter = "\n".data(using: .utf8)!
+            var buffer = Data()
+            var newRows: [[String]] = []
+            let batchSize = 50
+            var finished = false
+            while !finished {
+                autoreleasepool {
+                    do {
+                        if let chunk = try fileHandle.read(upToCount: 4096), !chunk.isEmpty {
+                            buffer.append(chunk)
+                            while let range = buffer.range(of: delimiter) {
+                                let lineData = buffer.subdata(in: 0..<range.lowerBound)
+                                buffer.removeSubrange(0..<range.upperBound)
+                                if let line = String(data: lineData, encoding: .utf8), !line.isEmpty {
+                                    let row = line.components(separatedBy: ",")
+                                    newRows.append(row)
+                                    if newRows.count >= batchSize {
+                                        let batch = newRows
+                                        newRows.removeAll()
+                                        DispatchQueue.main.async {
+                                            self.rows.append(contentsOf: batch)
+                                        }
+                                    }
+                                }
+                            }
+                        } else {
+                            finished = true
+                        }
+                    } catch {
+                        finished = true
+                    }
+                }
+            }
+            if !buffer.isEmpty, let line = String(data: buffer, encoding: .utf8), !line.isEmpty {
+                let row = line.components(separatedBy: ",")
+                newRows.append(row)
+            }
+            if !newRows.isEmpty {
+                let batch = newRows
+                DispatchQueue.main.async {
+                    self.rows.append(contentsOf: batch)
+                }
+            }
+        }
+    }
+}
+
 struct TabularView: View {
     let geometry: GeometryProxy
     let fileURL: URL
     @Binding var leftPanelWidthRatio: CGFloat
     @Binding var hasUnsavedChanges: Bool
-    
-    
-    var body: some View {
-        VStack {
-            
+    @StateObject private var dataSource: RawCSV
+    @State private var editedCell: (row: Int, column: Int)? = nil
+    private let lineNumberWidth: CGFloat = 60
+    private let columnWidth: CGFloat = 100
+    private let cellHeight: CGFloat = 25
+    private let minimumColumns = 15
+
+    init(
+        geometry: GeometryProxy,
+        fileURL: URL,
+        leftPanelWidthRatio: Binding<CGFloat>,
+        hasUnsavedChanges: Binding<Bool>
+    ) {
+        self.geometry = geometry
+        self.fileURL = fileURL
+        self._leftPanelWidthRatio = leftPanelWidthRatio
+        self._hasUnsavedChanges = hasUnsavedChanges
+        _dataSource = StateObject(wrappedValue: RawCSV(fileURL: fileURL))
+    }
+
+    private var actualColumnCount: Int {
+        dataSource.rows.map { $0.count }.max() ?? 0
+    }
+
+    private var displayedColumnCount: Int {
+        max(actualColumnCount, minimumColumns)
+    }
+
+    private func columnName(for index: Int) -> String {
+        var index = index
+        var name = ""
+        repeat {
+            let letter = Character(UnicodeScalar(65 + (index % 26))!)
+            name = String(letter) + name
+            index = index / 26 - 1
+        } while index >= 0
+        return name
+    }
+
+    private var headerView: some View {
+        ZStack(alignment: .leading) {
+            HStack(spacing: 0) {
+                Color.clear
+                    .frame(width: lineNumberWidth, height: cellHeight)
+                ForEach(0..<displayedColumnCount, id: \.self) { col in
+                    Text(columnName(for: col))
+                        .padding(EdgeInsets(top: 2, leading: 4, bottom: 2, trailing: 4))
+                        .frame(width: columnWidth, height: cellHeight)
+                        .overlay(Rectangle().stroke(Color.gray, lineWidth: 0.5))
+                        .background(Color(hex: 0x333333))
+                        .foregroundColor(Color(hex: 0xf5f5f5))
+                        .font(.system(size: 12, weight: .semibold))
+                }
+            }
+            GeometryReader { geo in
+                Text("")
+                    .frame(width: lineNumberWidth, height: cellHeight)
+                    .background(
+                        ZStack {
+                            Color(hex: 0x262626)
+                            Rectangle()
+                                .stroke(Color.gray, lineWidth: 1)
+                                .foregroundColor(.clear)
+                        }
+                    )
+                    .foregroundColor(.white)
+                    .font(.headline)
+                    .offset(x: -min(geo.frame(in: .named("TableScroll")).minX, 0))
+                    .zIndex(1)
+            }
+            .frame(width: lineNumberWidth, height: cellHeight)
         }
+        .frame(height: cellHeight)
+    }
+
+    var body: some View {
+        ScrollView([.horizontal, .vertical]) {
+            LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
+                Section(header: headerView) {
+                    ForEach(dataSource.rows.indices, id: \.self) { rowIndex in
+                        rowView(rowIndex: rowIndex)
+                    }
+                }
+            }
+        }
+        .coordinateSpace(name: "TableScroll")
+    }
+
+    private func rowView(rowIndex: Int) -> some View {
+        ZStack(alignment: .leading) {
+            HStack(spacing: 0) {
+                Color.clear
+                    .frame(width: lineNumberWidth, height: cellHeight)
+                let rowData = dataSource.rows[rowIndex]
+                ForEach(0..<displayedColumnCount, id: \.self) { col in
+                    let cellText = rowData.indices.contains(col) ? rowData[col] : ""
+                    if editedCell?.row == rowIndex && editedCell?.column == col {
+                        TextField("", text: Binding(
+                            get: { cellText },
+                            set: { newValue in
+                                while dataSource.rows[rowIndex].count <= col {
+                                    dataSource.rows[rowIndex].append("")
+                                }
+                                dataSource.rows[rowIndex][col] = newValue
+                                hasUnsavedChanges = true
+                            }
+                        ))
+                        .textFieldStyle(PlainTextFieldStyle())
+                        .font(.system(size: 12, weight: .regular))
+                        .padding(EdgeInsets(top: 2, leading: 4, bottom: 2, trailing: 4))
+                        .frame(width: columnWidth, height: cellHeight)
+                        .background(Color.blue.opacity(0.1))
+                        .overlay(Rectangle().stroke(Color.blue, lineWidth: 2.5))
+                        .onSubmit {
+                            editedCell = nil
+                        }
+                        .onAppear {
+                            if cellText.isEmpty {
+                                while dataSource.rows[rowIndex].count <= col {
+                                    dataSource.rows[rowIndex].append("")
+                                }
+                            }
+                        }
+                    } else {
+                        Text(cellText)
+                            .font(.system(size: 11, weight: .regular))
+                            .padding(EdgeInsets(top: 2, leading: 4, bottom: 2, trailing: 4))
+                            .frame(width: columnWidth, height: cellHeight)
+                            .overlay(Rectangle().stroke(Color.gray, lineWidth: 0.5))
+                            .contentShape(Rectangle())
+                            .onTapGesture {
+                                editedCell = (rowIndex, col)
+                            }
+                    }
+                }
+            }
+            GeometryReader { geo in
+                Text("\(rowIndex + 1)")
+                    .frame(width: lineNumberWidth, height: cellHeight)
+                    .background(
+                        ZStack {
+                            Color(hex: 0x333333)
+                            Rectangle()
+                                .overlay(Rectangle().stroke(Color.gray, lineWidth: 0.5))
+                                .foregroundColor(.clear)
+                        }
+                    )
+                    .foregroundColor(Color(hex: 0xf5f5f5))
+                    .font(.system(size: 12, weight: .semibold))
+                    .offset(x: -min(geo.frame(in: .named("TableScroll")).minX, 0))
+                    .zIndex(1)
+            }
+            .frame(width: lineNumberWidth, height: cellHeight)
+        }
+        .frame(height: cellHeight)
     }
 }
