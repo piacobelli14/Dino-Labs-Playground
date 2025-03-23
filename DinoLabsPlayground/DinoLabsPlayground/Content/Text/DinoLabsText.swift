@@ -51,8 +51,8 @@ struct TextView: View {
                                         Text("File")
                                             .lineLimit(1)
                                             .truncationMode(.tail)
-                                            .padding(.horizontal, 6)
-                                            .padding(.top, 1)
+                                            .padding(.horizontal, 8)
+                                            .padding(.top, 3)
                                             .padding(.bottom, 5)
                                             .font(.system(size: 11, weight: showFileMenu ? .semibold : .regular))
                                             .foregroundColor(showFileMenu ? Color.white.opacity(0.8) : Color.white.opacity(0.5))
@@ -83,8 +83,8 @@ struct TextView: View {
                                         Text("Edit")
                                             .lineLimit(1)
                                             .truncationMode(.tail)
-                                            .padding(.horizontal, 6)
-                                            .padding(.top, 1)
+                                            .padding(.horizontal, 8)
+                                            .padding(.top, 3)
                                             .padding(.bottom, 5)
                                             .font(.system(size: 11, weight: showEditMenu ? .semibold : .regular))
                                             .foregroundColor(showEditMenu ? Color.white.opacity(0.8) : Color.white.opacity(0.5))
@@ -134,7 +134,7 @@ struct TextView: View {
                                     .font(.system(size: 8, weight: .semibold))
                                     .padding(.horizontal, 10)
                                     .frame(width: 100, height: 25)
-                                    .containerHelper(backgroundColor: Color(hex: 0x222222),
+                                    .containerHelper(backgroundColor: Color.clear,
                                                      borderColor: Color(hex: 0x616161),
                                                      borderWidth: 1,
                                                      topLeft: 2, topRight: 0,
@@ -197,7 +197,7 @@ struct TextView: View {
                                     }
                                     .padding(.horizontal, 10)
                                     .frame(width: 60, height: 25)
-                                    .containerHelper(backgroundColor: Color(hex: 0x222222),
+                                    .containerHelper(backgroundColor: Color.clear,
                                                      borderColor: Color(hex: 0x616161),
                                                      borderWidth: 1,
                                                      topLeft: 0, topRight: 2,
@@ -217,7 +217,7 @@ struct TextView: View {
                                     }
                                     .padding(.horizontal, 10)
                                     .frame(width: 60, height: 25)
-                                    .containerHelper(backgroundColor: Color(hex: 0x222222),
+                                    .containerHelper(backgroundColor: Color.clear,
                                                      borderColor: Color(hex: 0x616161),
                                                      borderWidth: 1,
                                                      topLeft: 0, topRight: 2,
@@ -246,7 +246,7 @@ struct TextView: View {
                                             .font(.system(size: 8, weight: .semibold))
                                             .padding(.horizontal, 10)
                                             .frame(width: 100, height: 25)
-                                            .containerHelper(backgroundColor: Color(hex: 0x222222),
+                                            .containerHelper(backgroundColor: Color.clear,
                                                              borderColor: Color(hex: 0x616161),
                                                              borderWidth: 1,
                                                              topLeft: 2, topRight: 0,
@@ -308,7 +308,7 @@ struct TextView: View {
                                         }
                                         .padding(.horizontal, 10)
                                         .frame(width: 60, height: 25)
-                                        .containerHelper(backgroundColor: Color(hex: 0x222222),
+                                        .containerHelper(backgroundColor: Color.clear,
                                                          borderColor: Color(hex: 0x616161),
                                                          borderWidth: 1,
                                                          topLeft: 0, topRight: 2,
@@ -509,7 +509,7 @@ struct TextView: View {
                     .frame(height: 12)
                     .padding(.vertical, 10)
                     .padding(.horizontal, 8)
-                    .containerHelper(backgroundColor: Color(hex: 0x222222), borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                    .containerHelper(backgroundColor: Color.clear, borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
                     .overlay(
                         HStack {
                             Image(systemName: "arrow.down.doc.fill")
@@ -543,7 +543,7 @@ struct TextView: View {
                     .frame(height: 12)
                     .padding(.vertical, 10)
                     .padding(.horizontal, 8)
-                    .containerHelper(backgroundColor: Color(hex: 0x222222), borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                    .containerHelper(backgroundColor: Color.clear, borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
                     .overlay(
                         HStack {
                             Image(systemName: "square.and.arrow.down.on.square.fill")
@@ -594,7 +594,7 @@ struct TextView: View {
                     .frame(height: 12)
                     .padding(.vertical, 10)
                     .padding(.horizontal, 8)
-                    .containerHelper(backgroundColor: Color(hex: 0x222222), borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                    .containerHelper(backgroundColor: Color.clear, borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
                     .overlay(
                         HStack {
                             Image(systemName: "arrow.uturn.backward")
@@ -628,7 +628,7 @@ struct TextView: View {
                     .frame(height: 12)
                     .padding(.vertical, 10)
                     .padding(.horizontal, 8)
-                    .containerHelper(backgroundColor: Color(hex: 0x222222), borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                    .containerHelper(backgroundColor: Color.clear, borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
                     .overlay(
                         HStack {
                             Image(systemName: "arrow.uturn.forward")
@@ -662,7 +662,7 @@ struct TextView: View {
                     .frame(height: 12)
                     .padding(.vertical, 10)
                     .padding(.horizontal, 8)
-                    .containerHelper(backgroundColor: Color(hex: 0x222222), borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                    .containerHelper(backgroundColor: Color.clear, borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
                     .overlay(
                         HStack {
                             Image(systemName: "scissors")
@@ -696,7 +696,7 @@ struct TextView: View {
                     .frame(height: 12)
                     .padding(.vertical, 10)
                     .padding(.horizontal, 8)
-                    .containerHelper(backgroundColor: Color(hex: 0x222222), borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                    .containerHelper(backgroundColor: Color.clear, borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
                     .overlay(
                         HStack {
                             Image(systemName: "square.on.square")
@@ -730,7 +730,7 @@ struct TextView: View {
                     .frame(height: 12)
                     .padding(.vertical, 10)
                     .padding(.horizontal, 8)
-                    .containerHelper(backgroundColor: Color(hex: 0x222222), borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                    .containerHelper(backgroundColor: Color.clear, borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
                     .overlay(
                         HStack {
                             Image(systemName: "doc.on.clipboard.fill")
@@ -764,7 +764,7 @@ struct TextView: View {
                     .frame(height: 12)
                     .padding(.vertical, 10)
                     .padding(.horizontal, 8)
-                    .containerHelper(backgroundColor: Color(hex: 0x222222), borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                    .containerHelper(backgroundColor: Color.clear, borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
                     .overlay(
                         HStack {
                             Image(systemName: "cursorarrow.motionlines")
