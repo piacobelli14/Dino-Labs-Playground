@@ -74,6 +74,16 @@ struct TabularView: View {
     @Binding var hasUnsavedChanges: Bool
     @StateObject private var dataSource: RawCSV
     @State private var editedCell: (row: Int, column: Int)? = nil
+    @State private var selectionStart: (row: Int, col: Int)? = nil
+    @State private var selectionEnd: (row: Int, col: Int)? = nil
+    @State private var resizing: Bool = false
+    @State private var initialBox: (minRow: Int, maxRow: Int, minCol: Int, maxCol: Int)? = nil
+    @State private var isDraggingNewHighlight: Bool = false
+    @State private var isDraggingColumns: Bool = false
+    @State private var isDraggingRows: Bool = false
+    @State private var dragStartColumn: Int? = nil
+    @State private var dragStartRow: Int? = nil
+
     private let lineNumberWidth: CGFloat = 60
     private let columnWidth: CGFloat = 100
     private let cellHeight: CGFloat = 25
@@ -90,6 +100,24 @@ struct TabularView: View {
         self._leftPanelWidthRatio = leftPanelWidthRatio
         self._hasUnsavedChanges = hasUnsavedChanges
         _dataSource = StateObject(wrappedValue: RawCSV(fileURL: fileURL))
+    }
+
+    private func columnIndexFromX(_ x: CGFloat) -> Int {
+        let offsetX = x - lineNumberWidth
+        if offsetX < 0 {
+            return 0
+        }
+        let col = Int(floor(offsetX / columnWidth))
+        return max(0, min(col, displayedColumnCount - 1))
+    }
+
+    private func rowIndexFromY(_ y: CGFloat) -> Int {
+        let offsetY = y - cellHeight
+        if offsetY < 0 {
+            return 0
+        }
+        let row = Int(floor(offsetY / cellHeight))
+        return max(0, min(row, dataSource.rows.count - 1))
     }
 
     private var actualColumnCount: Int {
@@ -111,6 +139,93 @@ struct TabularView: View {
         return name
     }
 
+    private func isCellHighlighted(row: Int, col: Int) -> Bool {
+        if let start = selectionStart, let end = selectionEnd {
+            let minRow = min(start.row, end.row)
+            let maxRow = max(start.row, end.row)
+            let minCol = min(start.col, end.col)
+            let maxCol = max(start.col, end.col)
+            return row >= minRow && row <= maxRow && col >= minCol && col <= maxCol
+        }
+        return false
+    }
+
+    var body: some View {
+        ScrollView([.horizontal, .vertical]) {
+            LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
+                Section(header: headerView) {
+                    ForEach(dataSource.rows.indices, id: \.self) { rowIndex in
+                        rowView(rowIndex: rowIndex)
+                    }
+                }
+            }
+            .simultaneousGesture(
+                DragGesture(minimumDistance: 1)
+                    .onChanged { value in
+                        if resizing { return }
+                        editedCell = nil
+
+                        let localX = value.location.x
+                        let localY = value.location.y
+
+                        if localY <= cellHeight && localX >= lineNumberWidth {
+                            let cIndex = columnIndexFromX(localX)
+                            if !isDraggingColumns {
+                                isDraggingColumns = true
+                                dragStartColumn = cIndex
+                                selectionStart = (0, cIndex)
+                                selectionEnd = (dataSource.rows.count - 1, cIndex)
+                            } else if let startCol = dragStartColumn {
+                                let minCol = min(startCol, cIndex)
+                                let maxCol = max(startCol, cIndex)
+                                selectionStart = (0, minCol)
+                                selectionEnd = (dataSource.rows.count - 1, maxCol)
+                            }
+                            return
+                        }
+
+                        if localX <= lineNumberWidth && localY >= cellHeight {
+                            let rIndex = rowIndexFromY(localY)
+                            if !isDraggingRows {
+                                isDraggingRows = true
+                                dragStartRow = rIndex
+                                selectionStart = (rIndex, 0)
+                                selectionEnd = (rIndex, displayedColumnCount - 1)
+                            } else if let startRow = dragStartRow {
+                                let minRow = min(startRow, rIndex)
+                                let maxRow = max(startRow, rIndex)
+                                selectionStart = (minRow, 0)
+                                selectionEnd = (maxRow, displayedColumnCount - 1)
+                            }
+                            return
+                        }
+
+                        if !isDraggingNewHighlight {
+                            isDraggingNewHighlight = true
+                            selectionStart = nil
+                            selectionEnd = nil
+                        }
+
+                        let rIndex = rowIndexFromY(localY)
+                        let cIndex = columnIndexFromX(localX)
+
+                        if selectionStart == nil {
+                            selectionStart = (row: rIndex, col: cIndex)
+                        }
+                        selectionEnd = (row: rIndex, col: cIndex)
+                    }
+                    .onEnded { _ in
+                        isDraggingNewHighlight = false
+                        isDraggingColumns = false
+                        isDraggingRows = false
+                        dragStartColumn = nil
+                        dragStartRow = nil
+                    }
+            )
+        }
+        .coordinateSpace(name: "TableScroll")
+    }
+    
     private var headerView: some View {
         ZStack(alignment: .leading) {
             HStack(spacing: 0) {
@@ -124,6 +239,25 @@ struct TabularView: View {
                         .background(Color(hex: 0x333333))
                         .foregroundColor(Color(hex: 0xf5f5f5))
                         .font(.system(size: 12, weight: .semibold))
+                        .contentShape(Rectangle())
+                        .onTapGesture {
+                            editedCell = nil
+                            let shiftPressed = NSEvent.modifierFlags.contains(.shift)
+                            if shiftPressed {
+                                if let start = selectionStart {
+                                    let minCol = min(start.col, col)
+                                    let maxCol = max(start.col, col)
+                                    selectionStart = (0, minCol)
+                                    selectionEnd = (dataSource.rows.count - 1, maxCol)
+                                } else {
+                                    selectionStart = (0, col)
+                                    selectionEnd = (dataSource.rows.count - 1, col)
+                                }
+                            } else {
+                                selectionStart = (0, col)
+                                selectionEnd = (dataSource.rows.count - 1, col)
+                            }
+                        }
                 }
             }
             GeometryReader { geo in
@@ -147,18 +281,6 @@ struct TabularView: View {
         .frame(height: cellHeight)
     }
 
-    var body: some View {
-        ScrollView([.horizontal, .vertical]) {
-            LazyVStack(spacing: 0, pinnedViews: [.sectionHeaders]) {
-                Section(header: headerView) {
-                    ForEach(dataSource.rows.indices, id: \.self) { rowIndex in
-                        rowView(rowIndex: rowIndex)
-                    }
-                }
-            }
-        }
-        .coordinateSpace(name: "TableScroll")
-    }
 
     private func rowView(rowIndex: Int) -> some View {
         ZStack(alignment: .leading) {
@@ -196,15 +318,108 @@ struct TabularView: View {
                             }
                         }
                     } else {
-                        Text(cellText)
-                            .font(.system(size: 11, weight: .regular))
-                            .padding(EdgeInsets(top: 2, leading: 4, bottom: 2, trailing: 4))
-                            .frame(width: columnWidth, height: cellHeight)
-                            .overlay(Rectangle().stroke(Color.gray, lineWidth: 0.5))
-                            .contentShape(Rectangle())
-                            .onTapGesture {
-                                editedCell = (rowIndex, col)
-                            }
+                        if isCellHighlighted(row: rowIndex, col: col),
+                           let start = selectionStart,
+                           let end = selectionEnd {
+                            let minRow = min(start.row, end.row)
+                            let maxRow = max(start.row, end.row)
+                            let minCol = min(start.col, end.col)
+                            let maxCol = max(start.col, end.col)
+
+                            Text(cellText)
+                                .font(.system(size: 11, weight: .regular))
+                                .padding(EdgeInsets(top: 2, leading: 4, bottom: 2, trailing: 4))
+                                .frame(width: columnWidth, height: cellHeight)
+                                .background(Color(hex: 0x008000).opacity(0.1))
+                                .contentShape(Rectangle())
+                                .overlay(alignment: .top) {
+                                    if rowIndex == minRow {
+                                        Rectangle()
+                                            .foregroundColor(Color(hex: 0x008000))
+                                            .frame(height: 2.5)
+                                    }
+                                }
+                                .overlay(alignment: .bottom) {
+                                    if rowIndex == maxRow {
+                                        Rectangle()
+                                            .foregroundColor(Color(hex: 0x008000))
+                                            .frame(height: 2.5)
+                                    }
+                                }
+                                .overlay(alignment: .leading) {
+                                    if col == minCol {
+                                        Rectangle()
+                                            .foregroundColor(Color(hex: 0x008000))
+                                            .frame(width: 2.5)
+                                    }
+                                }
+                                .overlay(alignment: .trailing) {
+                                    if col == maxCol {
+                                        Rectangle()
+                                            .foregroundColor(Color(hex: 0x008000))
+                                            .frame(width: 2.5)
+                                    }
+                                }
+                                .onTapGesture {
+                                    let shiftPressed = NSEvent.modifierFlags.contains(.shift)
+                                    if shiftPressed {
+                                        if let _ = selectionStart {
+                                            selectionEnd = (rowIndex, col)
+                                        } else {
+                                            selectionStart = (rowIndex, col)
+                                            selectionEnd = (rowIndex, col)
+                                        }
+                                    } else {
+                                        if let start = selectionStart, let end = selectionEnd {
+                                            let minRow = min(start.row, end.row)
+                                            let maxRow = max(start.row, end.row)
+                                            let minCol = min(start.col, end.col)
+                                            let maxCol = max(start.col, end.col)
+                                            if !(rowIndex >= minRow && rowIndex <= maxRow && col >= minCol && col <= maxCol) {
+                                                selectionStart = nil
+                                                selectionEnd = nil
+                                            }
+                                        }
+                                        editedCell = (rowIndex, col)
+                                        selectionStart = (rowIndex, col)
+                                        selectionEnd = (rowIndex, col)
+                                    }
+                                }
+
+                        } else {
+                            Text(cellText)
+                                .font(.system(size: 11, weight: .regular))
+                                .padding(EdgeInsets(top: 2, leading: 4, bottom: 2, trailing: 4))
+                                .frame(width: columnWidth, height: cellHeight)
+                                .background(Color.clear)
+                                .overlay(Rectangle().stroke(Color.gray, lineWidth: 0.5))
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    let shiftPressed = NSEvent.modifierFlags.contains(.shift)
+                                    if shiftPressed {
+                                        if let _ = selectionStart {
+                                            selectionEnd = (rowIndex, col)
+                                        } else {
+                                            selectionStart = (rowIndex, col)
+                                            selectionEnd = (rowIndex, col)
+                                        }
+                                    } else {
+                                        if let start = selectionStart, let end = selectionEnd {
+                                            let minRow = min(start.row, end.row)
+                                            let maxRow = max(start.row, end.row)
+                                            let minCol = min(start.col, end.col)
+                                            let maxCol = max(start.col, end.col)
+                                            if !(rowIndex >= minRow && rowIndex <= maxRow && col >= minCol && col <= maxCol) {
+                                                selectionStart = nil
+                                                selectionEnd = nil
+                                            }
+                                        }
+                                        editedCell = (rowIndex, col)
+                                        selectionStart = (rowIndex, col)
+                                        selectionEnd = (rowIndex, col)
+                                    }
+                                }
+                        }
                     }
                 }
             }
@@ -223,6 +438,25 @@ struct TabularView: View {
                     .font(.system(size: 12, weight: .semibold))
                     .offset(x: -min(geo.frame(in: .named("TableScroll")).minX, 0))
                     .zIndex(1)
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        editedCell = nil
+                        let shiftPressed = NSEvent.modifierFlags.contains(.shift)
+                        if shiftPressed {
+                            if let start = selectionStart {
+                                let minRow = min(start.row, rowIndex)
+                                let maxRow = max(start.row, rowIndex)
+                                selectionStart = (minRow, 0)
+                                selectionEnd = (maxRow, displayedColumnCount - 1)
+                            } else {
+                                selectionStart = (rowIndex, 0)
+                                selectionEnd = (rowIndex, displayedColumnCount - 1)
+                            }
+                        } else {
+                            selectionStart = (rowIndex, 0)
+                            selectionEnd = (rowIndex, displayedColumnCount - 1)
+                        }
+                    }
             }
             .frame(width: lineNumberWidth, height: cellHeight)
         }
