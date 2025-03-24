@@ -344,6 +344,10 @@ struct DinoLabsPlayground: View {
         }
     }
     @Binding var displayedChildren: [FileItem]
+    
+    @State private var activeTabContent: String = ""  // Track active tab content separately
+    @State private var activeTabHasChanges: Bool = false
+    
     @State private var openTabs: [FileTab] = []
     @State private var activeTabId: UUID? 
     @State private var hasUnsavedChanges: Bool = false
@@ -362,23 +366,23 @@ struct DinoLabsPlayground: View {
     @State private var isAccount: Bool = false
     @State private var clipboardItem: URL? = nil
     @State private var clipboardOperation: String? = nil
-    @State private var isReplace: Bool = false
-    @State private var isSearchLoading: Bool = false
-    @State private var searchProgress: Double = 0.0
-    @State private var searchETA: String = ""
-    @State private var isReplaceAllLoading: Bool = false
-    @State private var replaceProgress: Double = 0.0
-    @State private var replaceETA: String = ""
-    @State private var isSearchCaseSensitive: Bool = true
-    @State private var isReplaceCaseSensitive: Bool = true
-    @State private var filteredSearch: String = ""
-    @State private var directoryItemSearch: String = ""
-    @State private var searchQuery: String = ""
-    @State private var replaceQuery: String = ""
-    @State private var searchDebounceTask: DispatchWorkItem? = nil
-    @State private var replaceDebounceTask: DispatchWorkItem? = nil
+    @State private var isSearchFiles: Bool = false
+    @State private var isSearchFolderLoading: Bool = false
+    @State private var isSearchFileLoading: Bool = false
+    @State private var searchFolderProgress: Double = 0.0
+    @State private var searchFilesProgress: Double = 0.0
+    @State private var searchFolderETA: String = ""
+    @State private var searchFilesETA: String = ""
+    @State private var isSearchFolderCaseSensitive: Bool = true
+    @State private var isSearchFilesCaseSensitive: Bool = true
+    @State private var searchFolderQuery: String = ""
+    @State private var searchFilesQuery: String = ""
+    @State private var searchFolderDebounceTask: DispatchWorkItem? = nil
+    @State private var searchFilesDebounceTask: DispatchWorkItem? = nil
     @State private var searchResults: [SearchResult] = []
     @State private var groupedSearchResults: [FileSearchResult] = []
+    @State private var filteredSearch: String = ""
+    @State private var directoryItemSearch: String = ""
     @State private var showAlert: Bool = false
     @State private var alertTitle: String = ""
     @State private var alertMessage: String = ""
@@ -604,7 +608,7 @@ struct DinoLabsPlayground: View {
         
         let name = item.url.lastPathComponent
         let matches: Bool
-        if isSearchCaseSensitive {
+        if isSearchFolderCaseSensitive {
             matches = name.contains(query)
         } else {
             matches = name.lowercased().contains(query.lowercased())
@@ -625,7 +629,7 @@ struct DinoLabsPlayground: View {
     private func loadFileItems(from url: URL) -> [FileItem] {
         var items = [FileItem]()
         let fm = FileManager.default
-        
+
         if let contents = try? fm.contentsOfDirectory(
             at: url,
             includingPropertiesForKeys: [.isDirectoryKey],
@@ -634,12 +638,12 @@ struct DinoLabsPlayground: View {
             for contentURL in contents {
                 let resourceValues = try? contentURL.resourceValues(forKeys: [.isDirectoryKey])
                 let isDir = resourceValues?.isDirectory ?? false
-                
+
                 var children: [FileItem]? = nil
                 if isDir {
                     children = loadFileItems(from: contentURL)
                 }
-                
+
                 let permissions = FilePermissions(canRead: true, canWrite: true, canExecute: true)
                 let fileItem = FileItem(
                     id: contentURL,
@@ -648,11 +652,11 @@ struct DinoLabsPlayground: View {
                     children: children,
                     permissions: permissions
                 )
-                
+
                 items.append(fileItem)
             }
         }
-        
+
         return items
     }
     
@@ -697,6 +701,7 @@ struct DinoLabsPlayground: View {
             )
             DispatchQueue.main.async {
                 fileItems = [root]
+                displayedChildren = root.children ?? []
                 rootIsExpanded = true
                 isNavigatorLoading = false
             }
@@ -764,6 +769,7 @@ struct DinoLabsPlayground: View {
         }
         showAlert = true
     }
+
     
     private func addFolder(to item: FileItem) {
         alertTitle = "Create New Folder"
@@ -931,7 +937,7 @@ struct DinoLabsPlayground: View {
         var results: [SearchResult] = []
         let lines = content.components(separatedBy: .newlines)
         for (index, line) in lines.enumerated() {
-            let matchFound = isReplaceCaseSensitive ? line.contains(query) : line.lowercased().contains(query.lowercased())
+            let matchFound = isSearchFilesCaseSensitive ? line.contains(query) : line.lowercased().contains(query.lowercased())
             if matchFound {
                 results.append(SearchResult(fileURL: file.url, line: line, lineNumber: index + 1))
             }
@@ -961,18 +967,15 @@ struct DinoLabsPlayground: View {
     }
 
     private func performSearch() {
-        guard !searchQuery.isEmpty, let root = fileItems.first else {
+        guard !searchFolderQuery.isEmpty, let root = fileItems.first else {
             groupedSearchResults = []
             return
         }
-        isSearchLoading = true
-        searchProgress = 0.0
-        searchETA = "Calculating..."
+        isSearchFolderLoading = true
+        searchFolderProgress = 0.0
+        searchFolderETA = "Calculating..."
         Task.detached(priority: .userInitiated) {
-            let allFiles = self.flattenFiles(from: root).filter { file in
-                let allowedExtensions = ["txt", "md", "swift", "js", "json", "html", "css", "py", "java", "c", "cpp"]
-                return allowedExtensions.contains(file.url.pathExtension.lowercased())
-            }
+            let allFiles = self.flattenFiles(from: root)
             let totalFiles = allFiles.count
             let batchSize = 50
             let startTime = Date()
@@ -982,18 +985,8 @@ struct DinoLabsPlayground: View {
                 let batchResults = await withTaskGroup(of: [SearchResult].self) { group -> [SearchResult] in
                     for file in batchFiles {
                         group.addTask {
-                            var fileResults: [SearchResult] = []
-                            if let fileData = try? Data(contentsOf: file.url, options: .mappedIfSafe),
-                               let content = String(data: fileData, encoding: .utf8) {
-                                let lines = content.components(separatedBy: .newlines)
-                                for (index, line) in lines.enumerated() {
-                                    let matchFound = self.isSearchCaseSensitive ? line.contains(self.searchQuery) : line.lowercased().contains(self.searchQuery.lowercased())
-                                    if matchFound {
-                                        fileResults.append(SearchResult(fileURL: file.url, line: line, lineNumber: index + 1))
-                                    }
-                                }
-                            }
-                            return fileResults
+                            let results = self.searchInFile(file, query: self.searchFolderQuery)
+                            return results
                         }
                     }
                     var batchAccumulated: [SearchResult] = []
@@ -1013,119 +1006,17 @@ struct DinoLabsPlayground: View {
                 let fileResults = grouped.map { FileSearchResult(id: $0.key, fileURL: $0.key, results: $0.value, isExpanded: true) }
                 await MainActor.run {
                     self.groupedSearchResults = fileResults
-                    self.searchProgress = progress
-                    self.searchETA = etaString
+                    self.searchFolderProgress = progress
+                    self.searchFolderETA = etaString
                 }
                 try? await Task.sleep(nanoseconds: 20000000)
             }
             await MainActor.run {
-                self.isSearchLoading = false
+                self.isSearchFolderLoading = false
             }
         }
     }
     
-    private func performReplace() {
-        guard !searchQuery.isEmpty else { return }
-        DispatchQueue.global(qos: .userInitiated).async {
-            let files = Dictionary(grouping: searchResults, by: { $0.fileURL }).keys
-            for fileURL in files {
-                if var content = try? String(contentsOf: fileURL) {
-                    let options: String.CompareOptions = isReplaceCaseSensitive ? [] : [.caseInsensitive]
-                    let newContent = content.replacingOccurrences(of: searchQuery, with: replaceQuery, options: options, range: nil)
-                    try? newContent.write(to: fileURL, atomically: true, encoding: .utf8)
-                }
-            }
-            
-            let updatedResults = searchFiles(in: fileItems.first?.children ?? [], query: searchQuery)
-            DispatchQueue.main.async {
-                searchResults = updatedResults
-                reloadDirectory()
-            }
-        }
-    }
-    
-    private func performReplaceAll() {
-        guard !searchQuery.isEmpty, let root = fileItems.first else {
-            return
-        }
-        isReplaceAllLoading = true
-        replaceProgress = 0.0
-        replaceETA = "Calculating..."
-        Task.detached(priority: .userInitiated) {
-            let allowedExtensions = ["txt", "md", "swift", "js", "json", "html", "css", "py", "java", "c", "cpp"]
-            let allFiles = self.flattenFiles(from: root).filter { allowedExtensions.contains($0.url.pathExtension.lowercased()) }
-            let totalFiles = allFiles.count
-            let batchSize = 50
-            let startTime = Date()
-            for batchStart in stride(from: 0, to: totalFiles, by: batchSize) {
-                let batchFiles = Array(allFiles[batchStart..<min(batchStart + batchSize, totalFiles)])
-                await withTaskGroup(of: Void.self) { group in
-                    for file in batchFiles {
-                        group.addTask {
-                            if let fileData = try? Data(contentsOf: file.url, options: .mappedIfSafe),
-                               var content = String(data: fileData, encoding: .utf8) {
-                                let options: String.CompareOptions = self.isReplaceCaseSensitive ? [] : [.caseInsensitive]
-                                if content.range(of: self.searchQuery, options: options) != nil {
-                                    let newContent = content.replacingOccurrences(of: self.searchQuery, with: self.replaceQuery, options: options, range: nil)
-                                    try? newContent.write(to: file.url, atomically: true, encoding: .utf8)
-                                }
-                            }
-                        }
-                    }
-                    for await _ in group {}
-                }
-                let progress = Double(min(batchStart + batchSize, totalFiles)) / Double(totalFiles)
-                let elapsed = Date().timeIntervalSince(startTime)
-                let averageTimePerFile = elapsed / Double(max(batchStart + batchSize, 1))
-                let remainingFiles = Double(totalFiles) - Double(batchStart + batchSize)
-                let estimatedRemainingTime = averageTimePerFile * remainingFiles
-                let etaString = String(format: "%.1f sec remaining", estimatedRemainingTime)
-                await MainActor.run {
-                    self.replaceProgress = progress
-                    self.replaceETA = etaString
-                }
-                try? await Task.sleep(nanoseconds: 20000000)
-            }
-            var allResults: [SearchResult] = []
-            let batchSizeResults = 50
-            for batchStart in stride(from: 0, to: totalFiles, by: batchSizeResults) {
-                let batchFiles = Array(allFiles[batchStart..<min(batchStart + batchSizeResults, totalFiles)])
-                let batchResults = await withTaskGroup(of: [SearchResult].self) { group -> [SearchResult] in
-                    for file in batchFiles {
-                        group.addTask {
-                            var fileResults: [SearchResult] = []
-                            if let fileData = try? Data(contentsOf: file.url, options: .mappedIfSafe),
-                               let content = String(data: fileData, encoding: .utf8) {
-                                let lines = content.components(separatedBy: .newlines)
-                                for (index, line) in lines.enumerated() {
-                                    let matchFound = self.isReplaceCaseSensitive ? line.contains(self.searchQuery) : line.lowercased().contains(self.searchQuery.lowercased())
-                                    if matchFound {
-                                        fileResults.append(SearchResult(fileURL: file.url, line: line, lineNumber: index + 1))
-                                    }
-                                }
-                            }
-                            return fileResults
-                        }
-                    }
-                    var batchAccumulated: [SearchResult] = []
-                    for await results in group {
-                        batchAccumulated.append(contentsOf: results)
-                    }
-                    return batchAccumulated
-                }
-                allResults.append(contentsOf: batchResults)
-                try? await Task.sleep(nanoseconds: 20000000)
-            }
-            let grouped = Dictionary(grouping: allResults, by: { $0.fileURL })
-            let fileResults = grouped.map { FileSearchResult(id: $0.key, fileURL: $0.key, results: $0.value, isExpanded: true) }
-            await MainActor.run {
-                self.groupedSearchResults = fileResults
-                self.reloadDirectory()
-                self.isReplaceAllLoading = false
-            }
-        }
-    }
-
     func relativePath(itemURL: URL) -> String {
         guard let root = DinoLabsPlayground.loadedRootURL else { return itemURL.path }
         let rootName = root.lastPathComponent
@@ -1230,13 +1121,13 @@ struct DinoLabsPlayground: View {
                             )
                             HStack(spacing: 0) {
                                 MainButtonMain {
-                                    isReplace.toggle()
+                                    isSearchFiles.toggle()
                                 }
                                 .frame(width: (geometry.size.width * leftPanelWidthRatio) * 0.5)
-                                .containerHelper(backgroundColor: isReplace ? Color.clear : Color(hex: 0x212121), borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                                .containerHelper(backgroundColor: isSearchFiles ? Color.clear : Color(hex: 0x212121), borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
                                 .overlay(
                                     HStack {
-                                        Text("Search")
+                                        Text("Search Folder")
                                             .foregroundColor(.white.opacity(0.8))
                                             .font(.system(size: 9, weight: .semibold))
                                             .lineLimit(1)
@@ -1246,13 +1137,13 @@ struct DinoLabsPlayground: View {
                                     .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
                                 )
                                 MainButtonMain {
-                                    isReplace.toggle()
+                                    isSearchFiles.toggle()
                                 }
                                 .frame(width: (geometry.size.width * leftPanelWidthRatio) * 0.5)
-                                .containerHelper(backgroundColor: !isReplace ? Color.clear : Color(hex: 0x212121), borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                                .containerHelper(backgroundColor: !isSearchFiles ? Color.clear : Color(hex: 0x212121), borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
                                 .overlay(
                                     HStack {
-                                        Text("Search & Replace")
+                                        Text("Search Files")
                                             .foregroundColor(.white.opacity(0.8))
                                             .font(.system(size: 9, weight: .semibold))
                                             .lineLimit(1)
@@ -1272,9 +1163,9 @@ struct DinoLabsPlayground: View {
                                 alignment: .bottom
                             )
                             VStack {
-                                if !isReplace {
+                                if !isSearchFiles {
                                     HStack(spacing: 0) {
-                                        MainTextField(placeholder: "Search...", text: $directoryItemSearch)
+                                        MainTextField(placeholder: "Search directory...", text: $directoryItemSearch)
                                             .lineLimit(1)
                                             .truncationMode(.tail)
                                             .textFieldStyle(PlainTextFieldStyle())
@@ -1286,7 +1177,16 @@ struct DinoLabsPlayground: View {
                                             .hoverEffect(opacity: 0.8)
                                         HStack {
                                             MainButtonMain {
-                                                isSearchCaseSensitive.toggle()
+                                                isSearchFolderCaseSensitive.toggle()
+                                                searchFolderDebounceTask?.cancel()
+                                                let task = DispatchWorkItem {
+                                                    if let root = fileItems.first {
+                                                        let filteredRoot = filteredFileItem(root, query: directoryItemSearch)
+                                                        displayedChildren = filteredRoot?.children ?? []
+                                                    }
+                                                }
+                                                searchFolderDebounceTask = task
+                                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: task)
                                             }
                                             .lineLimit(1)
                                             .truncationMode(.tail)
@@ -1296,7 +1196,7 @@ struct DinoLabsPlayground: View {
                                             .overlay(
                                                 Image(systemName: "a.square.fill")
                                                     .font(.system(size: 10, weight: .semibold))
-                                                    .foregroundColor(isSearchCaseSensitive ? Color(hex: 0x5C2BE2) : Color(hex: 0xf5f5f5))
+                                                    .foregroundColor(isSearchFolderCaseSensitive ? Color(hex: 0x5C2BE2) : Color(hex: 0xf5f5f5))
                                                     .allowsHitTesting(false)
                                             )
                                             .hoverEffect(
@@ -1317,14 +1217,14 @@ struct DinoLabsPlayground: View {
                                     }
                                     .frame(width: (geometry.size.width * leftPanelWidthRatio) * 0.9)
                                     .onChange(of: directoryItemSearch) { newValue in
-                                        searchDebounceTask?.cancel()
+                                        searchFolderDebounceTask?.cancel()
                                         let task = DispatchWorkItem {
                                             if let root = fileItems.first {
                                                 let filteredRoot = filteredFileItem(root, query: newValue)
                                                 displayedChildren = filteredRoot?.children ?? []
                                             }
                                         }
-                                        searchDebounceTask = task
+                                        searchFolderDebounceTask = task
                                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: task)
                                     }
                                     .containerHelper(
@@ -1335,9 +1235,10 @@ struct DinoLabsPlayground: View {
                                         shadowColor: Color.white.opacity(0.5), shadowRadius: 8, shadowX: 0, shadowY: 0
                                     )
                                 }
-                                if isReplace {
+                                
+                                if isSearchFiles {
                                     HStack(spacing: 0) {
-                                        MainTextField(placeholder: "Search all files...", text: $searchQuery)
+                                        MainTextField(placeholder: "Search across files...", text: $searchFolderQuery)
                                             .lineLimit(1)
                                             .truncationMode(.tail)
                                             .textFieldStyle(PlainTextFieldStyle())
@@ -1347,12 +1248,12 @@ struct DinoLabsPlayground: View {
                                             .frame(width: (geometry.size.width * leftPanelWidthRatio * 0.9) * 0.65, height: 32)
                                             .containerHelper(backgroundColor: Color(hex: 0x222222), borderColor: Color(hex: 0x616161), borderWidth: 1, topLeft: 6, topRight: 0, bottomLeft: 6, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
                                             .hoverEffect(opacity: 0.8)
-                                            .onChange(of: searchQuery) { newVal in
-                                                replaceDebounceTask?.cancel()
+                                            .onChange(of: searchFolderQuery) { newVal in
+                                                searchFilesDebounceTask?.cancel()
                                                 let task = DispatchWorkItem {
                                                     performSearch()
                                                 }
-                                                replaceDebounceTask = task
+                                                searchFilesDebounceTask = task
                                                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.35, execute: task)
                                             }
                                         HStack {
@@ -1377,7 +1278,8 @@ struct DinoLabsPlayground: View {
                                             )
                                             
                                             MainButtonMain {
-                                                isReplaceCaseSensitive.toggle()
+                                                isSearchFilesCaseSensitive.toggle()
+                                                performSearch()
                                             }
                                             .lineLimit(1)
                                             .truncationMode(.tail)
@@ -1387,7 +1289,7 @@ struct DinoLabsPlayground: View {
                                             .overlay(
                                                 Image(systemName: "a.square.fill")
                                                     .font(.system(size: 10, weight: .semibold))
-                                                    .foregroundColor(isReplaceCaseSensitive ? Color(hex: 0x5C2BE2) : Color(hex: 0xf5f5f5))
+                                                    .foregroundColor(isSearchFilesCaseSensitive ? Color(hex: 0x5C2BE2) : Color(hex: 0xf5f5f5))
                                                     .allowsHitTesting(false)
                                             )
                                             .hoverEffect(
@@ -1414,87 +1316,11 @@ struct DinoLabsPlayground: View {
                                         topLeft: 6, topRight: 6, bottomLeft: 6, bottomRight: 6,
                                         shadowColor: Color.white.opacity(0.5), shadowRadius: 8, shadowX: 0, shadowY: 0
                                     )
-                                    .padding(.bottom, 6)
-                                    
-                                    
-                                    HStack(spacing: 0) {
-                                        MainTextField(placeholder: "Replace with...", text: $replaceQuery)
-                                            .lineLimit(1)
-                                            .truncationMode(.tail)
-                                            .textFieldStyle(PlainTextFieldStyle())
-                                            .foregroundColor(.white)
-                                            .font(.system(size: 8, weight: .semibold))
-                                            .padding(.horizontal, 10)
-                                            .frame(width: (geometry.size.width * leftPanelWidthRatio * 0.9) * 0.65, height: 32)
-                                            .containerHelper(backgroundColor: Color(hex: 0x222222), borderColor: Color(hex: 0x616161), borderWidth: 1, topLeft: 6, topRight: 0, bottomLeft: 6, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
-                                            .hoverEffect(opacity: 0.8)
-                                        HStack {
-                                            MainButtonMain {
-                                                performReplace()
-                                            }
-                                            .lineLimit(1)
-                                            .truncationMode(.tail)
-                                            .textFieldStyle(PlainTextFieldStyle())
-                                            .foregroundColor(.white)
-                                            .font(.system(size: 8))
-                                            .overlay(
-                                                Image(systemName: "square.fill")
-                                                    .font(.system(size: 10, weight: .semibold))
-                                                    .foregroundColor(Color(hex: 0xf5f5f5))
-                                                    .allowsHitTesting(false)
-                                            )
-                                            .disabled(searchQuery.isEmpty || replaceQuery.isEmpty)
-                                            .hoverEffect(
-                                                opacity: 0.6,
-                                                scale: 1.05,
-                                                cursor: .pointingHand
-                                            )
-                                            
-                                            MainButtonMain {
-                                                performReplaceAll()
-                                            }
-                                            .lineLimit(1)
-                                            .truncationMode(.tail)
-                                            .textFieldStyle(PlainTextFieldStyle())
-                                            .foregroundColor(.white)
-                                            .font(.system(size: 8))
-                                            .overlay(
-                                                Image(systemName: "square.grid.3x1.below.line.grid.1x2")
-                                                    .font(.system(size: 10, weight: .semibold))
-                                                    .foregroundColor(Color(hex: 0xf5f5f5))
-                                                    .allowsHitTesting(false)
-                                            )
-                                            .disabled(searchQuery.isEmpty || replaceQuery.isEmpty)
-                                            .hoverEffect(
-                                                opacity: 0.6,
-                                                scale: 1.05,
-                                                cursor: .pointingHand
-                                            )
-                                        }
-                                        .padding(.horizontal, 10)
-                                        .frame(width: (geometry.size.width * leftPanelWidthRatio * 0.9) * 0.35, height: 32)
-                                        .containerHelper(
-                                            backgroundColor: Color(hex: 0x222222),
-                                            borderColor: Color(hex: 0x616161),
-                                            borderWidth: 1,
-                                            topLeft: 0, topRight: 6, bottomLeft: 0, bottomRight: 6,
-                                            shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0
-                                        )
-                                    }
-                                    .frame(width: (geometry.size.width * leftPanelWidthRatio) * 0.9)
-                                    .containerHelper(
-                                        backgroundColor: Color.clear,
-                                        borderColor: Color(hex: 0x616161),
-                                        borderWidth: 1,
-                                        topLeft: 6, topRight: 6, bottomLeft: 6, bottomRight: 6,
-                                        shadowColor: Color.white.opacity(0.5), shadowRadius: 8, shadowX: 0, shadowY: 0
-                                    )
-                                    .padding(.bottom, 6)
                                 }
 
                             }
                             .frame(width: geometry.size.width * leftPanelWidthRatio,
-                                   height: !isReplace ? (geometry.size.height - 50) * 0.1 : (geometry.size.height - 50) * 0.2)
+                                   height: (geometry.size.height - 50) * 0.1)
                             .containerHelper(backgroundColor: Color(hex: 0x171717), borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
                             .overlay(
                                 Rectangle()
@@ -1502,6 +1328,7 @@ struct DinoLabsPlayground: View {
                                     .foregroundColor(Color(hex: 0xc1c1c1).opacity(0.4)),
                                 alignment: .bottom
                             )
+                            
                             VStack(spacing: 0) {
                                 if isNavigatorLoading {
                                     VStack {
@@ -1511,9 +1338,9 @@ struct DinoLabsPlayground: View {
                                         Spacer()
                                     }
                                     .frame(width: geometry.size.width * leftPanelWidthRatio,
-                                           height: !isReplace ? (geometry.size.height - 50) * 0.6 : (geometry.size.height - 50) * 0.5)
+                                           height: (geometry.size.height - 50) * 0.6)
                                 } else if let root = fileItems.first {
-                                    if !isReplace {
+                                    if !isSearchFiles {
                                         HStack(alignment: .center, spacing: 0) {
                                             Image(systemName: rootIsExpanded ? "chevron.down" : "chevron.right")
                                                 .resizable()
@@ -1538,15 +1365,15 @@ struct DinoLabsPlayground: View {
                                     }
                                 
                                     if rootIsExpanded {
-                                        if isReplace {
-                                            if isReplaceAllLoading {
+                                        if isSearchFiles {
+                                            if isSearchFileLoading {
                                                 VStack {
                                                     Spacer()
                                                     ProgressView()
                                                         .progressViewStyle(CircularProgressViewStyle(tint: .white))
                                                     Spacer()
                                                 }
-                                            } else if isSearchLoading {
+                                            } else if isSearchFolderLoading {
                                                 VStack {
                                                     Spacer()
                                                     ProgressView()
@@ -1562,8 +1389,8 @@ struct DinoLabsPlayground: View {
                                                 } else {
                                                     AdvancedVirtualizedSearchResultsView(
                                                         searchResults: $groupedSearchResults,
-                                                        searchQuery: searchQuery,
-                                                        isCaseSensitive: isSearchCaseSensitive,
+                                                        searchQuery: searchFolderQuery,
+                                                        isCaseSensitive: isSearchFolderCaseSensitive,
                                                         onOpenFile: { fileURL, lineNumber in
                                                             openTab(url: fileURL, lineNumber: lineNumber)
                                                         }
@@ -1623,7 +1450,7 @@ struct DinoLabsPlayground: View {
                                 }
                             }
                             .frame(width: geometry.size.width * leftPanelWidthRatio,
-                                   height: !isReplace ? (geometry.size.height - 50) * 0.6 : (geometry.size.height - 50) * 0.5)
+                                   height: (geometry.size.height - 50) * 0.6)
                             .containerHelper(backgroundColor: Color(hex: 0x171717), borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
                             .overlay(
                                 Rectangle()

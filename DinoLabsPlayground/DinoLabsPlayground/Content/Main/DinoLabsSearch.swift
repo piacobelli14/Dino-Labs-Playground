@@ -135,7 +135,6 @@ class ClippedSearchResultTextView: NSView {
         ]
     }
 }
-
 class HoverEffectView: NSView {
     var hoverScale: CGFloat = 1.02
 
@@ -166,7 +165,8 @@ class HoverEffectView: NSView {
     override func mouseEntered(with event: NSEvent) {
         layer?.removeAllAnimations()
         CATransaction.begin()
-        CATransaction.setAnimationDuration(0.4)
+        CATransaction.setAnimationDuration(0.05)
+        CATransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: .easeInEaseOut))
         layer?.setAffineTransform(CGAffineTransform(scaleX: hoverScale, y: hoverScale))
         CATransaction.commit()
     }
@@ -174,7 +174,8 @@ class HoverEffectView: NSView {
     override func mouseExited(with event: NSEvent) {
         layer?.removeAllAnimations()
         CATransaction.begin()
-        CATransaction.setAnimationDuration(0.4)
+        CATransaction.setAnimationDuration(0.05)
+        CATransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: .easeInEaseOut))
         layer?.setAffineTransform(.identity)
         CATransaction.commit()
     }
@@ -360,7 +361,13 @@ struct AdvancedVirtualizedSearchResultsView: NSViewRepresentable {
                                              green: 20/255.0,
                                              blue: 20/255.0,
                                              alpha: 1.0)
+        
         let collectionView = NSCollectionView(frame: .zero)
+        collectionView.backgroundColors = [NSColor(calibratedRed: 20/255.0,
+                                                   green: 20/255.0,
+                                                   blue: 20/255.0,
+                                                   alpha: 1.0)]
+        
         let layout = NSCollectionViewFlowLayout()
         layout.minimumLineSpacing = 0
         layout.minimumInteritemSpacing = 0
@@ -372,9 +379,11 @@ struct AdvancedVirtualizedSearchResultsView: NSViewRepresentable {
         
         collectionView.dataSource = context.coordinator
         collectionView.delegate = context.coordinator
+        collectionView.autoresizingMask = [.width, .height]
         
         scrollView.documentView = collectionView
         scrollView.hasVerticalScroller = true
+        
         return scrollView
     }
     
