@@ -8,11 +8,62 @@ import SwiftUI
 import AVKit
 import AVFoundation
 
+struct VideoState {
+    var xPos: String = "0.0"
+    var yPos: String = "0.0"
+    var videoWidth: String = "0.0"
+    var videoHeight: String = "0.0"
+    var preserveAspectRatio: Bool = true
+    var isCropping: Bool = false
+    var videoSize: CGSize = .zero
+    var originalAspectRatio: CGFloat = 1.0
+    var lastDragPosition: CGPoint? = nil
+    var videoPosition: CGPoint = .zero
+    var initialDragVideoSize: CGSize? = nil
+    var initialDragVideoPosition: CGPoint? = nil
+    var editorSize: CGSize = .zero
+    var initialDragOffset: CGPoint? = nil
+    var rotationAngle: Angle = .zero
+    var flipHorizontal: Bool = false
+    var flipVertical: Bool = false
+    var initialLoadedVideoSize: CGSize = .zero
+    var initialLoadedVideoPosition: CGPoint = .zero
+    var currentVideo: NSImage? = nil
+    var cropHistory: [(item: AVPlayerItem, size: CGSize, position: CGPoint, cropRect: CGRect)] = []
+    var cropRectPosition: CGPoint = .zero
+    var cropRectSize: CGSize = .zero
+    var initialCropDragOffset: CGPoint? = nil
+    var initialCropRectSize: CGSize? = nil
+    var initialCropRectPosition: CGPoint? = nil
+    var cropRotationAngle: Angle = .zero
+    var initialCropRotationOffset: Angle? = nil
+    var opacityValue: CGFloat = 1.0
+    var hueValue: Double = 0.0
+    var saturationValue: CGFloat = 1.0
+    var brightnessValue: CGFloat = 0.0
+    var contrastValue: CGFloat = 1.0
+    var blurValue: CGFloat = 0.0
+    var grayscaleValue: CGFloat = 0.0
+    var videoScaleFactor: CGFloat = 1.0
+    var isPlaying: Bool = false
+    var isLooping: Bool = false
+    var isFrameState: Bool = false
+    var playbackSpeed: Double = 1.0
+    var currentCropRect: CGRect = .zero
+    var initialCropRect: CGRect = .zero
+    var frames: [(NSImage, String, Double)] = []
+    var isGeneratingFrames: Bool = false
+    var selectedFrameIndex: Int? = nil
+}
+
+
 struct VideoView: View {
     let geometry: GeometryProxy
     let fileURL: URL
     @Binding var hasUnsavedChanges: Bool
     @Binding var leftPanelWidthRatio: CGFloat
+    @Binding var videoState: VideoState
+    @State private var player: AVPlayer
     @State private var xPos: String = "0.0"
     @State private var yPos: String = "0.0"
     @State private var videoWidth: String = "0.0"
@@ -53,18 +104,18 @@ struct VideoView: View {
     @State private var isLooping: Bool = false
     @State private var isFrameState: Bool = false
     @State private var playbackSpeed: Double = 1.0
-    @State private var player: AVPlayer
     @State private var currentCropRect: CGRect = .zero
     @State private var initialCropRect: CGRect = .zero
     @State private var frames: [(NSImage, String, Double)] = []
     @State private var isGeneratingFrames = false
     @State private var selectedFrameIndex: Int? = nil
 
-    init(geometry: GeometryProxy, fileURL: URL, hasUnsavedChanges: Binding<Bool>, leftPanelWidthRatio: Binding<CGFloat>) {
+    init(geometry: GeometryProxy, fileURL: URL, hasUnsavedChanges: Binding<Bool>, leftPanelWidthRatio: Binding<CGFloat>, videoState: Binding<VideoState>) {
         self.geometry = geometry
         self.fileURL = fileURL
         self._hasUnsavedChanges = hasUnsavedChanges
         self._leftPanelWidthRatio = leftPanelWidthRatio
+        self._videoState = videoState
         self._player = State(initialValue: AVPlayer(url: fileURL))
     }
 
@@ -1290,6 +1341,20 @@ struct VideoView: View {
             )
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear {
+            restoreState()
+            if currentCropRect != .zero {
+                reapplyCrop()
+            }
+        }
+        .onAppear {
+            NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: player.currentItem, queue: .main) { _ in
+                if isLooping {
+                    player.seek(to: .zero)
+                    player.play()
+                }
+            }
+        }
         .onChange(of: preserveAspectRatio) { newValue in
             if newValue {
                 originalAspectRatio = videoSize.width / videoSize.height
@@ -1304,14 +1369,107 @@ struct VideoView: View {
                 player.rate = Float(newValue)
             }
         }
-        .onAppear {
-            NotificationCenter.default.addObserver(forName: .AVPlayerItemDidPlayToEndTime, object: player.currentItem, queue: .main) { _ in
-                if isLooping {
-                    player.seek(to: .zero)
-                    player.play()
-                }
-            }
+        .onDisappear {
+            saveState()
         }
+    }
+    
+    private func saveState() {
+        videoState = VideoState(
+            xPos: xPos,
+            yPos: yPos,
+            videoWidth: videoWidth,
+            videoHeight: videoHeight,
+            preserveAspectRatio: preserveAspectRatio,
+            isCropping: isCropping,
+            videoSize: videoSize,
+            originalAspectRatio: originalAspectRatio,
+            lastDragPosition: lastDragPosition,
+            videoPosition: videoPosition,
+            initialDragVideoSize: initialDragVideoSize,
+            initialDragVideoPosition: initialDragVideoPosition,
+            editorSize: editorSize,
+            initialDragOffset: initialDragOffset,
+            rotationAngle: rotationAngle,
+            flipHorizontal: flipHorizontal,
+            flipVertical: flipVertical,
+            initialLoadedVideoSize: initialLoadedVideoSize,
+            initialLoadedVideoPosition: initialLoadedVideoPosition,
+            currentVideo: currentVideo,
+            cropHistory: cropHistory,
+            cropRectPosition: cropRectPosition,
+            cropRectSize: cropRectSize,
+            initialCropDragOffset: initialCropDragOffset,
+            initialCropRectSize: initialCropRectSize,
+            initialCropRectPosition: initialCropRectPosition,
+            cropRotationAngle: cropRotationAngle,
+            initialCropRotationOffset: initialCropRotationOffset,
+            opacityValue: opacityValue,
+            hueValue: hueValue,
+            saturationValue: saturationValue,
+            brightnessValue: brightnessValue,
+            contrastValue: contrastValue,
+            blurValue: blurValue,
+            grayscaleValue: grayscaleValue,
+            videoScaleFactor: videoScaleFactor,
+            isPlaying: isPlaying,
+            isLooping: isLooping,
+            isFrameState: isFrameState,
+            playbackSpeed: playbackSpeed,
+            currentCropRect: currentCropRect,
+            initialCropRect: initialCropRect,
+            frames: frames,
+            isGeneratingFrames: isGeneratingFrames,
+            selectedFrameIndex: selectedFrameIndex
+        )
+    }
+
+    private func restoreState() {
+        xPos = videoState.xPos
+        yPos = videoState.yPos
+        videoWidth = videoState.videoWidth
+        videoHeight = videoState.videoHeight
+        preserveAspectRatio = videoState.preserveAspectRatio
+        isCropping = videoState.isCropping
+        videoSize = videoState.videoSize
+        originalAspectRatio = videoState.originalAspectRatio
+        lastDragPosition = videoState.lastDragPosition
+        videoPosition = videoState.videoPosition
+        initialDragVideoSize = videoState.initialDragVideoSize
+        initialDragVideoPosition = videoState.initialDragVideoPosition
+        editorSize = videoState.editorSize
+        initialDragOffset = videoState.initialDragOffset
+        rotationAngle = videoState.rotationAngle
+        flipHorizontal = videoState.flipHorizontal
+        flipVertical = videoState.flipVertical
+        initialLoadedVideoSize = videoState.initialLoadedVideoSize
+        initialLoadedVideoPosition = videoState.initialLoadedVideoPosition
+        currentVideo = videoState.currentVideo
+        cropHistory = videoState.cropHistory
+        cropRectPosition = videoState.cropRectPosition
+        cropRectSize = videoState.cropRectSize
+        initialCropDragOffset = videoState.initialCropDragOffset
+        initialCropRectSize = videoState.initialCropRectSize
+        initialCropRectPosition = videoState.initialCropRectPosition
+        cropRotationAngle = videoState.cropRotationAngle
+        initialCropRotationOffset = videoState.initialCropRotationOffset
+        opacityValue = videoState.opacityValue
+        hueValue = videoState.hueValue
+        saturationValue = videoState.saturationValue
+        brightnessValue = videoState.brightnessValue
+        contrastValue = videoState.contrastValue
+        blurValue = videoState.blurValue
+        grayscaleValue = videoState.grayscaleValue
+        videoScaleFactor = videoState.videoScaleFactor
+        isPlaying = videoState.isPlaying
+        isLooping = videoState.isLooping
+        isFrameState = videoState.isFrameState
+        playbackSpeed = videoState.playbackSpeed
+        currentCropRect = videoState.currentCropRect
+        initialCropRect = videoState.initialCropRect
+        frames = videoState.frames
+        isGeneratingFrames = videoState.isGeneratingFrames
+        selectedFrameIndex = videoState.selectedFrameIndex
     }
     
     private enum Corner {
@@ -1669,6 +1827,31 @@ struct VideoView: View {
                 updateTextFields()
             }
         }
+    }
+    
+    private func reapplyCrop() {
+        guard currentCropRect != .zero,
+              let currentAsset = player.currentItem?.asset,
+              let videoTrack = currentAsset.tracks(withMediaType: .video).first
+        else { return }
+        
+        let composition = AVMutableVideoComposition()
+        composition.renderSize = currentCropRect.size
+        composition.frameDuration = CMTime(value: 1, timescale: 30)
+        
+        let instruction = AVMutableVideoCompositionInstruction()
+        instruction.timeRange = CMTimeRange(start: .zero, duration: currentAsset.duration)
+        
+        let layerInstruction = AVMutableVideoCompositionLayerInstruction(assetTrack: videoTrack)
+        let transform = CGAffineTransform(translationX: -currentCropRect.origin.x, y: -currentCropRect.origin.y)
+        layerInstruction.setTransform(transform, at: .zero)
+        
+        instruction.layerInstructions = [layerInstruction]
+        composition.instructions = [instruction]
+        
+        let newItem = AVPlayerItem(asset: currentAsset)
+        newItem.videoComposition = composition
+        player.replaceCurrentItem(with: newItem)
     }
 }
 

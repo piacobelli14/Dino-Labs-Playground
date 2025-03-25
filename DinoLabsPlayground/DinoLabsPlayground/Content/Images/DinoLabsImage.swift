@@ -6,12 +6,52 @@
 
 import SwiftUI
 
+struct ImageState {
+    var xPos: String = "0.0"
+    var yPos: String = "0.0"
+    var imageWidth: String = "0.0"
+    var imageHeight: String = "0.0"
+    var preserveAspectRatio: Bool = true
+    var isCropping: Bool = false
+    var imageSize: CGSize = .zero
+    var originalAspectRatio: CGFloat = 1.0
+    var lastDragPosition: CGPoint? = nil
+    var imagePosition: CGPoint = .zero
+    var initialDragImageSize: CGSize? = nil
+    var initialDragImagePosition: CGPoint? = nil
+    var editorSize: CGSize = .zero
+    var initialDragOffset: CGPoint? = nil
+    var rotationAngle: Angle = .zero
+    var flipHorizontal: Bool = false
+    var flipVertical: Bool = false
+    var initialLoadedImageSize: CGSize = .zero
+    var initialLoadedImagePosition: CGPoint = .zero
+    var currentImage: NSImage? = nil
+    var cropHistory: [(image: NSImage, size: CGSize, position: CGPoint)] = []
+    var cropRectPosition: CGPoint = .zero
+    var cropRectSize: CGSize = .zero
+    var initialCropDragOffset: CGPoint? = nil
+    var initialCropRectSize: CGSize? = nil
+    var initialCropRectPosition: CGPoint? = nil
+    var cropRotationAngle: Angle = .zero
+    var initialCropRotationOffset: Angle? = nil
+    var opacityValue: CGFloat = 1.0
+    var hueValue: Double = 0.0
+    var saturationValue: CGFloat = 1.0
+    var brightnessValue: CGFloat = 0.0
+    var contrastValue: CGFloat = 1.0
+    var blurValue: CGFloat = 0.0
+    var grayscaleValue: CGFloat = 0.0
+    var imageScaleFactor: CGFloat = 1.0
+}
+
 struct ImageView: View {
     let geometry: GeometryProxy
     let fileURL: URL
     @Binding var hasUnsavedChanges: Bool
     @Binding var leftPanelWidthRatio: CGFloat
-    
+    @Binding var imageState: ImageState
+
     @State private var xPos: String = "0.0"
     @State private var yPos: String = "0.0"
     @State private var imageWidth: String = "0.0"
@@ -976,6 +1016,92 @@ struct ImageView: View {
             )
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .onAppear {
+            restoreState()
+        }
+        .onDisappear {
+            saveState()
+        }
+    }
+    
+    private func saveState() {
+        imageState = ImageState(
+            xPos: xPos,
+            yPos: yPos,
+            imageWidth: imageWidth,
+            imageHeight: imageHeight,
+            preserveAspectRatio: preserveAspectRatio,
+            isCropping: isCropping,
+            imageSize: imageSize,
+            originalAspectRatio: originalAspectRatio,
+            lastDragPosition: lastDragPosition,
+            imagePosition: imagePosition,
+            initialDragImageSize: initialDragImageSize,
+            initialDragImagePosition: initialDragImagePosition,
+            editorSize: editorSize,
+            initialDragOffset: initialDragOffset,
+            rotationAngle: rotationAngle,
+            flipHorizontal: flipHorizontal,
+            flipVertical: flipVertical,
+            initialLoadedImageSize: initialLoadedImageSize,
+            initialLoadedImagePosition: initialLoadedImagePosition,
+            currentImage: currentImage,
+            cropHistory: cropHistory,
+            cropRectPosition: cropRectPosition,
+            cropRectSize: cropRectSize,
+            initialCropDragOffset: initialCropDragOffset,
+            initialCropRectSize: initialCropRectSize,
+            initialCropRectPosition: initialCropRectPosition,
+            cropRotationAngle: cropRotationAngle,
+            initialCropRotationOffset: initialCropRotationOffset,
+            opacityValue: opacityValue,
+            hueValue: hueValue,
+            saturationValue: saturationValue,
+            brightnessValue: brightnessValue,
+            contrastValue: contrastValue,
+            blurValue: blurValue,
+            grayscaleValue: grayscaleValue,
+            imageScaleFactor: imageScaleFactor
+        )
+    }
+    
+    private func restoreState() {
+        xPos = imageState.xPos
+        yPos = imageState.yPos
+        imageWidth = imageState.imageWidth
+        imageHeight = imageState.imageHeight
+        preserveAspectRatio = imageState.preserveAspectRatio
+        isCropping = imageState.isCropping
+        imageSize = imageState.imageSize
+        originalAspectRatio = imageState.originalAspectRatio
+        lastDragPosition = imageState.lastDragPosition
+        imagePosition = imageState.imagePosition
+        initialDragImageSize = imageState.initialDragImageSize
+        initialDragImagePosition = imageState.initialDragImagePosition
+        editorSize = imageState.editorSize
+        initialDragOffset = imageState.initialDragOffset
+        rotationAngle = imageState.rotationAngle
+        flipHorizontal = imageState.flipHorizontal
+        flipVertical = imageState.flipVertical
+        initialLoadedImageSize = imageState.initialLoadedImageSize
+        initialLoadedImagePosition = imageState.initialLoadedImagePosition
+        currentImage = imageState.currentImage
+        cropHistory = imageState.cropHistory
+        cropRectPosition = imageState.cropRectPosition
+        cropRectSize = imageState.cropRectSize
+        initialCropDragOffset = imageState.initialCropDragOffset
+        initialCropRectSize = imageState.initialCropRectSize
+        initialCropRectPosition = imageState.initialCropRectPosition
+        cropRotationAngle = imageState.cropRotationAngle
+        initialCropRotationOffset = imageState.initialCropRotationOffset
+        opacityValue = imageState.opacityValue
+        hueValue = imageState.hueValue
+        saturationValue = imageState.saturationValue
+        brightnessValue = imageState.brightnessValue
+        contrastValue = imageState.contrastValue
+        blurValue = imageState.blurValue
+        grayscaleValue = imageState.grayscaleValue
+        imageScaleFactor = imageState.imageScaleFactor
     }
     
     private enum Corner {

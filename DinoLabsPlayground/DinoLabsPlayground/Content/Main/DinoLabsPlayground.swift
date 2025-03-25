@@ -390,6 +390,9 @@ struct DinoLabsPlayground: View {
     @State private var personalUsageByDay: [LineChartDataPoint] = []
     @State private var usageLanguagesData: [LanguageUsage] = []
     @State private var usageDoughnutData: [DoughnutData] = []
+    @State private var imageState = ImageState()
+    @State private var videoState = VideoState()
+    @State private var audioState = AudioState()
     
     private let extensionToImageMap: [String: String] = [
         "js": "javascript",
@@ -1753,7 +1756,8 @@ struct DinoLabsPlayground: View {
                                                 geometry: geometry,
                                                 fileURL: activeTab.fileURL,
                                                 hasUnsavedChanges: $openTabs[index].hasUnsavedChanges,
-                                                leftPanelWidthRatio: $leftPanelWidthRatio
+                                                leftPanelWidthRatio: $leftPanelWidthRatio,
+                                                imageState: $imageState
                                             )
                                             .onChange(of: openTabs[index].hasUnsavedChanges) { newValue in
                                                 updateUnsavedChangesInFileItems(for: activeTab.fileURL, unsaved: newValue)
@@ -1765,7 +1769,8 @@ struct DinoLabsPlayground: View {
                                                 geometry: geometry,
                                                 fileURL: activeTab.fileURL,
                                                 hasUnsavedChanges: $openTabs[index].hasUnsavedChanges,
-                                                leftPanelWidthRatio: $leftPanelWidthRatio
+                                                leftPanelWidthRatio: $leftPanelWidthRatio,
+                                                videoState: $videoState
                                             )
                                             .onChange(of: openTabs[index].hasUnsavedChanges) { newValue in
                                                 updateUnsavedChangesInFileItems(for: activeTab.fileURL, unsaved: newValue)
@@ -1777,7 +1782,8 @@ struct DinoLabsPlayground: View {
                                                 geometry: geometry,
                                                 fileURL: activeTab.fileURL,
                                                 hasUnsavedChanges: $openTabs[index].hasUnsavedChanges,
-                                                leftPanelWidthRatio: $leftPanelWidthRatio
+                                                leftPanelWidthRatio: $leftPanelWidthRatio,
+                                                audioState: $audioState
                                             )
                                             .onChange(of: openTabs[index].hasUnsavedChanges) { newValue in
                                                 updateUnsavedChangesInFileItems(for: activeTab.fileURL, unsaved: newValue)

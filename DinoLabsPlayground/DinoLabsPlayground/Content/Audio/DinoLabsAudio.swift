@@ -74,11 +74,33 @@ class AudioDataCache {
     }
 }
 
+struct AudioState {
+    var isLooping: Bool = false
+    var isPlaying: Bool = false
+    var audioPlayer: AVAudioPlayer? = nil
+    var playbackSpeed: Float = 1.0
+    var playbackPosition: CGFloat = 0.0
+    var volume: CGFloat = 1.0
+    var pitch: CGFloat = 0.5
+    var bass: CGFloat = 0.5
+    var mid: CGFloat = 0.5
+    var treble: CGFloat = 0.5
+    var vocalBoost: CGFloat = 0.5
+    var vocalIsolation: CGFloat = 1.0
+    var audioEngine: AVAudioEngine? = nil
+    var audioFilePlayer: AVAudioPlayerNode? = nil
+    var eqNode: AVAudioUnitEQ? = nil
+    var audioFileRef: AVAudioFile? = nil
+    var varispeedNode: AVAudioUnitVarispeed? = nil
+    var timePitchNode: AVAudioUnitTimePitch? = nil
+}
+
 struct AudioView: View {
     let geometry: GeometryProxy
     let fileURL: URL
     @Binding var hasUnsavedChanges: Bool
     @Binding var leftPanelWidthRatio: CGFloat
+    @Binding var audioState: AudioState
     
     @State private var isLooping: Bool = false
     @State private var isPlaying: Bool = false
@@ -964,6 +986,9 @@ struct AudioView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .onAppear {
+            restoreState()
+        }
+        .onAppear {
             setupAudioPlayer()
         }
         .onReceive(Timer.publish(every: 0.05, on: .main, in: .common).autoconnect()) { _ in
@@ -1000,6 +1025,53 @@ struct AudioView: View {
             let qFactor = minQ + Float(newValue) * range
             eqNode?.bands[4].bandwidth = qFactor
         }
+        .onDisappear {
+            saveState()
+        }
+    }
+    
+    private func saveState() {
+        audioState = AudioState(
+            isLooping: isLooping,
+            isPlaying: isPlaying,
+            audioPlayer: audioPlayer,
+            playbackSpeed: playbackSpeed,
+            playbackPosition: playbackPosition,
+            volume: volume,
+            pitch: pitch,
+            bass: bass,
+            mid: mid,
+            treble: treble,
+            vocalBoost: vocalBoost,
+            vocalIsolation: vocalIsolation,
+            audioEngine: audioEngine,
+            audioFilePlayer: audioFilePlayer,
+            eqNode: eqNode,
+            audioFileRef: audioFileRef,
+            varispeedNode: varispeedNode,
+            timePitchNode: timePitchNode
+        )
+    }
+    
+    private func restoreState() {
+        isLooping = audioState.isLooping
+        isPlaying = audioState.isPlaying
+        audioPlayer = audioState.audioPlayer
+        playbackSpeed = audioState.playbackSpeed
+        playbackPosition = audioState.playbackPosition
+        volume = audioState.volume
+        pitch = audioState.pitch
+        bass = audioState.bass
+        mid = audioState.mid
+        treble = audioState.treble
+        vocalBoost = audioState.vocalBoost
+        vocalIsolation = audioState.vocalIsolation
+        audioEngine = audioState.audioEngine
+        audioFilePlayer = audioState.audioFilePlayer
+        eqNode = audioState.eqNode
+        audioFileRef = audioState.audioFileRef
+        varispeedNode = audioState.varispeedNode
+        timePitchNode = audioState.timePitchNode
     }
     
     private func setupAudioPlayer() {
@@ -1070,7 +1142,7 @@ struct AudioView: View {
         }
         if let timePitch = timePitchNode {
             let semitones = (Float(pitch) * 24.0) - 12.0
-            timePitch.pitch = semitones * 100 
+            timePitch.pitch = semitones * 100
         }
     }
 }

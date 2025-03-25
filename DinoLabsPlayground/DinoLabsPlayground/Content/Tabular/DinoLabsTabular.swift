@@ -385,8 +385,9 @@ struct TabularView: View {
             }
         }
         .onDisappear {
+            let rowsCopy = dataSource.rows
             var csvString = ""
-            for row in dataSource.rows {
+            for row in rowsCopy {
                 let csvRow = row.map { escapeCSV($0) }.joined(separator: ",")
                 csvString.append(csvRow + "\n")
             }
@@ -1079,8 +1080,7 @@ struct TabularView: View {
                     .containerHelper(backgroundColor: Color.clear,
                                      borderColor: Color.clear,
                                      borderWidth: 0,
-                                     topLeft: 0, topRight: 0,
-                                     bottomLeft: 0, bottomRight: 0,
+                                     topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0,
                                      shadowColor: .clear,
                                      shadowRadius: 0,
                                      shadowX: 0, shadowY: 0)
@@ -1120,8 +1120,7 @@ struct TabularView: View {
                     .containerHelper(backgroundColor: Color.clear,
                                      borderColor: Color.clear,
                                      borderWidth: 0,
-                                     topLeft: 0, topRight: 0,
-                                     bottomLeft: 0, bottomRight: 0,
+                                     topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0,
                                      shadowColor: .clear,
                                      shadowRadius: 0,
                                      shadowX: 0, shadowY: 0)
@@ -1161,8 +1160,7 @@ struct TabularView: View {
                     .containerHelper(backgroundColor: Color.clear,
                                      borderColor: Color.clear,
                                      borderWidth: 0,
-                                     topLeft: 0, topRight: 0,
-                                     bottomLeft: 0, bottomRight: 0,
+                                     topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0,
                                      shadowColor: .clear,
                                      shadowRadius: 0,
                                      shadowX: 0, shadowY: 0)
@@ -1202,8 +1200,7 @@ struct TabularView: View {
                     .containerHelper(backgroundColor: Color.clear,
                                      borderColor: Color.clear,
                                      borderWidth: 0,
-                                     topLeft: 0, topRight: 0,
-                                     bottomLeft: 0, bottomRight: 0,
+                                     topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0,
                                      shadowColor: .clear,
                                      shadowRadius: 0,
                                      shadowX: 0, shadowY: 0)
@@ -1243,8 +1240,7 @@ struct TabularView: View {
                     .containerHelper(backgroundColor: Color.clear,
                                      borderColor: Color.clear,
                                      borderWidth: 0,
-                                     topLeft: 0, topRight: 0,
-                                     bottomLeft: 0, bottomRight: 0,
+                                     topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0,
                                      shadowColor: .clear,
                                      shadowRadius: 0,
                                      shadowX: 0, shadowY: 0)
