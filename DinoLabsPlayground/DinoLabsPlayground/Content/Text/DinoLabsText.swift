@@ -11,10 +11,10 @@ import ObjectiveC.runtime
 struct TextView: View {
     let geometry: GeometryProxy
     let fileURL: URL
+    @Binding var fileContent: String
     @Binding var leftPanelWidthRatio: CGFloat
     @Binding var hasUnsavedChanges: Bool
     @Binding var showAlert: Bool
-    @State private var fileContent: String = ""
     @State private var initialContent: String = ""
     @State private var showFileMenu = false
     @State private var showEditMenu = false
@@ -809,7 +809,9 @@ struct TextView: View {
         }
         .coordinateSpace(name: "MenuBar")
         .onAppear {
-            loadFile()
+            if fileContent.isEmpty {
+                loadFile()
+            }
         }
         .onReceive(NotificationCenter.default.publisher(for: .reSearchAfterReplacement)) { _ in
             if (searchState || replaceState), !searchQuery.isEmpty {

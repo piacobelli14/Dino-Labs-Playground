@@ -11,9 +11,11 @@ class RawCSV: ObservableObject {
     @Published var rows: [[String]] = []
     var fileURL: URL
 
-    init(fileURL: URL) {
+    init(fileURL: URL, fileContent: Binding<String>) {
         self.fileURL = fileURL
-        loadFile()
+        if fileContent.wrappedValue.isEmpty {
+            loadFile()
+        }
     }
 
     func loadFile() {
@@ -70,6 +72,7 @@ class RawCSV: ObservableObject {
 struct TabularView: View {
     let geometry: GeometryProxy
     let fileURL: URL
+    @Binding var fileContent: String
     @Binding var leftPanelWidthRatio: CGFloat
     @Binding var hasUnsavedChanges: Bool
     @StateObject private var dataSource: RawCSV
@@ -124,14 +127,16 @@ struct TabularView: View {
     init(
         geometry: GeometryProxy,
         fileURL: URL,
+        fileContent: Binding<String>,
         leftPanelWidthRatio: Binding<CGFloat>,
         hasUnsavedChanges: Binding<Bool>
     ) {
         self.geometry = geometry
         self.fileURL = fileURL
+        self._fileContent = fileContent
         self._leftPanelWidthRatio = leftPanelWidthRatio
         self._hasUnsavedChanges = hasUnsavedChanges
-        _dataSource = StateObject(wrappedValue: RawCSV(fileURL: fileURL))
+        _dataSource = StateObject(wrappedValue: RawCSV(fileURL: fileURL, fileContent: fileContent))
     }
 
     private func columnIndexFromX(_ x: CGFloat) -> Int {
@@ -372,6 +377,20 @@ struct TabularView: View {
                 NSEvent.removeMonitor(keyMonitor)
             }
             keyMonitor = nil
+        }
+        .onAppear {
+            if !fileContent.isEmpty {
+                let parsedRows = fileContent.components(separatedBy: "\n").filter { !$0.isEmpty }.map { $0.components(separatedBy: ",") }
+                dataSource.rows = parsedRows
+            }
+        }
+        .onDisappear {
+            var csvString = ""
+            for row in dataSource.rows {
+                let csvRow = row.map { escapeCSV($0) }.joined(separator: ",")
+                csvString.append(csvRow + "\n")
+            }
+            fileContent = csvString
         }
     }
     
@@ -1332,7 +1351,7 @@ struct TabularView: View {
                         ZStack {
                             Color(hex: 0x262626)
                             Rectangle()
-                                .stroke(Color.gray, lineWidth: 1)
+                                .overlay(Rectangle().stroke(Color.gray, lineWidth: 0.5))
                                 .foregroundColor(.clear)
                         }
                     )

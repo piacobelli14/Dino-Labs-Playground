@@ -344,12 +344,8 @@ struct DinoLabsPlayground: View {
         }
     }
     @Binding var displayedChildren: [FileItem]
-    
-    @State private var activeTabContent: String = ""  // Track active tab content separately
-    @State private var activeTabHasChanges: Bool = false
-    
     @State private var openTabs: [FileTab] = []
-    @State private var activeTabId: UUID? 
+    @State private var activeTabId: UUID?
     @State private var hasUnsavedChanges: Bool = false
     @State private var dataDragOverError: Bool = false
     @State private var leftPanelWidthRatio: CGFloat = 0.25
@@ -460,7 +456,7 @@ struct DinoLabsPlayground: View {
 
     private func openTab(url: URL, lineNumber: Int?) {
         let ext = url.pathExtension.lowercased()
-        
+            
         if ext == "csv" {
             if let existingTab = openTabs.first(where: { $0.fileURL == url }) {
                 activeTabId = existingTab.id
@@ -1729,6 +1725,7 @@ struct DinoLabsPlayground: View {
                                             TabularView(
                                                 geometry: geometry,
                                                 fileURL: activeTab.fileURL,
+                                                fileContent: $openTabs[index].fileContent,
                                                 leftPanelWidthRatio: $leftPanelWidthRatio,
                                                 hasUnsavedChanges: $openTabs[index].hasUnsavedChanges
                                             )
@@ -1741,6 +1738,7 @@ struct DinoLabsPlayground: View {
                                             TextView(
                                                 geometry: geometry,
                                                 fileURL: activeTab.fileURL,
+                                                fileContent: $openTabs[index].fileContent,
                                                 leftPanelWidthRatio: $leftPanelWidthRatio,
                                                 hasUnsavedChanges: $openTabs[index].hasUnsavedChanges,
                                                 showAlert: $showAlert
