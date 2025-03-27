@@ -33,6 +33,7 @@ struct IDEView: View {
     @State private var totalSearchMatches: Int = 0
     @State private var consoleState: String = "terminal"
     @State private var showFullRoot: Bool = true
+    @State private var editorScrollOffset: CGFloat = 0
 
     var body: some View {
         Group {
@@ -390,32 +391,52 @@ struct IDEView: View {
                         alignment: .bottom
                     )
                     
-                    IDEEditorView(
-                        text: $fileContent,
-                        programmingLanguage: programmingLanguage,
-                        theme: {
-                            switch colorTheme.lowercased() {
-                            case "light":
-                                return .lightTheme
-                            case "dark":
-                                return .darkTheme
-                            default:
-                                return .defaultTheme
-                            }
-                        }(),
-                        zoomLevel: zoomLevel,
-                        keyBinds: keyBinds,
-                        searchQuery: $searchQuery,
-                        replaceQuery: $replaceQuery,
-                        searchCaseSensitive: $searchCaseSensitive,
-                        isReplacing: $isReplacing,
-                        currentSearchMatch: $currentSearchMatch,
-                        totalSearchMatches: $totalSearchMatches,
-                        hasUnsavedChanges: $hasUnsavedChanges,
-                        showAlert: $showAlert,
-                        disableEditing: (searchState || replaceState),
-                        onSave: saveFile
-                    )
+                    HStack(spacing: 0) {
+                        IDEEditorView(
+                            text: $fileContent,
+                            programmingLanguage: programmingLanguage,
+                            theme: {
+                                switch colorTheme.lowercased() {
+                                case "light":
+                                    return .lightTheme
+                                case "dark":
+                                    return .darkTheme
+                                default:
+                                    return .defaultTheme
+                                }
+                            }(),
+                            zoomLevel: zoomLevel,
+                            keyBinds: keyBinds,
+                            searchQuery: $searchQuery,
+                            replaceQuery: $replaceQuery,
+                            searchCaseSensitive: $searchCaseSensitive,
+                            isReplacing: $isReplacing,
+                            currentSearchMatch: $currentSearchMatch,
+                            totalSearchMatches: $totalSearchMatches,
+                            hasUnsavedChanges: $hasUnsavedChanges,
+                            showAlert: $showAlert,
+                            disableEditing: (searchState || replaceState),
+                            onSave: saveFile
+                        )
+                        .frame(width: geometry.size.width * (1 - leftPanelWidthRatio) - 100)
+                        
+                        MinimapEditorView(
+                            text: $fileContent,
+                            programmingLanguage: programmingLanguage,
+                            theme: {
+                                switch colorTheme.lowercased() {
+                                case "light":
+                                    return .lightTheme
+                                case "dark":
+                                    return .darkTheme
+                                default:
+                                    return .defaultTheme
+                                }
+                            }(),
+                            zoomLevel: zoomLevel,
+                            scrollOffset: editorScrollOffset
+                        )
+                    }
                     
                     VStack(alignment: .leading, spacing: 0) {
                         HStack(spacing: 20) {
@@ -507,6 +528,11 @@ struct IDEView: View {
                 replaceState = false
                 searchQuery = ""
                 replaceQuery = ""
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("EditorScrollOffsetChanged"))) { notification in
+            if let offset = notification.userInfo?["offset"] as? CGFloat {
+                editorScrollOffset = offset
             }
         }
         .onAppear {
@@ -700,6 +726,7 @@ struct IDEEditorView: NSViewRepresentable {
                 context.coordinator.applySyntaxHighlighting(to: textView)
             }
             scrollView.verticalRulerView?.needsDisplay = true
+            NotificationCenter.default.post(name: Notification.Name("EditorScrollOffsetChanged"), object: nil, userInfo: ["offset": scrollView.contentView.bounds.origin.y])
         }
         
         context.coordinator.textView = textView
@@ -1658,10 +1685,142 @@ class InvisibleScroller: NSScroller {
     override func hitTest(_ point: NSPoint) -> NSView? {
         nil
     }
+    override func drawKnob() {}
+    override func drawKnobSlot(in rect: NSRect, highlight flag: Bool) {}
 }
 
-extension NSRange {
-    func contains(_ location: Int) -> Bool {
-        return (location >= self.location) && (location < (self.location + self.length))
+class MinimapScrollView: NSScrollView {
+    override func scrollWheel(with event: NSEvent) {}
+}
+
+struct MinimapEditorView: NSViewRepresentable {
+    @Binding var text: String
+    let programmingLanguage: String
+    var theme: CodeEditorTheme = .defaultTheme
+    var zoomLevel: Double = 0.2
+    var scrollOffset: CGFloat
+
+    class Coordinator: NSObject {
+        var cachedText: String = ""
+        var cachedAttributedString: NSAttributedString = NSAttributedString(string: "")
+        var updateWorkItem: DispatchWorkItem?
+    }
+    
+    func makeCoordinator() -> Coordinator {
+        return Coordinator()
+    }
+    
+    private func highlightedAttributedString() -> NSAttributedString {
+        let paragraphStyle = NSMutableParagraphStyle()
+        paragraphStyle.lineSpacing = 0
+        paragraphStyle.minimumLineHeight = 2
+        paragraphStyle.maximumLineHeight = 2
+        paragraphStyle.lineBreakMode = .byClipping
+        let miniFont = NSFont.monospacedSystemFont(ofSize: 2 * CGFloat(zoomLevel), weight: .semibold)
+        let tokens = SwiftParser.tokenize(text, language: programmingLanguage)
+        let highlighted = NSMutableAttributedString()
+        var currentLine = 1
+        for token in tokens {
+            if token.lineNumber > currentLine {
+                let newlines = String(repeating: "\n", count: token.lineNumber - currentLine)
+                highlighted.append(NSAttributedString(string: newlines, attributes: [.paragraphStyle: paragraphStyle, .font: miniFont]))
+                currentLine = token.lineNumber
+            }
+            let color = ThemeColorProvider.tokenColor(for: token.type, theme: theme)
+            let attrs: [NSAttributedString.Key: Any] = [
+                .foregroundColor: color,
+                .font: miniFont,
+                .paragraphStyle: paragraphStyle
+            ]
+            highlighted.append(NSAttributedString(string: token.value, attributes: attrs))
+        }
+        return highlighted
+    }
+    
+    func makeNSView(context: Context) -> NSScrollView {
+        let fixedWidth: CGFloat = 100
+        let leadingPadding: CGFloat = 6
+        let trailingPadding: CGFloat = 14
+        
+        let textView = NSTextView()
+        textView.isEditable = false
+        textView.backgroundColor = NSColor(hex: 0x242424)
+        textView.textColor = ThemeColorProvider.defaultTextColor(for: theme)
+        let miniFont = NSFont.monospacedSystemFont(ofSize: 2 * CGFloat(zoomLevel), weight: .semibold)
+        textView.font = miniFont
+        textView.isHorizontallyResizable = false
+        textView.isVerticallyResizable = true
+        textView.autoresizingMask = []
+        textView.minSize = NSSize(width: fixedWidth, height: 0)
+        textView.maxSize = NSSize(width: fixedWidth, height: CGFloat.greatestFiniteMagnitude)
+        
+        let textWidth = fixedWidth - (leadingPadding + trailingPadding)
+        
+        textView.textContainer?.containerSize = NSSize(width: textWidth, height: CGFloat.greatestFiniteMagnitude)
+        textView.textContainer?.widthTracksTextView = false
+        textView.textContainer?.lineBreakMode = .byClipping
+        textView.textContainerInset = NSSize(
+            width: leadingPadding,
+            height: 10
+        )
+        textView.textContainer?.lineFragmentPadding = 0
+        textView.alignment = .left
+        textView.layoutManager?.usesFontLeading = false
+        textView.layoutManager?.hyphenationFactor = 0
+        textView.layoutManager?.allowsNonContiguousLayout = false
+        textView.frame = NSRect(x: 0, y: 0, width: fixedWidth, height: textView.intrinsicContentSize.height)
+        textView.wantsLayer = true
+        textView.layer?.masksToBounds = true
+        
+        let scrollView = MinimapScrollView()
+        scrollView.documentView = textView
+        scrollView.hasVerticalScroller = false
+        scrollView.hasHorizontalScroller = false
+        scrollView.drawsBackground = false
+        scrollView.contentView.wantsLayer = true
+        scrollView.contentView.layer?.masksToBounds = true
+        scrollView.wantsLayer = true
+        scrollView.layer?.masksToBounds = true
+        
+        if let blurFilter = CIFilter(name: "CIGaussianBlur") {
+            blurFilter.setValue(0.2, forKey: kCIInputRadiusKey)
+            scrollView.layer?.filters = [blurFilter]
+        }
+        
+        scrollView.wantsLayer = true
+        if let layer = scrollView.layer {
+            let borderWidth: CGFloat = 1.0
+            let borderLayer = CALayer()
+            borderLayer.backgroundColor = NSColor(hex: 0x616161).cgColor
+            borderLayer.frame = CGRect(x: 0, y: 0, width: borderWidth, height: scrollView.frame.height)
+            borderLayer.autoresizingMask = [.layerHeightSizable]
+            layer.addSublayer(borderLayer)
+        }
+        
+        return scrollView
+    }
+    
+    func updateNSView(_ nsView: NSScrollView, context: Context) {
+        if let textView = nsView.documentView as? NSTextView {
+            if context.coordinator.cachedText != text {
+                context.coordinator.updateWorkItem?.cancel()
+                let currentText = text
+                let workItem = DispatchWorkItem { [weak nsView] in
+                    guard let nsView = nsView,
+                          let textView = nsView.documentView as? NSTextView else { return }
+                    let highlighted = self.highlightedAttributedString()
+                    DispatchQueue.main.async {
+                        context.coordinator.cachedAttributedString = highlighted
+                        context.coordinator.cachedText = currentText
+                        textView.textStorage?.setAttributedString(highlighted)
+                    }
+                }
+                context.coordinator.updateWorkItem = workItem
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: workItem)
+            }
+        }
+        let scaleFactor: CGFloat = 0.2
+        nsView.contentView.setBoundsOrigin(NSPoint(x: 0, y: scrollOffset * scaleFactor))
+        nsView.reflectScrolledClipView(nsView.contentView)
     }
 }

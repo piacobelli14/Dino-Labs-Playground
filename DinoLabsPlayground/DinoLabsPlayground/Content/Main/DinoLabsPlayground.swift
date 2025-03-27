@@ -454,13 +454,26 @@ struct DinoLabsPlayground: View {
         "bak": "cacheExtensions",
         "dockerfile": "dockerfileExtension",
         "makefile": "makefileExtension",
-        "git": "githubExtension"
+        "git": "githubExtension",
+        "3mf": "3dExtension"
     ]
 
     private func openTab(url: URL, lineNumber: Int?) {
         let ext = url.pathExtension.lowercased()
-            
-        if ext == "csv" {
+        
+        if ["3mf"].contains(ext) {
+            if let existingTab = openTabs.first(where: { $0.fileURL == url }) {
+                activeTabId = existingTab.id
+                noFileSelected = false
+            } else {
+                let newTab = FileTab(fileName: url.lastPathComponent, fileURL: url)
+                openTabs.append(newTab)
+                activeTabId = newTab.id
+                noFileSelected = false
+            }
+            return
+        }
+        else if ext == "csv" {
             if let existingTab = openTabs.first(where: { $0.fileURL == url }) {
                 activeTabId = existingTab.id
                 noFileSelected = false
@@ -1724,7 +1737,20 @@ struct DinoLabsPlayground: View {
                                 } else {
                                     if let activeTab = openTabs.first(where: { $0.id == activeTabId }),
                                        let index = openTabs.firstIndex(where: { $0.id == activeTab.id }) {
-                                        if activeTab.fileURL.pathExtension.lowercased() == "csv" {
+                                        if ["3mf"].contains(activeTab.fileURL.pathExtension.lowercased()) {
+                                            ThreeDModelView(
+                                                geometry: geometry,
+                                                fileURL: activeTab.fileURL,
+                                                leftPanelWidthRatio: $leftPanelWidthRatio,
+                                                hasUnsavedChanges: $openTabs[index].hasUnsavedChanges,
+                                                showAlert: $showAlert
+                                            )
+                                            .onChange(of: openTabs[index].hasUnsavedChanges) { newValue in
+                                                updateUnsavedChangesInFileItems(for: activeTab.fileURL, unsaved: newValue)
+                                            }
+                                            .id(activeTab.id)
+                                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                        } else if activeTab.fileURL.pathExtension.lowercased() == "csv" {
                                             TabularView(
                                                 geometry: geometry,
                                                 fileURL: activeTab.fileURL,
