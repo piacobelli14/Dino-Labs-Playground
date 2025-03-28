@@ -33,6 +33,8 @@ class ModelConverter: ObservableObject {
 }
 
 class ModelSCNView: SCNView {
+    private var isHighlighted: Bool = false
+
     override func scrollWheel(with event: NSEvent) {
         if event.modifierFlags.contains(.shift) {
             if let cameraNode = self.pointOfView {
@@ -53,6 +55,51 @@ class ModelSCNView: SCNView {
             currentAngles.y = 0
             modelNode.eulerAngles = currentAngles
         }
+    }
+    
+    override func mouseDown(with event: NSEvent) {
+        let point = self.convert(event.locationInWindow, from: nil)
+        let hitResults = self.hitTest(point, options: nil)
+        var validModelHit = false
+        if let hit = hitResults.first {
+            var currentNode = hit.node
+            while true {
+                if currentNode.name == "gridNode" || currentNode.name == "axesNode" {
+                    validModelHit = false
+                    break
+                }
+                if currentNode.name == "modelNode" {
+                    validModelHit = true
+                    break
+                }
+                if let parent = currentNode.parent {
+                    currentNode = parent
+                } else {
+                    break
+                }
+            }
+        }
+        if validModelHit {
+            if isHighlighted {
+                if let modelNode = self.scene?.rootNode.childNode(withName: "modelNode", recursively: true) {
+                    applyColor(to: modelNode, color: NSColor(hex: 0x919191))
+                }
+                isHighlighted = false
+            } else {
+                if let modelNode = self.scene?.rootNode.childNode(withName: "modelNode", recursively: true) {
+                    applyColor(to: modelNode, color: NSColor(hex: 0x0D98E3))
+                }
+                isHighlighted = true
+            }
+        } else {
+            if isHighlighted {
+                if let modelNode = self.scene?.rootNode.childNode(withName: "modelNode", recursively: true) {
+                    applyColor(to: modelNode, color: NSColor(hex: 0x919191))
+                }
+                isHighlighted = false
+            }
+        }
+        super.mouseDown(with: event)
     }
 }
 
@@ -101,10 +148,11 @@ struct SceneKitView: NSViewRepresentable {
             let modelDepth = maxBound.z - minBound.z
             let maxDimension = max(modelWidth, max(modelHeight, modelDepth))
             let axisLength = CGFloat(maxDimension) * 1000
-            let axesNode = createAxesNode(axisLength: axisLength)
-            container.addChildNode(axesNode)
             let gridNode = createGridNode(axisLength: axisLength)
             container.addChildNode(gridNode)
+            let axesNode = createAxesNode(axisLength: axisLength)
+            axesNode.renderingOrder = 2
+            container.addChildNode(axesNode)
             finalScene.rootNode.addChildNode(container)
         }
         finalScene.rootNode.addChildNode(createCameraNode())
@@ -165,6 +213,9 @@ struct SceneKitView: NSViewRepresentable {
 }
 
 func applyColor(to node: SCNNode, color: NSColor) {
+    if node.name == "gridNode" || node.name == "axesNode" {
+        return
+    }
     if let geometry = node.geometry {
         for material in geometry.materials {
             material.diffuse.contents = color
@@ -179,22 +230,26 @@ func createAxesNode(axisLength: CGFloat) -> SCNNode {
     let axesNode = SCNNode()
     axesNode.name = "axesNode"
     let axisRadius: CGFloat = 1.0
+    let offset: Float = 0.1
     let xAxisGeometry = SCNCylinder(radius: axisRadius, height: axisLength)
     xAxisGeometry.firstMaterial?.diffuse.contents = NSColor(hex: 0x097DF0)
     let xAxisNode = SCNNode(geometry: xAxisGeometry)
+    xAxisNode.renderingOrder = 2
     xAxisNode.eulerAngles = SCNVector3(0, 0, Float.pi/2)
-    xAxisNode.position = SCNVector3(Float(axisLength/2), 0, 0)
+    xAxisNode.position = SCNVector3(Float(axisLength / 2) + offset, 0, 0)
     axesNode.addChildNode(xAxisNode)
     let yAxisGeometry = SCNCylinder(radius: axisRadius, height: axisLength)
     yAxisGeometry.firstMaterial?.diffuse.contents = NSColor(hex: 0xD109F0)
     let yAxisNode = SCNNode(geometry: yAxisGeometry)
-    yAxisNode.position = SCNVector3(0, Float(axisLength/2), 0)
+    yAxisNode.renderingOrder = 2
+    yAxisNode.position = SCNVector3(0, Float(axisLength / 2) + offset, 0)
     axesNode.addChildNode(yAxisNode)
     let zAxisGeometry = SCNCylinder(radius: axisRadius, height: axisLength)
     zAxisGeometry.firstMaterial?.diffuse.contents = NSColor(hex: 0x4F09F0)
     let zAxisNode = SCNNode(geometry: zAxisGeometry)
+    zAxisNode.renderingOrder = 2
     zAxisNode.eulerAngles = SCNVector3(Float.pi/2, 0, 0)
-    zAxisNode.position = SCNVector3(0, 0, Float(axisLength/2))
+    zAxisNode.position = SCNVector3(0, 0, Float(axisLength / 2) + offset)
     axesNode.addChildNode(zAxisNode)
     return axesNode
 }
@@ -207,63 +262,70 @@ func createGridNode(axisLength: CGFloat) -> SCNNode {
     let gridSpacing = axisLength / CGFloat(divisions)
     let subGridSpacing = gridSpacing / CGFloat(subDivisions)
     let halfExtent = axisLength / 2.0
-    var vertices: [SCNVector3] = []
-    var indices: [Int32] = []
-    var lineWidths: [Float] = []
-    
+    let majorNode = SCNNode()
+    let majorRadius: CGFloat = 2.0
     for i in 0...divisions {
         let x = -halfExtent + CGFloat(i) * gridSpacing
-        vertices.append(SCNVector3(Float(x), Float(-halfExtent), 0))
-        vertices.append(SCNVector3(Float(x), Float(halfExtent), 0))
+        let verticalLine = SCNTube(innerRadius: 0, outerRadius: majorRadius, height: axisLength)
+        verticalLine.firstMaterial?.diffuse.contents = NSColor(hex: 0x313131)
+        verticalLine.firstMaterial?.lightingModel = .constant
+        verticalLine.firstMaterial?.writesToDepthBuffer = false
+        let verticalNode = SCNNode(geometry: verticalLine)
+        verticalNode.position = SCNVector3(x, 0, 0)
+        majorNode.addChildNode(verticalNode)
     }
     for i in 0...divisions {
         let y = -halfExtent + CGFloat(i) * gridSpacing
-        vertices.append(SCNVector3(Float(-halfExtent), Float(y), 0))
-        vertices.append(SCNVector3(Float(halfExtent), Float(y), 0))
+        let horizontalLine = SCNTube(innerRadius: 0, outerRadius: majorRadius, height: axisLength)
+        horizontalLine.firstMaterial?.diffuse.contents = NSColor(hex: 0x313131)
+        horizontalLine.firstMaterial?.lightingModel = .constant
+        horizontalLine.firstMaterial?.writesToDepthBuffer = false
+        let horizontalNode = SCNNode(geometry: horizontalLine)
+        horizontalNode.position = SCNVector3(0, y, 0)
+        horizontalNode.eulerAngles = SCNVector3(0, 0, Float.pi/2)
+        majorNode.addChildNode(horizontalNode)
     }
+    majorNode.renderingOrder = 1
+    gridNode.addChildNode(majorNode)
     
-    let majorLinesCount = (divisions + 1) * 2
-    for i in 0..<majorLinesCount {
-        indices.append(Int32(i * 2))
-        indices.append(Int32(i * 2 + 1))
-        lineWidths.append(1.0)
-    }
-    
-    let minorStartIndex = vertices.count
+    var minorVertices: [SCNVector3] = []
     for i in 0..<divisions {
         for j in 1..<subDivisions {
             let x = -halfExtent + CGFloat(i) * gridSpacing + CGFloat(j) * subGridSpacing
-            vertices.append(SCNVector3(Float(x), Float(-halfExtent), 0))
-            vertices.append(SCNVector3(Float(x), Float(halfExtent), 0))
+            minorVertices.append(SCNVector3(Float(x), Float(-halfExtent), 0))
+            minorVertices.append(SCNVector3(Float(x), Float(halfExtent), 0))
         }
     }
     for i in 0..<divisions {
         for j in 1..<subDivisions {
             let y = -halfExtent + CGFloat(i) * gridSpacing + CGFloat(j) * subGridSpacing
-            vertices.append(SCNVector3(Float(-halfExtent), Float(y), 0))
-            vertices.append(SCNVector3(Float(halfExtent), Float(y), 0))
+            minorVertices.append(SCNVector3(Float(-halfExtent), Float(y), 0))
+            minorVertices.append(SCNVector3(Float(halfExtent), Float(y), 0))
         }
     }
     
+    var minorIndices: [Int32] = []
     let minorLinesCount = divisions * (subDivisions - 1) * 2
     for i in 0..<minorLinesCount {
-        indices.append(Int32(minorStartIndex + i * 2))
-        indices.append(Int32(minorStartIndex + i * 2 + 1))
-        lineWidths.append(0.5)
+        minorIndices.append(Int32(i * 2))
+        minorIndices.append(Int32(i * 2 + 1))
     }
     
-    let vertexSource = SCNGeometrySource(vertices: vertices)
-    let indexData = Data(bytes: indices, count: indices.count * MemoryLayout<Int32>.size)
-    let element = SCNGeometryElement(data: indexData, primitiveType: .line, primitiveCount: majorLinesCount + minorLinesCount, bytesPerIndex: MemoryLayout<Int32>.size)
-    let geometry = SCNGeometry(sources: [vertexSource], elements: [element])
+    let minorVertexSource = SCNGeometrySource(vertices: minorVertices)
+    let minorIndexData = Data(bytes: minorIndices, count: minorIndices.count * MemoryLayout<Int32>.size)
+    let minorElement = SCNGeometryElement(data: minorIndexData, primitiveType: .line, primitiveCount: minorLinesCount, bytesPerIndex: MemoryLayout<Int32>.size)
+    let minorGeometry = SCNGeometry(sources: [minorVertexSource], elements: [minorElement])
     
-    let material = SCNMaterial()
-    material.diffuse.contents = NSColor(hex: 0x313131)
-    material.lightingModel = .constant
-    material.isDoubleSided = true
-    geometry.materials = [material]
+    let minorMaterial = SCNMaterial()
+    minorMaterial.diffuse.contents = NSColor(hex: 0x313131)
+    minorMaterial.lightingModel = .constant
+    minorMaterial.isDoubleSided = true
+    minorMaterial.writesToDepthBuffer = false
+    minorGeometry.materials = [minorMaterial]
+    let minorNode = SCNNode(geometry: minorGeometry)
+    minorNode.renderingOrder = 0
+    gridNode.addChildNode(minorNode)
     
-    gridNode.geometry = geometry
     return gridNode
 }
 
