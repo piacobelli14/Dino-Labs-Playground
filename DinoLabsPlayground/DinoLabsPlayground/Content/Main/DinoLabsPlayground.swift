@@ -455,13 +455,14 @@ struct DinoLabsPlayground: View {
         "dockerfile": "dockerfileExtension",
         "makefile": "makefileExtension",
         "git": "githubExtension",
-        "3mf": "3dExtension"
+        "3mf": "3dExtension",
+        "stl": "3dExtension"
     ]
 
     private func openTab(url: URL, lineNumber: Int?) {
         let ext = url.pathExtension.lowercased()
         
-        if ["3mf"].contains(ext) {
+        if ["3mf", "stl"].contains(ext) {
             if let existingTab = openTabs.first(where: { $0.fileURL == url }) {
                 activeTabId = existingTab.id
                 noFileSelected = false
@@ -1737,7 +1738,7 @@ struct DinoLabsPlayground: View {
                                 } else {
                                     if let activeTab = openTabs.first(where: { $0.id == activeTabId }),
                                        let index = openTabs.firstIndex(where: { $0.id == activeTab.id }) {
-                                        if ["3mf"].contains(activeTab.fileURL.pathExtension.lowercased()) {
+                                        if ["3mf", "stl"].contains(activeTab.fileURL.pathExtension.lowercased()) {
                                             ThreeDModelView(
                                                 geometry: geometry,
                                                 fileURL: activeTab.fileURL,

@@ -267,6 +267,7 @@
 			isa = PBXGroup;
 			children = (
 				CBD30ED62D93767300FC1A4F /* 3DModelHelpers */,
+				CBD30ED72D9376A600FC1A4F /* DinoLabs3DModel.swift */,
 			);
 			path = 3DModels;
 			sourceTree = "<group>";
@@ -386,7 +387,6 @@
 			children = (
 				CB5B4AE12D600C1100492970 /* Navigator */,
 				CBD30ED52D93766000FC1A4F /* 3DModels */,
-				CBD30ED72D9376A600FC1A4F /* DinoLabs3DModel.swift */,
 				CBEC15BD2D5D8FAF009A0FAF /* Text */,
 				CBEC15BC2D5D8FA2009A0FAF /* Tabular */,
 				CB9A90C02D7F932400AA034A /* Audio */,
