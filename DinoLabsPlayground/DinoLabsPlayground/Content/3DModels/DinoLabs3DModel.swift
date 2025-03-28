@@ -10,12 +10,7 @@ import ModelIO
 import SceneKit
 
 enum FileType: String, CaseIterable {
-    case shapr
-    case obj
-    case stl
-    case iges
-    case step
-    case dxf
+    case shapr, obj, stl, iges, step, dxf
 }
 
 class ModelConverter: ObservableObject {
@@ -41,7 +36,7 @@ class ModelSCNView: SCNView {
     override func scrollWheel(with event: NSEvent) {
         if event.modifierFlags.contains(.shift) {
             if let cameraNode = self.pointOfView {
-                let panFactor: Float = 0.003
+                let panFactor: Float = 0.3
                 let panDeltaX = Float(event.scrollingDeltaX) * panFactor
                 let panDeltaY = Float(event.scrollingDeltaY) * panFactor
                 cameraNode.position.x += CGFloat(panDeltaX)
@@ -68,6 +63,8 @@ struct SceneKitView: NSViewRepresentable {
     }
     func makeNSView(context: Context) -> SCNView {
         let scnView = ModelSCNView()
+        scnView.delegate = context.coordinator
+        scnView.isPlaying = true
         scnView.allowsCameraControl = true
         scnView.autoenablesDefaultLighting = true
         scnView.backgroundColor = NSColor(hex: 0x242424)
@@ -94,16 +91,20 @@ struct SceneKitView: NSViewRepresentable {
                 container.addChildNode(child)
             }
             let (minBound, maxBound) = container.boundingBox
-            let center = SCNVector3((minBound.x + maxBound.x) / 2, (minBound.y + maxBound.y) / 2, (minBound.z + maxBound.z) / 2)
+            let center = SCNVector3((minBound.x + maxBound.x) / 2,
+                                    (minBound.y + maxBound.y) / 2,
+                                    (minBound.z + maxBound.z) / 2)
             container.pivot = SCNMatrix4MakeTranslation(center.x, center.y, center.z)
             applyColor(to: container, color: NSColor(hex: 0x919191))
             let modelWidth = maxBound.x - minBound.x
             let modelHeight = maxBound.y - minBound.y
             let modelDepth = maxBound.z - minBound.z
             let maxDimension = max(modelWidth, max(modelHeight, modelDepth))
-            let axisLength = CGFloat(maxDimension) * 100
+            let axisLength = CGFloat(maxDimension) * 1000
             let axesNode = createAxesNode(axisLength: axisLength)
             container.addChildNode(axesNode)
+            let gridNode = createGridNode(axisLength: axisLength)
+            container.addChildNode(gridNode)
             finalScene.rootNode.addChildNode(container)
         }
         finalScene.rootNode.addChildNode(createCameraNode())
@@ -125,9 +126,24 @@ struct SceneKitView: NSViewRepresentable {
         cameraNode.constraints = [constraint]
         return cameraNode
     }
-
-    class Coordinator: NSObject {
+    class Coordinator: NSObject, SCNSceneRendererDelegate {
         var initialModelPosition: SCNVector3?
+        func renderer(_ renderer: SCNSceneRenderer, updateAtTime time: TimeInterval) {
+            guard let scnView = renderer as? SCNView,
+                  let cameraNode = scnView.pointOfView,
+                  let container = scnView.scene?.rootNode.childNode(withName: "modelNode", recursively: false),
+                  let axesNode = container.childNode(withName: "axesNode", recursively: true),
+                  let gridNode = container.childNode(withName: "gridNode", recursively: true)
+            else { return }
+            let dx = cameraNode.position.x - container.position.x
+            let dy = cameraNode.position.y - container.position.y
+            let dz = cameraNode.position.z - container.position.z
+            let distance = sqrt(dx*dx + dy*dy + dz*dz)
+            let referenceDistance: Float = 1000
+            let scaleFactor = Float(distance) / referenceDistance
+            axesNode.scale = SCNVector3(scaleFactor, scaleFactor, scaleFactor)
+            gridNode.scale = SCNVector3(scaleFactor, scaleFactor, scaleFactor)
+        }
         @objc func handlePanGesture(_ gesture: NSPanGestureRecognizer) {
             guard let scnView = gesture.view as? SCNView,
                   let modelNode = scnView.scene?.rootNode.childNode(withName: "modelNode", recursively: true)
@@ -161,7 +177,8 @@ func applyColor(to node: SCNNode, color: NSColor) {
 
 func createAxesNode(axisLength: CGFloat) -> SCNNode {
     let axesNode = SCNNode()
-    let axisRadius = 0.1
+    axesNode.name = "axesNode"
+    let axisRadius: CGFloat = 1.0
     let xAxisGeometry = SCNCylinder(radius: axisRadius, height: axisLength)
     xAxisGeometry.firstMaterial?.diffuse.contents = NSColor(hex: 0x097DF0)
     let xAxisNode = SCNNode(geometry: xAxisGeometry)
@@ -180,6 +197,74 @@ func createAxesNode(axisLength: CGFloat) -> SCNNode {
     zAxisNode.position = SCNVector3(0, 0, Float(axisLength/2))
     axesNode.addChildNode(zAxisNode)
     return axesNode
+}
+
+func createGridNode(axisLength: CGFloat) -> SCNNode {
+    let gridNode = SCNNode()
+    gridNode.name = "gridNode"
+    let divisions: Int = 400
+    let subDivisions: Int = 10
+    let gridSpacing = axisLength / CGFloat(divisions)
+    let subGridSpacing = gridSpacing / CGFloat(subDivisions)
+    let halfExtent = axisLength / 2.0
+    var vertices: [SCNVector3] = []
+    var indices: [Int32] = []
+    var lineWidths: [Float] = []
+    
+    for i in 0...divisions {
+        let x = -halfExtent + CGFloat(i) * gridSpacing
+        vertices.append(SCNVector3(Float(x), Float(-halfExtent), 0))
+        vertices.append(SCNVector3(Float(x), Float(halfExtent), 0))
+    }
+    for i in 0...divisions {
+        let y = -halfExtent + CGFloat(i) * gridSpacing
+        vertices.append(SCNVector3(Float(-halfExtent), Float(y), 0))
+        vertices.append(SCNVector3(Float(halfExtent), Float(y), 0))
+    }
+    
+    let majorLinesCount = (divisions + 1) * 2
+    for i in 0..<majorLinesCount {
+        indices.append(Int32(i * 2))
+        indices.append(Int32(i * 2 + 1))
+        lineWidths.append(1.0)
+    }
+    
+    let minorStartIndex = vertices.count
+    for i in 0..<divisions {
+        for j in 1..<subDivisions {
+            let x = -halfExtent + CGFloat(i) * gridSpacing + CGFloat(j) * subGridSpacing
+            vertices.append(SCNVector3(Float(x), Float(-halfExtent), 0))
+            vertices.append(SCNVector3(Float(x), Float(halfExtent), 0))
+        }
+    }
+    for i in 0..<divisions {
+        for j in 1..<subDivisions {
+            let y = -halfExtent + CGFloat(i) * gridSpacing + CGFloat(j) * subGridSpacing
+            vertices.append(SCNVector3(Float(-halfExtent), Float(y), 0))
+            vertices.append(SCNVector3(Float(halfExtent), Float(y), 0))
+        }
+    }
+    
+    let minorLinesCount = divisions * (subDivisions - 1) * 2
+    for i in 0..<minorLinesCount {
+        indices.append(Int32(minorStartIndex + i * 2))
+        indices.append(Int32(minorStartIndex + i * 2 + 1))
+        lineWidths.append(0.5)
+    }
+    
+    let vertexSource = SCNGeometrySource(vertices: vertices)
+    let indexData = Data(bytes: indices, count: indices.count * MemoryLayout<Int32>.size)
+    let element = SCNGeometryElement(data: indexData, primitiveType: .line, primitiveCount: majorLinesCount + minorLinesCount, bytesPerIndex: MemoryLayout<Int32>.size)
+    let geometry = SCNGeometry(sources: [vertexSource], elements: [element])
+    
+    let material = SCNMaterial()
+    material.diffuse.contents = NSColor(hex: 0x313131)
+    material.lightingModel = .constant
+    material.isDoubleSided = true
+    geometry.materials = [material]
+    
+    gridNode.geometry = geometry
+    return gridNode
 }
 
 struct ThreeDModelView: View {
@@ -203,12 +288,10 @@ struct ThreeDModelView: View {
         ZStack(alignment: .topLeading) {
             VStack(spacing: 0) {
                 HStack(spacing: 0) {
-                    
                 }
                 .padding(.horizontal, 10)
                 .frame(width: geometry.size.width * (1 - leftPanelWidthRatio), height: 80)
                 .containerHelper(backgroundColor: Color(hex: 0x171717), borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
-                
                 SceneKitView(fileURL: fileURL)
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .background(Color.gray.opacity(0.2))
