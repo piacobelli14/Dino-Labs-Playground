@@ -24,7 +24,9 @@ struct DonutSegment: Shape {
         var path = Path()
         let sDeg = min(startAngle, endAngle)
         let eDeg = max(startAngle, endAngle)
-        let halfGap = gapDegrees / 2
+        let angleDiff = eDeg - sDeg
+        let effectiveGapDegrees: CGFloat = (abs(angleDiff - 360) < 0.01) ? 0 : gapDegrees
+        let halfGap = effectiveGapDegrees / 2
         let effStart = sDeg + halfGap
         let effEnd   = eDeg - halfGap
         let center = CGPoint(x: rect.midX, y: rect.midY)
@@ -206,9 +208,17 @@ struct AnimatedPieChart: View {
                 hoveredIndex = foundIndex
             })
             .cursorOnHover(hovered: hoveredIndex != nil)
+            .onAppear {
+                if !data.isEmpty && data.count < 2 {
+                    currentValue = data[0].value
+                }
+            }
             .onReceive(timer) { _ in
                 guard !data.isEmpty else { return }
-                if data.count < 2 { return }
+                if data.count < 2 {
+                    currentValue = data[0].value
+                    return
+                }
                 withAnimation { visible = false }
                 DispatchQueue.main.asyncAfter(deadline: .now() + fadeDuration) {
                     activeIndex = (activeIndex + 1) % data.count
