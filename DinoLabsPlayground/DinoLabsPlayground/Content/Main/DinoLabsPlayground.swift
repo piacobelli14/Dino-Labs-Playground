@@ -477,6 +477,18 @@ struct DinoLabsPlayground: View {
             }
             return
         }
+        else if ext == "pdf" {
+            if let existingTab = openTabs.first(where: { $0.fileURL == url }) {
+                activeTabId = existingTab.id
+                noFileSelected = false
+            } else {
+                let newTab = FileTab(fileName: url.lastPathComponent, fileURL: url)
+                openTabs.append(newTab)
+                activeTabId = newTab.id
+                noFileSelected = false
+            }
+            return
+        }
         else if ext == "csv" {
             if let existingTab = openTabs.first(where: { $0.fileURL == url }) {
                 activeTabId = existingTab.id
@@ -1748,6 +1760,19 @@ struct DinoLabsPlayground: View {
                                                 leftPanelWidthRatio: $leftPanelWidthRatio,
                                                 hasUnsavedChanges: $openTabs[index].hasUnsavedChanges,
                                                 showAlert: $showAlert
+                                            )
+                                            .onChange(of: openTabs[index].hasUnsavedChanges) { newValue in
+                                                updateUnsavedChangesInFileItems(for: activeTab.fileURL, unsaved: newValue)
+                                            }
+                                            .id(activeTab.id)
+                                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                                        } else if activeTab.fileURL.pathExtension.lowercased() == "pdf" {
+                                            PDFView(
+                                                geometry: geometry,
+                                                fileURL: activeTab.fileURL,
+                                                fileContent: $openTabs[index].fileContent,
+                                                leftPanelWidthRatio: $leftPanelWidthRatio,
+                                                hasUnsavedChanges: $openTabs[index].hasUnsavedChanges
                                             )
                                             .onChange(of: openTabs[index].hasUnsavedChanges) { newValue in
                                                 updateUnsavedChangesInFileItems(for: activeTab.fileURL, unsaved: newValue)
