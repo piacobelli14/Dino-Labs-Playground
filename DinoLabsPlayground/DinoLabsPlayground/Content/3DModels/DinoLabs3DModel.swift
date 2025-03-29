@@ -156,6 +156,9 @@ struct SceneKitView: NSViewRepresentable {
             finalScene.rootNode.addChildNode(container)
         }
         finalScene.rootNode.addChildNode(createCameraNode())
+        let gizmoNode = createGizmoNode()
+        gizmoNode.name = "gizmoNode"
+        finalScene.rootNode.addChildNode(gizmoNode)
         return finalScene
     }
     func createCameraNode() -> SCNNode {
@@ -174,6 +177,57 @@ struct SceneKitView: NSViewRepresentable {
         cameraNode.constraints = [constraint]
         return cameraNode
     }
+    func createGizmoNode() -> SCNNode {
+        let gizmoNode = SCNNode()
+        gizmoNode.name = "gizmoNode"
+        let cubeSize: CGFloat = 0.5
+        let cubeGeometry = SCNBox(width: cubeSize, height: cubeSize, length: cubeSize, chamferRadius: 0.05)
+        cubeGeometry.firstMaterial?.diffuse.contents = NSColor(hex: 0x919191)
+        let cubeNode = SCNNode(geometry: cubeGeometry)
+        gizmoNode.addChildNode(cubeNode)
+        let axisLength: CGFloat = 0.8 * (cubeSize / 0.5)
+        let axisRadius: CGFloat = 0.02
+        let cornerX = -Float(cubeSize / 2)
+        let cornerY = -Float(cubeSize / 2)
+        let cornerZ = -Float(cubeSize / 2)
+        let xAxisGeometry = SCNCylinder(radius: axisRadius, height: axisLength)
+        xAxisGeometry.firstMaterial?.diffuse.contents = NSColor(hex: 0x097DF0)
+        xAxisGeometry.firstMaterial?.transparency = 0.8
+        let xAxisNode = SCNNode(geometry: xAxisGeometry)
+        xAxisNode.eulerAngles = SCNVector3(0, 0, Float.pi/2)
+        xAxisNode.position = SCNVector3(cornerX + Float(axisLength / 2), cornerY, cornerZ)
+        gizmoNode.addChildNode(xAxisNode)
+        let xStopGeometry = SCNBox(width: 0.05, height: 0.05, length: 0.05, chamferRadius: 0)
+        xStopGeometry.firstMaterial?.diffuse.contents = NSColor(hex: 0x097DF0)
+        let xStopNode = SCNNode(geometry: xStopGeometry)
+        xStopNode.position = SCNVector3(cornerX + Float(axisLength), cornerY, cornerZ)
+        gizmoNode.addChildNode(xStopNode)
+        let yAxisGeometry = SCNCylinder(radius: axisRadius, height: axisLength)
+        yAxisGeometry.firstMaterial?.diffuse.contents = NSColor(hex: 0xD109F0)
+        yAxisGeometry.firstMaterial?.transparency = 0.8
+        let yAxisNode = SCNNode(geometry: yAxisGeometry)
+        yAxisNode.position = SCNVector3(cornerX, cornerY + Float(axisLength / 2), cornerZ)
+        gizmoNode.addChildNode(yAxisNode)
+        let yStopGeometry = SCNBox(width: 0.05, height: 0.05, length: 0.05, chamferRadius: 0)
+        yStopGeometry.firstMaterial?.diffuse.contents = NSColor(hex: 0xD109F0)
+        let yStopNode = SCNNode(geometry: yStopGeometry)
+        yStopNode.position = SCNVector3(cornerX, cornerY + Float(axisLength), cornerZ)
+        gizmoNode.addChildNode(yStopNode)
+        let zAxisGeometry = SCNCylinder(radius: axisRadius, height: axisLength)
+        zAxisGeometry.firstMaterial?.diffuse.contents = NSColor(hex: 0x4F09F0)
+        zAxisGeometry.firstMaterial?.transparency = 0.8
+        let zAxisNode = SCNNode(geometry: zAxisGeometry)
+        zAxisNode.eulerAngles = SCNVector3(Float.pi/2, 0, 0)
+        zAxisNode.position = SCNVector3(cornerX, cornerY, cornerZ + Float(axisLength / 2))
+        gizmoNode.addChildNode(zAxisNode)
+        let zStopGeometry = SCNBox(width: 0.05, height: 0.05, length: 0.05, chamferRadius: 0)
+        zStopGeometry.firstMaterial?.diffuse.contents = NSColor(hex: 0x4F09F0)
+        let zStopNode = SCNNode(geometry: zStopGeometry)
+        zStopNode.position = SCNVector3(cornerX, cornerY, cornerZ + Float(axisLength))
+        gizmoNode.addChildNode(zStopNode)
+        gizmoNode.renderingOrder = 1000
+        return gizmoNode
+    }
     class Coordinator: NSObject, SCNSceneRendererDelegate {
         var initialModelPosition: SCNVector3?
         func renderer(_ renderer: SCNSceneRenderer, updateAtTime time: TimeInterval) {
@@ -181,7 +235,8 @@ struct SceneKitView: NSViewRepresentable {
                   let cameraNode = scnView.pointOfView,
                   let container = scnView.scene?.rootNode.childNode(withName: "modelNode", recursively: false),
                   let axesNode = container.childNode(withName: "axesNode", recursively: true),
-                  let gridNode = container.childNode(withName: "gridNode", recursively: true)
+                  let gridNode = container.childNode(withName: "gridNode", recursively: true),
+                  let gizmoNode = scnView.scene?.rootNode.childNode(withName: "gizmoNode", recursively: true)
             else { return }
             let dx = cameraNode.position.x - container.position.x
             let dy = cameraNode.position.y - container.position.y
@@ -191,6 +246,20 @@ struct SceneKitView: NSViewRepresentable {
             let scaleFactor = Float(distance) / referenceDistance
             axesNode.scale = SCNVector3(scaleFactor, scaleFactor, scaleFactor)
             gridNode.scale = SCNVector3(scaleFactor, scaleFactor, scaleFactor)
+            let modelTransform = container.worldTransform
+            let rotationMatrix = SCNMatrix4(
+                m11: modelTransform.m11, m12: modelTransform.m12, m13: modelTransform.m13, m14: 0,
+                m21: modelTransform.m21, m22: modelTransform.m22, m23: modelTransform.m23, m24: 0,
+                m31: modelTransform.m31, m32: modelTransform.m32, m33: modelTransform.m33, m34: 0,
+                m41: 0, m42: 0, m43: 0, m44: 1
+            )
+            gizmoNode.transform = rotationMatrix
+            scnView.scene?.rootNode.scale = SCNVector3(1, 1, 1)
+            let viewSize = scnView.bounds.size
+            let topRightScreenPoint = CGPoint(x: viewSize.width - 50, y: viewSize.height - 50)
+            let topRight3DPoint = scnView.unprojectPoint(SCNVector3(Float(topRightScreenPoint.x), Float(topRightScreenPoint.y), 0.1))
+            gizmoNode.position = topRight3DPoint
+            gizmoNode.scale = SCNVector3(0.01, 0.01, 0.01)
         }
         @objc func handlePanGesture(_ gesture: NSPanGestureRecognizer) {
             guard let scnView = gesture.view as? SCNView,
