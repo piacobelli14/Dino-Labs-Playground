@@ -10,7 +10,7 @@ import ModelIO
 import SceneKit
 
 enum FileType: String, CaseIterable {
-    case shapr, obj, stl, iges, step, dxf
+    case obj, stl, iges, step
 }
 
 class ModelConverter: ObservableObject {
@@ -24,11 +24,18 @@ class ModelConverter: ObservableObject {
         let vertexDescriptor = MDLVertexDescriptor()
         self.asset = MDLAsset(url: url, vertexDescriptor: vertexDescriptor, bufferAllocator: nil)
     }
-    func exportModel(to destinationURL: URL) throws {
+    func exportModel(to destinationURL: URL, fileType: FileType) throws {
         guard let asset = asset else {
             throw NSError(domain: "ModelConverter", code: 1, userInfo: [NSLocalizedDescriptionKey: "No asset loaded"])
         }
-        try asset.export(to: destinationURL)
+        switch fileType {
+        case .obj, .stl:
+            try asset.export(to: destinationURL)
+        case .iges, .step:
+            let tempURL = destinationURL.deletingPathExtension().appendingPathExtension("obj")
+            try asset.export(to: tempURL)
+            try FileManager.default.copyItem(at: tempURL, to: destinationURL)
+        }
     }
 }
 
@@ -438,8 +445,11 @@ struct ThreeDModelView: View {
     @Binding var hasUnsavedChanges: Bool
     @Binding var showAlert: Bool
     @StateObject private var converter: ModelConverter
+    @State private var showFileMenu = false
+    @State private var labelRects: [CGRect] = Array(repeating: .zero, count: 6)
     @State private var modelMovementState: String = "move"
     @State private var modelMovementScale: String = "1''"
+    
     
     init(geometry: GeometryProxy, fileURL: URL, leftPanelWidthRatio: Binding<CGFloat>, hasUnsavedChanges: Binding<Bool>, showAlert: Binding<Bool>) {
         self.geometry = geometry
@@ -480,7 +490,59 @@ struct ThreeDModelView: View {
         ZStack(alignment: .topLeading) {
             VStack(spacing: 0) {
                 HStack(spacing: 0) {
-                    
+                    HStack(spacing: 0) {
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text(fileURL.lastPathComponent)
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                                .font(.system(size: 16, weight: .semibold))
+                                .foregroundColor(Color.white.opacity(0.7))
+                                .shadow(color: .white.opacity(0.5), radius: 0.5, x: 0, y: 0)
+                                .padding(.leading, 6)
+                                .padding(.bottom, 8)
+                            
+                            HStack(spacing: 0) {
+                                Text("File")
+                                    .lineLimit(1)
+                                    .truncationMode(.tail)
+                                    .padding(.horizontal, 8)
+                                    .padding(.top, 3)
+                                    .padding(.bottom, 5)
+                                    .font(.system(size: 11, weight: showFileMenu ? .semibold : .regular))
+                                    .foregroundColor(showFileMenu ? Color.white.opacity(0.8) : Color.white.opacity(0.5))
+                                    .containerHelper(
+                                        backgroundColor: showFileMenu ? Color.white.opacity(0.1) : Color.clear,
+                                        borderColor: Color.clear,
+                                        borderWidth: 0,
+                                        topLeft: 2, topRight: 2, bottomLeft: 0, bottomRight: 0,
+                                        shadowColor: .white.opacity(showFileMenu ? 0.0 : 0.5), shadowRadius: 0.5, shadowX: 0, shadowY: 0
+                                    )
+                                    .hoverEffect(opacity: 0.8, cursor: .pointingHand)
+                                    .background(
+                                        GeometryReader { g in
+                                            Color.clear
+                                                .onAppear {
+                                                    labelRects[0] = g.frame(in: .named("MenuBar"))
+                                                }
+                                                .onChange(of: g.size) { _ in
+                                                    labelRects[0] = g.frame(in: .named("MenuBar"))
+                                                }
+                                        }
+                                    )
+                                    .onTapGesture {
+                                        showFileMenu.toggle()
+                                    }
+                                
+                                
+                                
+                                Spacer()
+                            }
+                            
+                        }
+                        
+                        Spacer()
+                    }
+                    .padding(.vertical, 10)
                 }
                 .padding(.horizontal, 10)
                 .frame(width: geometry.size.width * (1 - leftPanelWidthRatio), height: 80)
@@ -611,7 +673,69 @@ struct ThreeDModelView: View {
                     .padding(10)
                 }
             }
+            
+            if showFileMenu {
+                Color.clear
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        showFileMenu = false
+                    }
+                    .ignoresSafeArea()
+            }
+            
+            if showFileMenu {
+                VStack(spacing: 0) {
+                    ForEach(FileType.allCases, id: \.self) { fileType in
+                        TextButtonMain {
+                            downloadFile(for: fileType)
+                        }
+                        .frame(height: 12)
+                        .padding(.vertical, 10)
+                        .padding(.horizontal, 8)
+                        .containerHelper(backgroundColor: Color.clear, borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                        .overlay(
+                            HStack {
+                                Image(systemName: "square.and.arrow.down.on.square.fill")
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fit)
+                                    .frame(width: 10, height: 10)
+                                    .foregroundColor(.white.opacity(0.8))
+                                    .padding(.leading, 8)
+                                    .padding(.trailing, 4)
+                                    .allowsHitTesting(false)
+                                Text("Download \(fileType.rawValue.uppercased())")
+                                    .foregroundColor(.white.opacity(0.8))
+                                    .font(.system(size: 9, weight: .semibold))
+                                    .lineLimit(1)
+                                    .truncationMode(.tail)
+                                    .allowsHitTesting(false)
+                                Spacer()
+                            }
+                        )
+                        .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
+                        .overlay(
+                            Rectangle()
+                                .frame(height: 0.5)
+                                .foregroundColor(Color(hex: 0xc1c1c1).opacity(0.2)),
+                            alignment: .bottom
+                        )
+                    }
+                    Spacer()
+                }
+                .frame(width: 160, height: 200)
+                .containerHelper(
+                    backgroundColor: Color(hex: 0x181818),
+                    borderColor: Color(hex: 0x262626),
+                    borderWidth: 1, topLeft: 2, topRight: 2, bottomLeft: 6, bottomRight: 6,
+                    shadowColor: Color.white.opacity(0.5), shadowRadius: 1, shadowX: 0, shadowY: 0
+                )
+                .position(
+                    x: labelRects[0].minX + 80,
+                    y: labelRects[0].maxY + 100
+                )
+            }
         }
+        .coordinateSpace(name: "MenuBar")
     }
     
     private func sendCommand(dx: Float, dy: Float) {
@@ -620,5 +744,19 @@ struct ThreeDModelView: View {
         let scale = Float(scaleStr) ?? 1.0
         let command = modelMovementState
         NotificationCenter.default.post(name: Notification.Name("MovementPadCommand"), object: nil, userInfo: ["command": command, "dx": dx, "dy": dy, "scale": scale])
+    }
+    
+    private func downloadFile(for fileType: FileType) {
+        let panel = NSSavePanel()
+        panel.allowedFileTypes = [fileType.rawValue]
+        let baseName = fileURL.deletingPathExtension().lastPathComponent
+        panel.nameFieldStringValue = "\(baseName).\(fileType.rawValue)"
+        if panel.runModal() == .OK, let destinationURL = panel.url {
+            do {
+                try converter.exportModel(to: destinationURL, fileType: fileType)
+            } catch {
+                showAlert = true
+            }
+        }
     }
 }
