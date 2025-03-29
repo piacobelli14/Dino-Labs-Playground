@@ -120,6 +120,7 @@ struct SceneKitView: NSViewRepresentable {
         if let cameraNode = scene.rootNode.childNode(withName: "cameraNode", recursively: true) {
             scnView.pointOfView = cameraNode
         }
+        context.coordinator.scnView = scnView
         return scnView
     }
     func updateNSView(_ scnView: SCNView, context: Context) {
@@ -229,7 +230,39 @@ struct SceneKitView: NSViewRepresentable {
         return gizmoNode
     }
     class Coordinator: NSObject, SCNSceneRendererDelegate {
+        weak var scnView: SCNView?
         var initialModelPosition: SCNVector3?
+        
+        override init() {
+            super.init()
+            NotificationCenter.default.addObserver(self, selector: #selector(handleMovementPadCommand(notification:)), name: Notification.Name("MovementPadCommand"), object: nil)
+        }
+        
+        deinit {
+            NotificationCenter.default.removeObserver(self)
+        }
+        
+        @objc func handleMovementPadCommand(notification: Notification) {
+            guard let userInfo = notification.userInfo,
+                  let command = userInfo["command"] as? String,
+                  let dx = userInfo["dx"] as? Float,
+                  let dy = userInfo["dy"] as? Float,
+                  let scaleValue = userInfo["scale"] as? Float,
+                  let scnView = self.scnView,
+                  let modelNode = scnView.scene?.rootNode.childNode(withName: "modelNode", recursively: false)
+            else { return }
+            if command == "move" {
+                let newX = modelNode.position.x + CGFloat(dx * scaleValue)
+                let newY = modelNode.position.y + CGFloat(dy * scaleValue)
+                modelNode.position = SCNVector3(newX, newY, modelNode.position.z)
+            } else if command == "rotate" {
+                let radians = scaleValue * Float.pi / 180.0
+                modelNode.eulerAngles.x += CGFloat(dy * radians)
+                modelNode.eulerAngles.z += CGFloat(dx * radians)
+                modelNode.eulerAngles.y = 0
+            }
+        }
+        
         func renderer(_ renderer: SCNSceneRenderer, updateAtTime time: TimeInterval) {
             guard let scnView = renderer as? SCNView,
                   let cameraNode = scnView.pointOfView,
@@ -405,8 +438,9 @@ struct ThreeDModelView: View {
     @Binding var hasUnsavedChanges: Bool
     @Binding var showAlert: Bool
     @StateObject private var converter: ModelConverter
-    @State private var selectedFileType: FileType = .obj
-    @State private var exportStatusMessage: String = ""
+    @State private var modelMovementState: String = "move"
+    @State private var modelMovementScale: String = "1''"
+    
     init(geometry: GeometryProxy, fileURL: URL, leftPanelWidthRatio: Binding<CGFloat>, hasUnsavedChanges: Binding<Bool>, showAlert: Binding<Bool>) {
         self.geometry = geometry
         self.fileURL = fileURL
@@ -415,18 +449,176 @@ struct ThreeDModelView: View {
         self._showAlert = showAlert
         _converter = StateObject(wrappedValue: ModelConverter(fileURL: fileURL))
     }
+    
+    private var movementScaleBinding: Binding<String> {
+        let unit = modelMovementState == "rotate" ? "°" : "''"
+        return Binding(
+           get: {
+               if modelMovementScale.hasSuffix(unit) {
+                   return modelMovementScale
+               } else {
+                   return modelMovementScale + unit
+               }
+           },
+           set: { newValue in
+               let unit = modelMovementState == "rotate" ? "°" : "''"
+               var numeric = newValue
+               if numeric.hasSuffix(unit) {
+                   numeric = String(numeric.dropLast(unit.count))
+               }
+               let allowedCharacters = "0123456789."
+               numeric = String(numeric.filter { allowedCharacters.contains($0) })
+               if numeric.isEmpty {
+                  numeric = "1"
+               }
+               modelMovementScale = numeric + unit
+           }
+        )
+    }
+    
     var body: some View {
         ZStack(alignment: .topLeading) {
             VStack(spacing: 0) {
                 HStack(spacing: 0) {
+                    
                 }
                 .padding(.horizontal, 10)
                 .frame(width: geometry.size.width * (1 - leftPanelWidthRatio), height: 80)
                 .containerHelper(backgroundColor: Color(hex: 0x171717), borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
-                SceneKitView(fileURL: fileURL)
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .background(Color.gray.opacity(0.2))
+                
+                ZStack(alignment: .bottomLeading) {
+                    SceneKitView(fileURL: fileURL)
+                        .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        .background(Color.gray.opacity(0.2))
+                    
+                    VStack(spacing: 15) {
+                        HStack {
+                            Text("Move")
+                                .font(.system(size: 10, weight: modelMovementState == "move"  ? .heavy : .semibold))
+                                .foregroundColor(Color(hex: 0xc0c0c0).opacity(modelMovementState == "move" ? 1.0 : 0.7))
+                                .underline(modelMovementState == "move" ? true : false)
+                                .hoverEffect(opacity: 0.6, scale: 1.05, cursor: .pointingHand)
+                                .onTapGesture(perform: {
+                                    modelMovementState = "move"
+                                })
+                            
+                            Text("Rotate")
+                                .font(.system(size: 10, weight: modelMovementState == "rotate"  ? .heavy : .semibold))
+                                .foregroundColor(Color(hex: 0xc0c0c0).opacity(modelMovementState == "rotate" ? 1.0 : 0.7))
+                                .underline(modelMovementState == "rotate" ? true : false)
+                                .hoverEffect(opacity: 0.6, scale: 1.05, cursor: .pointingHand)
+                                .onTapGesture(perform: {
+                                    modelMovementState = "rotate"
+                                })
+                        }
+                        HStack(spacing: 5) {
+                            VStack(spacing: 5) {
+                                Image(systemName: "arrow.up.left.square.fill")
+                                    .font(.system(size: 15, weight: .bold))
+                                    .foregroundColor(Color(hex: 0xc0c0c0))
+                                    .hoverEffect(opacity: 0.6, scale: 1.1, cursor: .pointingHand)
+                                    .onTapGesture {
+                                        sendCommand(dx: -1, dy: 1)
+                                    }
+                                Image(systemName: "arrow.left.square.fill")
+                                    .font(.system(size: 15, weight: .bold))
+                                    .foregroundColor(Color(hex: 0xc0c0c0))
+                                    .hoverEffect(opacity: 0.6, scale: 1.1, cursor: .pointingHand)
+                                    .onTapGesture {
+                                        sendCommand(dx: -1, dy: 0)
+                                    }
+                                Image(systemName: "arrow.down.left.square.fill")
+                                    .font(.system(size: 15, weight: .bold))
+                                    .foregroundColor(Color(hex: 0xc0c0c0))
+                                    .hoverEffect(opacity: 0.6, scale: 1.1, cursor: .pointingHand)
+                                    .onTapGesture {
+                                        sendCommand(dx: -1, dy: -1)
+                                    }
+                            }
+                            VStack(spacing: 5) {
+                                Image(systemName: "arrow.up.square.fill")
+                                    .font(.system(size: 15, weight: .bold))
+                                    .foregroundColor(Color(hex: 0xc0c0c0))
+                                    .hoverEffect(opacity: 0.6, scale: 1.1, cursor: .pointingHand)
+                                    .onTapGesture {
+                                        sendCommand(dx: 0, dy: 1)
+                                    }
+                                Image(systemName: "square.fill")
+                                    .font(.system(size: 15, weight: .bold))
+                                    .foregroundColor(.clear)
+                                Image(systemName: "arrow.down.square.fill")
+                                    .font(.system(size: 15, weight: .bold))
+                                    .foregroundColor(Color(hex: 0xc0c0c0))
+                                    .hoverEffect(opacity: 0.6, scale: 1.1, cursor: .pointingHand)
+                                    .onTapGesture {
+                                        sendCommand(dx: 0, dy: -1)
+                                    }
+                            }
+                            VStack(spacing: 5) {
+                                Image(systemName: "arrow.up.right.square.fill")
+                                    .font(.system(size: 15, weight: .bold))
+                                    .foregroundColor(Color(hex: 0xc0c0c0))
+                                    .hoverEffect(opacity: 0.6, scale: 1.1, cursor: .pointingHand)
+                                    .onTapGesture {
+                                        sendCommand(dx: 1, dy: 1)
+                                    }
+                                Image(systemName: "arrow.right.square.fill")
+                                    .font(.system(size: 15, weight: .bold))
+                                    .foregroundColor(Color(hex: 0xc0c0c0))
+                                    .hoverEffect(opacity: 0.6, scale: 1.1, cursor: .pointingHand)
+                                    .onTapGesture {
+                                        sendCommand(dx: 1, dy: 0)
+                                    }
+                                Image(systemName: "arrow.down.right.square.fill")
+                                    .font(.system(size: 15, weight: .bold))
+                                    .foregroundColor(Color(hex: 0xc0c0c0))
+                                    .hoverEffect(opacity: 0.6, scale: 1.1, cursor: .pointingHand)
+                                    .onTapGesture {
+                                        sendCommand(dx: 1, dy: -1)
+                                    }
+                            }
+                        }
+                        
+                        ThreeDTextField(
+                            placeholder: modelMovementState == "rotate" ? "1°" : "1''",
+                            text: movementScaleBinding
+                        )
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .textFieldStyle(PlainTextFieldStyle())
+                        .foregroundColor(.white)
+                        .font(.system(size: 8, weight: .semibold))
+                        .padding(.horizontal, 10)
+                        .frame(width: 70, height: 25)
+                        .containerHelper(backgroundColor: Color.clear,
+                                         borderColor: Color(hex: 0x616161),
+                                         borderWidth: 1,
+                                         topLeft: 2, topRight: 2,
+                                         bottomLeft: 2, bottomRight: 2,
+                                         shadowColor: .clear,
+                                         shadowRadius: 0,
+                                         shadowX: 0, shadowY: 0)
+                        .hoverEffect(opacity: 0.8)
+                        .onChange(of: modelMovementState) { newValue in
+                            let unit = newValue == "rotate" ? "°" : "''"
+                            let numeric = modelMovementScale.filter { "0123456789.".contains($0) }
+                            modelMovementScale = numeric.isEmpty ? "1" + unit : numeric + unit
+                        }
+                    }
+                    .frame(width: 100, height: 160)
+                    .background(Color(hex: 0x171717).opacity(0.8))
+                    .cornerRadius(8)
+                    .padding(10)
+                }
             }
         }
+    }
+    
+    private func sendCommand(dx: Float, dy: Float) {
+        let unit = modelMovementState == "rotate" ? "°" : "''"
+        let scaleStr = modelMovementScale.replacingOccurrences(of: unit, with: "")
+        let scale = Float(scaleStr) ?? 1.0
+        let command = modelMovementState
+        NotificationCenter.default.post(name: Notification.Name("MovementPadCommand"), object: nil, userInfo: ["command": command, "dx": dx, "dy": dy, "scale": scale])
     }
 }
