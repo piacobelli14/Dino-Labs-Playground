@@ -43,6 +43,10 @@
 		CBD30EE22D98886500FC1A4F /* PDFTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD30EE12D98885400FC1A4F /* PDFTextField.swift */; };
 		CBD30EE62D98888100FC1A4F /* PDFButtonMain.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD30EE52D98887C00FC1A4F /* PDFButtonMain.swift */; };
 		CBD30EE82D98889100FC1A4F /* DinoLabsPDF.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD30EE72D98888A00FC1A4F /* DinoLabsPDF.swift */; };
+		CBD30EEC2D98AF5700FC1A4F /* DinoLabsToolkit.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD30EEB2D98AF5200FC1A4F /* DinoLabsToolkit.swift */; };
+		CBD30EEE2D98AF6D00FC1A4F /* ToolkitTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD30EED2D98AF6800FC1A4F /* ToolkitTextField.swift */; };
+		CBD30EF02D98AF7700FC1A4F /* ToolkitButtonMain.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD30EEF2D98AF7000FC1A4F /* ToolkitButtonMain.swift */; };
+		CBD30EF42D98C37B00FC1A4F /* DinoLabsDinoDigits.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD30EF32D98C37600FC1A4F /* DinoLabsDinoDigits.swift */; };
 		CBDF23522D6807B40049F865 /* AccountTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBDF23512D6807B40049F865 /* AccountTextField.swift */; };
 		CBDF23542D6807C30049F865 /* AccountButtonMain.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBDF23532D6807C30049F865 /* AccountButtonMain.swift */; };
 		CBDF23562D681AAF0049F865 /* ToggleHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBDF23552D681AAF0049F865 /* ToggleHelper.swift */; };
@@ -119,6 +123,10 @@
 		CBD30EE12D98885400FC1A4F /* PDFTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFTextField.swift; sourceTree = "<group>"; };
 		CBD30EE52D98887C00FC1A4F /* PDFButtonMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFButtonMain.swift; sourceTree = "<group>"; };
 		CBD30EE72D98888A00FC1A4F /* DinoLabsPDF.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinoLabsPDF.swift; sourceTree = "<group>"; };
+		CBD30EEB2D98AF5200FC1A4F /* DinoLabsToolkit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinoLabsToolkit.swift; sourceTree = "<group>"; };
+		CBD30EED2D98AF6800FC1A4F /* ToolkitTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolkitTextField.swift; sourceTree = "<group>"; };
+		CBD30EEF2D98AF7000FC1A4F /* ToolkitButtonMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolkitButtonMain.swift; sourceTree = "<group>"; };
+		CBD30EF32D98C37600FC1A4F /* DinoLabsDinoDigits.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinoLabsDinoDigits.swift; sourceTree = "<group>"; };
 		CBDF23512D6807B40049F865 /* AccountTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountTextField.swift; sourceTree = "<group>"; };
 		CBDF23532D6807C30049F865 /* AccountButtonMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountButtonMain.swift; sourceTree = "<group>"; };
 		CBDF23552D681AAF0049F865 /* ToggleHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToggleHelper.swift; sourceTree = "<group>"; wrapsLines = 0; };
@@ -305,6 +313,40 @@
 			path = PDFHelpers;
 			sourceTree = "<group>";
 		};
+		CBD30EE92D98AF0800FC1A4F /* Toolkit */ = {
+			isa = PBXGroup;
+			children = (
+				CBD30EEA2D98AF3800FC1A4F /* ToolkitHelpers */,
+				CBD30EEB2D98AF5200FC1A4F /* DinoLabsToolkit.swift */,
+			);
+			path = Toolkit;
+			sourceTree = "<group>";
+		};
+		CBD30EEA2D98AF3800FC1A4F /* ToolkitHelpers */ = {
+			isa = PBXGroup;
+			children = (
+				CBD30EED2D98AF6800FC1A4F /* ToolkitTextField.swift */,
+				CBD30EEF2D98AF7000FC1A4F /* ToolkitButtonMain.swift */,
+			);
+			path = ToolkitHelpers;
+			sourceTree = "<group>";
+		};
+		CBD30EF12D98C35300FC1A4F /* Tools */ = {
+			isa = PBXGroup;
+			children = (
+				CBD30EF22D98C35D00FC1A4F /* DinoLabsDinoDigits */,
+			);
+			path = Tools;
+			sourceTree = "<group>";
+		};
+		CBD30EF22D98C35D00FC1A4F /* DinoLabsDinoDigits */ = {
+			isa = PBXGroup;
+			children = (
+				CBD30EF32D98C37600FC1A4F /* DinoLabsDinoDigits.swift */,
+			);
+			path = DinoLabsDinoDigits;
+			sourceTree = "<group>";
+		};
 		CBDF235F2D6AA0950049F865 /* CodeHelpers */ = {
 			isa = PBXGroup;
 			children = (
@@ -409,6 +451,7 @@
 		CBEC15B82D5D8F45009A0FAF /* Content */ = {
 			isa = PBXGroup;
 			children = (
+				CBD30EF12D98C35300FC1A4F /* Tools */,
 				CB5B4AE12D600C1100492970 /* Navigator */,
 				CBD30ED52D93766000FC1A4F /* 3DModels */,
 				CBD30EDF2D98883B00FC1A4F /* PDF */,
@@ -418,6 +461,7 @@
 				CB9A90B82D7BB6BC00AA034A /* Video */,
 				CBEC15BB2D5D8F9D009A0FAF /* Images */,
 				CBEC15BA2D5D8F96009A0FAF /* Code */,
+				CBD30EE92D98AF0800FC1A4F /* Toolkit */,
 				CBEC15B92D5D8F8F009A0FAF /* Account */,
 				CBEC15B72D5D8EC9009A0FAF /* Authentication */,
 				CBF91B9A2D5EE67A00B0616D /* Main */,
@@ -603,6 +647,7 @@
 				CBFDA88B2D64FC3700EA87BB /* TabHelper.swift in Sources */,
 				CB9A90C52D7F937A00AA034A /* AudioTextField.swift in Sources */,
 				CB9A90AE2D76857D00AA034A /* TextTextField.swift in Sources */,
+				CBD30EEC2D98AF5700FC1A4F /* DinoLabsToolkit.swift in Sources */,
 				CBEC15CB2D5D9176009A0FAF /* NetworkManager.swift in Sources */,
 				CBDF23612D6AA0AF0049F865 /* CodeTextField.swift in Sources */,
 				CBD30EDC2D9376B700FC1A4F /* 3DModelTextField.swift in Sources */,
@@ -627,6 +672,7 @@
 				CBEC15E02D5EA98A009A0FAF /* RegisterAuth.swift in Sources */,
 				CB5B4AD32D5FC0B100492970 /* AlertCheckField.swift in Sources */,
 				CB5B4AD52D5FC0C700492970 /* AlertMenuField.swift in Sources */,
+				CBD30EF02D98AF7700FC1A4F /* ToolkitButtonMain.swift in Sources */,
 				CBEC15C92D5D9159009A0FAF /* SecurityManager.swift in Sources */,
 				CBD30EE22D98886500FC1A4F /* PDFTextField.swift in Sources */,
 				CBD30ED82D9376A600FC1A4F /* DinoLabs3DModel.swift in Sources */,
@@ -634,9 +680,11 @@
 				CBB19EF92D6EB12C002E7805 /* DinoLabsTabular.swift in Sources */,
 				CBFDF9D32D612FD0008C580D /* CursorHelper.swift in Sources */,
 				CBEC15C72D5D90F3009A0FAF /* DateManager.swift in Sources */,
+				CBD30EEE2D98AF6D00FC1A4F /* ToolkitTextField.swift in Sources */,
 				CBFDA88F2D65C97800EA87BB /* DinoLabsSearch.swift in Sources */,
 				CBDF235E2D6A46D60049F865 /* DinoLabsThemes.swift in Sources */,
 				CB5B4ADE2D5FF8CE00492970 /* MainTextField.swift in Sources */,
+				CBD30EF42D98C37B00FC1A4F /* DinoLabsDinoDigits.swift in Sources */,
 				CBDF23582D687EA10049F865 /* SliderHelper.swift in Sources */,
 				CB18D2D62D6E447000CCFA36 /* DinoLabsTerminal.swift in Sources */,
 				CB9A90B52D77DCBF00AA034A /* ImageTextField.swift in Sources */,

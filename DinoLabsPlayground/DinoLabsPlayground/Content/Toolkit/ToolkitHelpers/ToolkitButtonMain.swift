@@ -1,13 +1,13 @@
 //
-//  AccountMainButton.swift
+//  ToolkitButtonMain.swift
 //
-//  Created by Peter Iacobelli on 2/20/25.
+//  Created by Peter Iacobelli on 3/29/25.
 //
 
 import SwiftUI
 import AppKit
 
-struct AccountButtonMain: NSViewRepresentable {
+struct ToolkitButtonMain: NSViewRepresentable {
     let action: () -> Void
 
     func makeCoordinator() -> Coordinator {
@@ -35,3 +35,4 @@ struct AccountButtonMain: NSViewRepresentable {
         }
     }
 }
+

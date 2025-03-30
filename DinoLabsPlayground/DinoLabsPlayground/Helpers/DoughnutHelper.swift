@@ -168,7 +168,8 @@ struct AnimatedPieChart: View {
                     .transition(.opacity)
                 }
             }
-            .background(MouseTrackingView { location in
+            .background(
+                MouseTrackingView { location in
                 mouseLocation = location
                 
                 let center = CGPoint(x: geo.size.width/2, y: geo.size.height/2)

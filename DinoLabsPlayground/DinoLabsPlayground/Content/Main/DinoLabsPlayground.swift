@@ -360,6 +360,7 @@ struct DinoLabsPlayground: View {
     @State private var fileURL: URL? = nil
     @State private var noFileSelected: Bool = true
     @State private var isAccount: Bool = false
+    @State private var isToolkit: Bool = false
     @State private var clipboardItem: URL? = nil
     @State private var clipboardOperation: String? = nil
     @State private var isSearchFiles: Bool = false
@@ -1549,8 +1550,10 @@ struct DinoLabsPlayground: View {
                                     MainButtonMain {
                                         if !isAccount {
                                             isAccount = true
+                                            isToolkit = false
                                         } else {
                                             isAccount = false
+                                            isToolkit = false
                                             noFileSelected = openTabs.isEmpty
                                         }
                                     }
@@ -1560,6 +1563,26 @@ struct DinoLabsPlayground: View {
                                         Image(systemName: "person.circle")
                                             .font(.system(size: 11, weight: .semibold))
                                             .foregroundColor(isAccount ? Color(hex: 0xAD6ADD) : Color(hex: 0xf5f5f5).opacity(0.8))
+                                            .allowsHitTesting(false)
+                                    )
+                                    .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
+                                    
+                                    MainButtonMain {
+                                        if !isToolkit {
+                                            isToolkit = true
+                                            isAccount = false
+                                        } else {
+                                            isToolkit = false
+                                            isAccount = false
+                                            noFileSelected = openTabs.isEmpty
+                                        }
+                                    }
+                                    .containerHelper(backgroundColor: Color.clear, borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                                    .frame(width: 18, height: 18)
+                                    .overlay(
+                                        Image(systemName: "hammer.circle")
+                                            .font(.system(size: 11, weight: .semibold))
+                                            .foregroundColor(isToolkit ? Color(hex: 0xAD6ADD) : Color(hex: 0xf5f5f5).opacity(0.8))
                                             .allowsHitTesting(false)
                                     )
                                     .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
@@ -1613,6 +1636,32 @@ struct DinoLabsPlayground: View {
                                                 .allowsHitTesting(false)
                                                 .hoverEffect(opacity: 0.8, cursor: .pointingHand)
                                             Text("My Account")
+                                                .foregroundColor(.white.opacity(0.8))
+                                                .font(.system(size: 9, weight: .bold))
+                                                .lineLimit(1)
+                                                .truncationMode(.tail)
+                                                .allowsHitTesting(false)
+                                                .hoverEffect(opacity: 0.8, cursor: .pointingHand)
+                                        }
+                                        .frame(height: (geometry.size.height - 50) * 0.05)
+                                        .padding(.horizontal, 12)
+                                        .background(Color(hex: 0xAD6ADD).opacity(0.2))
+                                        .overlay(
+                                            Rectangle()
+                                                .frame(width: 0.5)
+                                                .foregroundColor(Color(hex: 0xc1c1c1).opacity(0.2)),
+                                            alignment: .trailing
+                                        )
+                                    } else if isToolkit {
+                                        HStack(spacing: 4) {
+                                            Image(systemName: "hammer.circle")
+                                                .resizable()
+                                                .aspectRatio(contentMode: .fit)
+                                                .frame(width: 12, height: 12)
+                                                .padding(.trailing, 4)
+                                                .allowsHitTesting(false)
+                                                .hoverEffect(opacity: 0.8, cursor: .pointingHand)
+                                            Text("Toolkit")
                                                 .foregroundColor(.white.opacity(0.8))
                                                 .font(.system(size: 9, weight: .bold))
                                                 .lineLimit(1)
@@ -1748,6 +1797,16 @@ struct DinoLabsPlayground: View {
                                         zoomLevel: $userZoomLevel,
                                         colorTheme: $userColorTheme,
                                         personalUsageData: $personalUsageData
+                                    )
+                                    Spacer()
+                                } else if isToolkit {
+                                    Spacer()
+                                    DinoLabsToolkit(
+                                        geometry: geometry,
+                                        authenticatedUsername: $authenticatedUsername,
+                                        authenticatedOrgID: $authenticatedOrgID,
+                                        isToolkit: $isToolkit,
+                                        leftPanelWidthRatio: $leftPanelWidthRatio
                                     )
                                     Spacer()
                                 } else {
