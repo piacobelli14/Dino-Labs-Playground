@@ -47,6 +47,8 @@
 		CBD30EEE2D98AF6D00FC1A4F /* ToolkitTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD30EED2D98AF6800FC1A4F /* ToolkitTextField.swift */; };
 		CBD30EF02D98AF7700FC1A4F /* ToolkitButtonMain.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD30EEF2D98AF7000FC1A4F /* ToolkitButtonMain.swift */; };
 		CBD30EF42D98C37B00FC1A4F /* DinoLabsDinoDigits.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD30EF32D98C37600FC1A4F /* DinoLabsDinoDigits.swift */; };
+		CBD30EF82D99E93B00FC1A4F /* ToolTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD30EF72D99E93600FC1A4F /* ToolTextField.swift */; };
+		CBD30EFA2D99E94400FC1A4F /* ToolButtonMain.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD30EF92D99E93F00FC1A4F /* ToolButtonMain.swift */; };
 		CBDF23522D6807B40049F865 /* AccountTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBDF23512D6807B40049F865 /* AccountTextField.swift */; };
 		CBDF23542D6807C30049F865 /* AccountButtonMain.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBDF23532D6807C30049F865 /* AccountButtonMain.swift */; };
 		CBDF23562D681AAF0049F865 /* ToggleHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBDF23552D681AAF0049F865 /* ToggleHelper.swift */; };
@@ -127,6 +129,8 @@
 		CBD30EED2D98AF6800FC1A4F /* ToolkitTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolkitTextField.swift; sourceTree = "<group>"; };
 		CBD30EEF2D98AF7000FC1A4F /* ToolkitButtonMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolkitButtonMain.swift; sourceTree = "<group>"; };
 		CBD30EF32D98C37600FC1A4F /* DinoLabsDinoDigits.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinoLabsDinoDigits.swift; sourceTree = "<group>"; };
+		CBD30EF72D99E93600FC1A4F /* ToolTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolTextField.swift; sourceTree = "<group>"; };
+		CBD30EF92D99E93F00FC1A4F /* ToolButtonMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolButtonMain.swift; sourceTree = "<group>"; };
 		CBDF23512D6807B40049F865 /* AccountTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountTextField.swift; sourceTree = "<group>"; };
 		CBDF23532D6807C30049F865 /* AccountButtonMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountButtonMain.swift; sourceTree = "<group>"; };
 		CBDF23552D681AAF0049F865 /* ToggleHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToggleHelper.swift; sourceTree = "<group>"; wrapsLines = 0; };
@@ -334,6 +338,7 @@
 		CBD30EF12D98C35300FC1A4F /* Tools */ = {
 			isa = PBXGroup;
 			children = (
+				CBD30EF62D99E92E00FC1A4F /* ToolHelpers */,
 				CBD30EF22D98C35D00FC1A4F /* DinoLabsDinoDigits */,
 			);
 			path = Tools;
@@ -345,6 +350,15 @@
 				CBD30EF32D98C37600FC1A4F /* DinoLabsDinoDigits.swift */,
 			);
 			path = DinoLabsDinoDigits;
+			sourceTree = "<group>";
+		};
+		CBD30EF62D99E92E00FC1A4F /* ToolHelpers */ = {
+			isa = PBXGroup;
+			children = (
+				CBD30EF72D99E93600FC1A4F /* ToolTextField.swift */,
+				CBD30EF92D99E93F00FC1A4F /* ToolButtonMain.swift */,
+			);
+			path = ToolHelpers;
 			sourceTree = "<group>";
 		};
 		CBDF235F2D6AA0950049F865 /* CodeHelpers */ = {
@@ -669,6 +683,7 @@
 				CBEC15DC2D5E806E009A0FAF /* ClickHelper.swift in Sources */,
 				CBEC15CD2D5D91A8009A0FAF /* StructManager.swift in Sources */,
 				CBEC15D62D5E5CFA009A0FAF /* AuthenticationTextField.swift in Sources */,
+				CBD30EFA2D99E94400FC1A4F /* ToolButtonMain.swift in Sources */,
 				CBEC15E02D5EA98A009A0FAF /* RegisterAuth.swift in Sources */,
 				CB5B4AD32D5FC0B100492970 /* AlertCheckField.swift in Sources */,
 				CB5B4AD52D5FC0C700492970 /* AlertMenuField.swift in Sources */,
@@ -684,6 +699,7 @@
 				CBFDA88F2D65C97800EA87BB /* DinoLabsSearch.swift in Sources */,
 				CBDF235E2D6A46D60049F865 /* DinoLabsThemes.swift in Sources */,
 				CB5B4ADE2D5FF8CE00492970 /* MainTextField.swift in Sources */,
+				CBD30EF82D99E93B00FC1A4F /* ToolTextField.swift in Sources */,
 				CBD30EF42D98C37B00FC1A4F /* DinoLabsDinoDigits.swift in Sources */,
 				CBDF23582D687EA10049F865 /* SliderHelper.swift in Sources */,
 				CB18D2D62D6E447000CCFA36 /* DinoLabsTerminal.swift in Sources */,
