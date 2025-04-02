@@ -362,7 +362,18 @@ func transformTrigFunctions(in expression: String) -> String {
 
 func prepareExpressionPart(_ expression: String) -> String {
     guard !expression.isEmpty else { return "0" }
+    
+    let decimalPattern = "\\d+\\.\\d+\\."
+    if let regex = try? NSRegularExpression(pattern: decimalPattern),
+       regex.firstMatch(in: expression, range: NSRange(expression.startIndex..., in: expression)) != nil {
+        return "0"
+    }
+    
     var expr = expression.replacingOccurrences(of: " ", with: "")
+    
+    if expr.last == "." {
+        expr += "0"
+    }
     
     if expr.first == "-" {
         expr = "0" + expr
@@ -475,16 +486,27 @@ func isValidExpression(_ expression: String, variables: [GraphVariable]) -> Bool
         return false
     }
     
+    let decimalPattern = "\\d+\\.\\d+\\."
+    if let regex = try? NSRegularExpression(pattern: decimalPattern),
+       regex.firstMatch(in: trimmed, range: NSRange(trimmed.startIndex..., in: trimmed)) != nil {
+        return false
+    }
+    
     if trimmed.contains("=") || trimmed.lowercased().contains("y") {
         return false
     }
     
-    let strictlyAllowedCharacters = CharacterSet(charactersIn: "0123456789.+-*/()^,x")
     let allowedFunctions = [
         "function", "sin", "cos", "tan", "sec", "csc", "cot",
         "asin", "acos", "atan", "asec", "acsc", "acot",
         "log", "exp", "ln", "sqrt", "pow", "abs"
     ]
+    
+    var allowedChars = "0123456789.+-*/()^,x"
+    for variable in variables {
+        allowedChars += variable.name
+    }
+    let strictlyAllowedCharacters = CharacterSet(charactersIn: allowedChars)
     
     var remainingExpression = trimmed.lowercased()
     for fn in allowedFunctions {
@@ -522,23 +544,6 @@ func isValidExpression(_ expression: String, variables: [GraphVariable]) -> Bool
            regex.firstMatch(in: expression, range: NSRange(expression.startIndex..., in: expression)) != nil {
             return false
         }
-    }
-    
-    let incompleteFunctionPatterns = [
-        "\\b(sin|cos|tan|sec|csc|cot|asin|acos|atan|asec|acsc|acot|log|ln|exp|sqrt|abs|pow)\\s*\\([^\\)]*$",
-        "\\b(sin|cos|tan|sec|csc|cot|asin|acos|atan|asec|acsc|acot|log|ln|exp|sqrt|abs|pow)\\s*$"
-    ]
-    
-    for pattern in incompleteFunctionPatterns {
-        if let regex = try? NSRegularExpression(pattern: pattern, options: .caseInsensitive),
-           regex.firstMatch(in: expression, range: NSRange(expression.startIndex..., in: expression)) != nil {
-            return false
-        }
-    }
-    
-    if let invalidExpRegex = try? NSRegularExpression(pattern: "\\^\\s*[\\+\\-\\*/\\^]"),
-       invalidExpRegex.firstMatch(in: expression, range: NSRange(expression.startIndex..., in: expression)) != nil {
-        return false
     }
     
     if ["+", "-", "*", "/", "^"].contains(trimmed) {
@@ -1252,37 +1257,48 @@ struct DinoLabsDinoDigitsPlot: View {
                                         )
                                         HStack(spacing: 0) {
                                             VStack(spacing: 0) {
-                                                ToolTextField(placeholder: "Enter new formula...", text: $formula.text)
-                                                    .onChange(of: formula.text) { newValue in
-                                                        let prefix = "y = "
-                                                        if !newValue.hasPrefix(prefix) {
-                                                            DispatchQueue.main.async {
-                                                                if newValue.count < prefix.count {
-                                                                    formula.text = prefix
-                                                                } else {
-                                                                    let startIndex = newValue.startIndex
-                                                                    let remainder = newValue[newValue.index(startIndex, offsetBy: prefix.count)...]
-                                                                    formula.text = prefix + remainder
+                                                HStack(spacing: 0) {
+                                                    ScrollView(.horizontal, showsIndicators: false) {
+                                                        ToolTextField(placeholder: "Enter new formula...", text: $formula.text, isSecure: false, textSize: 11)
+                                                            .onChange(of: formula.text) { newValue in
+                                                                let prefix = "y = "
+                                                                if !newValue.hasPrefix(prefix) {
+                                                                    DispatchQueue.main.async {
+                                                                        if newValue.count < prefix.count {
+                                                                            formula.text = prefix
+                                                                        } else {
+                                                                            let startIndex = newValue.startIndex
+                                                                            let remainder = newValue[newValue.index(startIndex, offsetBy: prefix.count)...]
+                                                                            formula.text = prefix + remainder
+                                                                        }
+                                                                    }
                                                                 }
+                                                                
+                                                                intercepts=[]
                                                             }
-                                                        }
-                                                        
-                                                        intercepts=[]
+                                                            .lineLimit(1)
+                                                            .truncationMode(.tail)
+                                                            .textFieldStyle(PlainTextFieldStyle())
+                                                            .foregroundColor(.black)
+                                                            .font(.system(size: 12, weight: .heavy))
+                                                            .padding(.horizontal, 10)
+                                                            .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.8, height: 32)
+                                                            .containerHelper(
+                                                                backgroundColor: Color(hex: 0xf5f5f5),
+                                                                borderColor: Color.clear, borderWidth: 1,
+                                                                topLeft: 4, topRight: 4, bottomLeft: 4, bottomRight: 4,
+                                                                shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0
+                                                            )
+                                                            .hoverEffect(opacity: 0.8)
                                                     }
-                                                    .lineLimit(1)
-                                                    .truncationMode(.tail)
-                                                    .textFieldStyle(PlainTextFieldStyle())
-                                                    .foregroundColor(.black)
-                                                    .font(.system(size: 12, weight: .heavy))
-                                                    .padding(.horizontal, 10)
-                                                    .frame(width: (geometry.size.width * (1 - leftPanelWidthRatio) * 0.3) * 0.8, height: 32)
-                                                    .containerHelper(
-                                                        backgroundColor: Color(hex: 0xf5f5f5),
-                                                        borderColor: Color.clear, borderWidth: 1,
-                                                        topLeft: 4, topRight: 4, bottomLeft: 4, bottomRight: 4,
-                                                        shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0
-                                                    )
-                                                    .hoverEffect(opacity: 0.8)
+                                                }
+                                                .containerHelper(
+                                                    backgroundColor: Color(hex: 0xf5f5f5),
+                                                    borderColor: Color.clear, borderWidth: 1,
+                                                    topLeft: 4, topRight: 4, bottomLeft: 4, bottomRight: 4,
+                                                    shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0
+                                                )
+                                                .hoverEffect(opacity: 0.8)
                                                 if !missingVars.isEmpty {
                                                     ScrollView(.horizontal, showsIndicators: false) {
                                                         HStack {
@@ -1359,7 +1375,7 @@ struct DinoLabsDinoDigitsPlot: View {
                                     backgroundColor: Color(hex: 0xf5f5f5),
                                     borderColor: Color(hex: 0xc1c1c1), borderWidth:3,
                                     topLeft: 2, topRight: 2, bottomLeft: 2, bottomRight: 2,
-                                    shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0
+                                    shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0
                                 )
                             }
                             ForEach($variables) { $variable in
@@ -1464,69 +1480,96 @@ struct DinoLabsDinoDigitsPlot: View {
                     
                     
             }
+            
             if isKeyboardView {
-                HStack {
-                    VStack(spacing: 4) {
-                        HStack(spacing: 4) {
-                            ToolButtonMain { insertText("7") }  .basicKeyStyle("7")
-                            ToolButtonMain { insertText("8") }  .basicKeyStyle("8")
-                            ToolButtonMain { insertText("9") }  .basicKeyStyle("9")
-                            ToolButtonMain { insertText("+") }  .opKeyStyle("+")
-                            ToolButtonMain { insertText("(") }  .opKeyStyle("(")
-                            ToolButtonMain { insertText(")") }  .opKeyStyle(")")
-                            ToolButtonMain { insertText("sqrt(") } .fnKeyStyle("sqrt")
+                VStack(spacing: 8) {
+                    HStack {
+                        VStack(spacing: 4) {
+                            HStack(spacing: 4) {
+                                ToolButtonMain { insertText("7") }  .basicKeyStyle("7")
+                                ToolButtonMain { insertText("8") }  .basicKeyStyle("8")
+                                ToolButtonMain { insertText("9") }  .basicKeyStyle("9")
+                                ToolButtonMain { insertText("+") }  .opKeyStyle("+")
+                                ToolButtonMain { insertText("(") }  .opKeyStyle("(")
+                                ToolButtonMain { insertText(")") }  .opKeyStyle(")")
+                                ToolButtonMain { insertText("sqrt(") } .fnKeyStyle("sqrt")
+                            }
+                            HStack(spacing: 4) {
+                                ToolButtonMain { insertText("4") }  .basicKeyStyle("4")
+                                ToolButtonMain { insertText("5") }  .basicKeyStyle("5")
+                                ToolButtonMain { insertText("6") }  .basicKeyStyle("6")
+                                ToolButtonMain { insertText("-") }  .opKeyStyle("-")
+                                ToolButtonMain { insertText("[") }  .opKeyStyle("[")
+                                ToolButtonMain { insertText("]") }  .opKeyStyle("]")
+                                ToolButtonMain { insertText("pow(") } .fnKeyStyle("pow")
+                            }
+                            HStack(spacing: 4) {
+                                ToolButtonMain { insertText("1") }  .basicKeyStyle("1")
+                                ToolButtonMain { insertText("2") }  .basicKeyStyle("2")
+                                ToolButtonMain { insertText("3") }  .basicKeyStyle("3")
+                                ToolButtonMain { insertText("/") }  .opKeyStyle("/")
+                                ToolButtonMain { insertText("{") }  .opKeyStyle("{")
+                                ToolButtonMain { insertText("}") }  .opKeyStyle("}")
+                                ToolButtonMain { insertText("log(") } .fnKeyStyle("log")
+                            }
+                            HStack(spacing: 4) {
+                                ToolButtonMain { insertText("0") }  .basicKeyStyle("0")
+                                ToolButtonMain { insertText(".") }  .opKeyStyle(".")
+                                ToolButtonMain { insertText("=") }  .opKeyStyle("=")
+                                ToolButtonMain { insertText("*") }  .opKeyStyle("*")
+                                ToolButtonMain { insertText("|") }  .opKeyStyle("|")
+                                ToolButtonMain { insertText("^") }  .opKeyStyle("^")
+                                ToolButtonMain { insertText("ln(") } .fnKeyStyle("ln")
+                            }
                         }
-                        HStack(spacing: 4) {
-                            ToolButtonMain { insertText("4") }  .basicKeyStyle("4")
-                            ToolButtonMain { insertText("5") }  .basicKeyStyle("5")
-                            ToolButtonMain { insertText("6") }  .basicKeyStyle("6")
-                            ToolButtonMain { insertText("-") }  .opKeyStyle("-")
-                            ToolButtonMain { insertText("[") }  .opKeyStyle("[")
-                            ToolButtonMain { insertText("]") }  .opKeyStyle("]")
-                            ToolButtonMain { insertText("pow(") } .fnKeyStyle("pow")
+                        .padding(.trailing, 20)
+                        VStack(spacing: 4) {
+                            HStack(spacing: 4) {
+                                ToolButtonMain { insertText("sin(") } .fnKeyStyle("sin")
+                                ToolButtonMain { insertText("cos(") } .fnKeyStyle("cos")
+                                ToolButtonMain { insertText("tan(") } .fnKeyStyle("tan")
+                            }
+                            HStack(spacing: 4) {
+                                ToolButtonMain { insertText("sec(") } .fnKeyStyle("sec")
+                                ToolButtonMain { insertText("csc(") } .fnKeyStyle("csc")
+                                ToolButtonMain { insertText("cot(") } .fnKeyStyle("cot")
+                            }
+                            HStack(spacing: 4) {
+                                ToolButtonMain { insertText("asin(") } .fnKeyStyle("asin")
+                                ToolButtonMain { insertText("acos(") } .fnKeyStyle("acos")
+                                ToolButtonMain { insertText("atan(") } .fnKeyStyle("atan")
+                            }
+                            HStack(spacing: 4) {
+                                ToolButtonMain { insertText("asec(") } .fnKeyStyle("asec")
+                                ToolButtonMain { insertText("acsc(") } .fnKeyStyle("acsc")
+                                ToolButtonMain { insertText("acot(") } .fnKeyStyle("acot")
+                            }
                         }
-                        HStack(spacing: 4) {
-                            ToolButtonMain { insertText("1") }  .basicKeyStyle("1")
-                            ToolButtonMain { insertText("2") }  .basicKeyStyle("2")
-                            ToolButtonMain { insertText("3") }  .basicKeyStyle("3")
-                            ToolButtonMain { insertText("/") }  .opKeyStyle("/")
-                            ToolButtonMain { insertText("{") }  .opKeyStyle("{")
-                            ToolButtonMain { insertText("}") }  .opKeyStyle("}")
-                            ToolButtonMain { insertText("log(") } .fnKeyStyle("log")
-                        }
-                        HStack(spacing: 4) {
-                            ToolButtonMain { insertText("0") }  .basicKeyStyle("0")
-                            ToolButtonMain { insertText(".") }  .opKeyStyle(".")
-                            ToolButtonMain { insertText("=") }  .opKeyStyle("=")
-                            ToolButtonMain { insertText("*") }  .opKeyStyle("*")
-                            ToolButtonMain { insertText("|") }  .opKeyStyle("|")
-                            ToolButtonMain { insertText("^") }  .opKeyStyle("^")
-                            ToolButtonMain { insertText("ln(") } .fnKeyStyle("ln")
+                        .padding(.trailing, 20)
+                        VStack(spacing: 4) {
+                            HStack(spacing: 4) {
+                                ToolButtonMain { insertText("\(Double.pi)") } .fnKeyStyle("π")
+                                ToolButtonMain { insertText("\(2 * Double.pi)") } .fnKeyStyle("τ")
+                                ToolButtonMain { insertText("\(M_E)") } .fnKeyStyle("e")
+                            }
+                            HStack(spacing: 4) {
+                                ToolButtonMain { insertText("0.0000000000667430") } .fnKeyStyle("G")
+                                ToolButtonMain { insertText("299792458") } .fnKeyStyle("c")
+                                ToolButtonMain { insertText("0.000000000000000000000000000000000662607015") } .fnKeyStyle("h")
+                            }
+                            HStack(spacing: 4) {
+                                ToolButtonMain { insertText("0.00000000000000000000001380649") } .fnKeyStyle("k")
+                                ToolButtonMain { insertText("0.0000000000088541878128") } .fnKeyStyle("ε0")
+                                ToolButtonMain { insertText("0.00000125663706212") } .fnKeyStyle("μ0")
+                            }
+                            HStack(spacing: 4) {
+                                ToolButtonMain { insertText("602214076000000000000000") } .fnKeyStyle("NA")
+                                ToolButtonMain { insertText("8.314462618") } .fnKeyStyle("R")
+                                ToolButtonMain { insertText("0.000000000000000000000000000000910938356") } .fnKeyStyle("me")
+                            }
                         }
                     }
-                    .padding(.trailing, 20)
-                    VStack(spacing: 4) {
-                        HStack(spacing: 4) {
-                            ToolButtonMain { insertText("sin(") } .fnKeyStyle("sin")
-                            ToolButtonMain { insertText("cos(") } .fnKeyStyle("cos")
-                            ToolButtonMain { insertText("tan(") } .fnKeyStyle("tan")
-                        }
-                        HStack(spacing: 4) {
-                            ToolButtonMain { insertText("sec(") } .fnKeyStyle("sec")
-                            ToolButtonMain { insertText("csc(") } .fnKeyStyle("csc")
-                            ToolButtonMain { insertText("cot(") } .fnKeyStyle("cot")
-                        }
-                        HStack(spacing: 4) {
-                            ToolButtonMain { insertText("asin(") } .fnKeyStyle("asin")
-                            ToolButtonMain { insertText("acos(") } .fnKeyStyle("acos")
-                            ToolButtonMain { insertText("atan(") } .fnKeyStyle("atan")
-                        }
-                        HStack(spacing: 4) {
-                            ToolButtonMain { insertText("asec(") } .fnKeyStyle("asec")
-                            ToolButtonMain { insertText("acsc(") } .fnKeyStyle("acsc")
-                            ToolButtonMain { insertText("acot(") } .fnKeyStyle("acot")
-                        }
-                    }
+                    
                 }
                 .padding(.vertical, 12)
                 .padding(.horizontal, 30)
@@ -1591,6 +1634,24 @@ extension View {
     func fnKeyStyle(_ label: String) -> some View {
         self
             .frame(width: 28, height: 18)
+            .padding(6)
+            .containerHelper(
+                backgroundColor: Color(hex: 0x414141),
+                borderColor: Color(hex: 0x222222), borderWidth: 1,
+                topLeft: 6, topRight: 6, bottomLeft: 6, bottomRight: 6,
+                shadowColor: Color.black, shadowRadius: 1, shadowX: 0, shadowY: 0
+            )
+            .overlay(
+                Text(label)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(Color(hex: 0xf5f5f5))
+                    .allowsHitTesting(false)
+            )
+            .hoverEffect(opacity: 0.6, scale: 1.05, cursor: .pointingHand)
+    }
+    func wideKeyStyle(_ label: String) -> some View {
+        self
+            .frame(width: 45, height: 18)
             .padding(6)
             .containerHelper(
                 backgroundColor: Color(hex: 0x414141),

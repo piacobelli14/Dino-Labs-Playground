@@ -129,7 +129,7 @@
 		CBD30EEB2D98AF5200FC1A4F /* DinoLabsToolkit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinoLabsToolkit.swift; sourceTree = "<group>"; };
 		CBD30EED2D98AF6800FC1A4F /* ToolkitTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolkitTextField.swift; sourceTree = "<group>"; };
 		CBD30EEF2D98AF7000FC1A4F /* ToolkitButtonMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolkitButtonMain.swift; sourceTree = "<group>"; };
-		CBD30EF32D98C37600FC1A4F /* DinoLabsDinoDigitsPlot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinoLabsDinoDigitsPlot.swift; sourceTree = "<group>"; };
+		CBD30EF32D98C37600FC1A4F /* DinoLabsDinoDigitsPlot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinoLabsDinoDigitsPlot.swift; sourceTree = "<group>"; wrapsLines = 0; };
 		CBD30EF72D99E93600FC1A4F /* ToolTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolTextField.swift; sourceTree = "<group>"; };
 		CBD30EF92D99E93F00FC1A4F /* ToolButtonMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolButtonMain.swift; sourceTree = "<group>"; };
 		CBD30EFB2D9CC20900FC1A4F /* DinoLabsDinoDigitsCalc.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinoLabsDinoDigitsCalc.swift; sourceTree = "<group>"; };

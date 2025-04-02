@@ -11,14 +11,15 @@ struct ToolTextField: NSViewRepresentable {
     var placeholder: String
     @Binding var text: String
     var isSecure: Bool = false
-    
+    var textSize: CGFloat = 11
+
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
     }
-    
+
     func makeNSView(context: Context) -> NSTextField {
         let textField: NSTextField
-        
+
         if isSecure {
             let secureField = ClickableNSSecureTextField()
             secureField.isBordered = false
@@ -27,8 +28,10 @@ struct ToolTextField: NSViewRepresentable {
             secureField.focusRingType = .none
             secureField.isEditable = true
             secureField.isSelectable = true
-            secureField.font = .systemFont(ofSize: 11, weight: .semibold)
+            secureField.font = .systemFont(ofSize: textSize, weight: .semibold)
             secureField.textColor = .black
+            secureField.cell?.wraps = false
+            secureField.cell?.isScrollable = true
             textField = secureField
         } else {
             let normalField = ClickableNSTextField()
@@ -38,26 +41,28 @@ struct ToolTextField: NSViewRepresentable {
             normalField.focusRingType = .none
             normalField.isEditable = true
             normalField.isSelectable = true
-            normalField.font = .systemFont(ofSize: 11, weight: .semibold)
+            normalField.font = .systemFont(ofSize: textSize, weight: .semibold)
             normalField.textColor = .black
+            normalField.cell?.wraps = false
+            normalField.cell?.isScrollable = true
             textField = normalField
         }
-        
+
         let placeholderColor = NSColor(srgbRed: 192/255, green: 192/255, blue: 192/255, alpha: 1)
         let placeholderAttributes: [NSAttributedString.Key: Any] = [
             .foregroundColor: placeholderColor,
-            .font: NSFont.systemFont(ofSize: 11, weight: .semibold)
+            .font: NSFont.systemFont(ofSize: textSize, weight: .semibold)
         ]
         textField.placeholderAttributedString = NSAttributedString(
             string: placeholder,
             attributes: placeholderAttributes
         )
-        
+
         textField.delegate = context.coordinator
-        
+
         return textField
     }
-    
+
     func updateNSView(_ nsView: NSTextField, context: Context) {
         if nsView.stringValue != text {
             nsView.stringValue = text
@@ -67,14 +72,14 @@ struct ToolTextField: NSViewRepresentable {
             editor.insertionPointColor = NSColor.black
         }
     }
-    
+
     class Coordinator: NSObject, NSTextFieldDelegate {
         var parent: ToolTextField
-        
+
         init(_ parent: ToolTextField) {
             self.parent = parent
         }
-        
+
         func controlTextDidChange(_ notification: Notification) {
             if let textField = notification.object as? NSTextField {
                 parent.text = textField.stringValue

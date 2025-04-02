@@ -9,8 +9,8 @@ import SwiftUI
 struct ContentView: View {
     @ObservedObject private var sessionManager = SessionStateManager.shared
     @State private var currentView: AppView = .DinoLabsPlayground
-    @State private var authenticatedUsername: String = ""
-    @State private var authenticatedOrgID: String = ""
+    @State private var authenticatedUsername: String = "piacobelli"
+    @State private var authenticatedOrgID: String = "100000"
     @State private var isLoggedOut: Bool = false
     @StateObject private var auth = AuthViewModel()
 
@@ -70,14 +70,14 @@ struct ContentView: View {
             auth.token = nil
             auth.isAdmin = false
             isLoggedOut = true
-            currentView = .LoginAuth
+            currentView = .DinoLabsPlayground//.LoginAuth
         }
     }
 
     func redirectToLogin() {
         withAnimation {
             isLoggedOut = true
-            currentView = .LoginAuth
+            currentView = .DinoLabsPlayground//.LoginAuth
         }
     }
 
