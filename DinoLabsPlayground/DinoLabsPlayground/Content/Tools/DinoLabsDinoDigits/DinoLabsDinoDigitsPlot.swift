@@ -447,6 +447,12 @@ func parseFormula(_ formula: String) -> (op: String, expression: String)? {
         if afterY.hasPrefix(op) {
             var expression = afterY.dropFirst(op.count).trimmingCharacters(in: .whitespaces)
             
+            let allowedCharacters = CharacterSet(charactersIn: "0123456789.+-*/^(),xabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
+            let expressionSet = CharacterSet(charactersIn: expression)
+            if !expressionSet.isSubset(of: allowedCharacters) {
+                return nil
+            }
+            
             if expression.contains("=") || expression.lowercased().contains("y") {
                 return nil
             }
@@ -469,7 +475,23 @@ func isValidExpression(_ expression: String, variables: [GraphVariable]) -> Bool
         return false
     }
     
-    if expression.contains("=") || expression.lowercased().contains("y") {
+    if trimmed.contains("=") || trimmed.lowercased().contains("y") {
+        return false
+    }
+    
+    let strictlyAllowedCharacters = CharacterSet(charactersIn: "0123456789.+-*/()^,x")
+    let allowedFunctions = [
+        "function", "sin", "cos", "tan", "sec", "csc", "cot",
+        "asin", "acos", "atan", "asec", "acsc", "acot",
+        "log", "exp", "ln", "sqrt", "pow", "abs"
+    ]
+    
+    var remainingExpression = trimmed.lowercased()
+    for fn in allowedFunctions {
+        remainingExpression = remainingExpression.replacingOccurrences(of: fn, with: "")
+    }
+    let remainingSet = CharacterSet(charactersIn: remainingExpression)
+    if !remainingSet.isSubset(of: strictlyAllowedCharacters) {
         return false
     }
     
@@ -519,34 +541,13 @@ func isValidExpression(_ expression: String, variables: [GraphVariable]) -> Bool
         return false
     }
     
-    let allowedFunctions = [
-        "function","sin","cos","tan","sec","csc","cot",
-        "asin","acos","atan","asec","acsc","acot",
-        "log","exp","ln","sqrt","pow","abs"
-    ]
-    let allowedCharacters = CharacterSet(charactersIn: "0123456789.+-*/()^,xabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ':")
-    
-    let functionSet = Set(allowedFunctions)
-    if functionSet.contains(trimmed.lowercased()) {
-        return false
-    }
-    
-    var remainingExpression = expression.lowercased()
-    for fn in allowedFunctions {
-        remainingExpression = remainingExpression.replacingOccurrences(of: fn, with: "")
-    }
-    
-    let remainingSet = CharacterSet(charactersIn: remainingExpression)
-    if !remainingSet.isSubset(of: allowedCharacters) {
-        return false
-    }
-    
     if ["+", "-", "*", "/", "^"].contains(trimmed) {
         return false
     }
     
     return true
 }
+
 func extractMissingVariables(from formula: String, variables: [GraphVariable]) -> [String] {
     guard let parsed = parseFormula(formula) else { return [] }
     let correctedExpression = prepareExpressionPart(parsed.expression)
@@ -588,15 +589,12 @@ func extractMissingVariables(from formula: String, variables: [GraphVariable]) -
 func createExpressionSafely(_ expression: String) -> NSExpression? {
     guard !expression.isEmpty else { return nil }
     
-    if let expr = try? NSExpression(format: expression) {
+    do {
+        let expr = try NSExpression(format: expression)
         return expr
+    } catch {
+        return nil
     }
-    
-    if let expr = try? NSExpression(format: "(\(expression))") {
-        return expr
-    }
-    
-    return nil
 }
 
 struct GraphFormula: Identifiable {
@@ -860,10 +858,11 @@ struct GraphView: View {
                     
                     for formula in formulas where !formula.isHidden {
                         guard let parsed = parseFormula(formula.text),
-                              let nsExpression = createExpressionSafely(prepareExpressionPart(parsed.expression)),
-                              isValidExpression(prepareExpressionPart(parsed.expression), variables: variables),
-                              extractMissingVariables(from: formula.text, variables: variables).isEmpty else { continue }
-                        
+                            let nsExpression = createExpressionSafely(prepareExpressionPart(parsed.expression)),
+                            isValidExpression(prepareExpressionPart(parsed.expression), variables: variables),
+                            extractMissingVariables(from: formula.text, variables: variables).isEmpty else {
+                            continue
+                        }
                         let samples = 200
                         let dx = (mathMaxX - mathMinX) / Double(samples)
                         for i in 0...samples {
@@ -1303,7 +1302,6 @@ struct DinoLabsDinoDigitsPlot: View {
                                                                         Text("\(varName)")
                                                                             .font(.system(size: 9, weight: .semibold, design: .default).italic())
                                                                             .foregroundColor(Color(hex: 0xf5f5f5).opacity(1.0))
-                                                                            .allowsHitTesting(false)
                                                                             .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
                                                                     )
                                                                 }
@@ -1320,7 +1318,6 @@ struct DinoLabsDinoDigitsPlot: View {
                                                                     Text("all")
                                                                         .font(.system(size: 9, weight: .semibold, design: .default).italic())
                                                                         .foregroundColor(Color(hex: 0xf5f5f5).opacity(1.0))
-                                                                        .allowsHitTesting(false)
                                                                         .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
                                                                 )
                                                             }

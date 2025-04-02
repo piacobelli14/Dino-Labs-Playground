@@ -1,9 +1,3 @@
-//
-//  DinoLabsToolkit.swift
-//
-//  Created by Peter Iacobelli on 3/29/25.
-//
-
 import SwiftUI
 import AppKit
 
@@ -24,11 +18,13 @@ struct DinoLabsToolkit: View {
     @Binding var leftPanelWidthRatio: CGFloat
     @State private var isToolOpen: Bool = false
     @State private var toolOpenName: String = ""
-
     @State private var searchText: String = ""
+    
     private let cells: [ToolCell] = [
-        ToolCell(toolOpenName: "DinoDigits", title: "Dino Digits", description: "An all in one graphing and scientific calculator from the Dino Labs team.", imageName: "divide.square", gradientColors: [Color(hex: 0x008143), Color(hex: 0x4BBD90)]),
+        ToolCell(toolOpenName: "DinoDigitsCalc", title: "Dino Digits - Calc", description: "", imageName: "plus.forwardslash.minus", gradientColors: [Color(hex: 0x008167), Color(hex: 0x4BBDB4)]),
+        ToolCell(toolOpenName: "DinoDigitsPlot", title: "Dino Digits - Plot", description: "", imageName: "chart.dots.scatter", gradientColors: [Color(hex: 0x008143), Color(hex: 0x4BBD90)])
     ]
+    
     private var filteredCells: [ToolCell] {
         if searchText.isEmpty {
             return cells
@@ -50,14 +46,32 @@ struct DinoLabsToolkit: View {
                         .font(.system(size: 11, weight: .heavy))
                         .frame(width: geometry.size.width * (1 - leftPanelWidthRatio) * 0.90, height: 40)
                         .padding(.horizontal, 20)
-                        .containerHelper(backgroundColor: Color(hex: 0x171717), borderColor: Color(hex: 0x616161), borderWidth: 2, topLeft: 6, topRight: 6, bottomLeft: 6, bottomRight: 6, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                        .containerHelper(
+                            backgroundColor: Color(hex: 0x171717),
+                            borderColor: Color(hex: 0x616161),
+                            borderWidth: 2,
+                            topLeft: 6,
+                            topRight: 6,
+                            bottomLeft: 6,
+                            bottomRight: 6,
+                            shadowColor: .clear,
+                            shadowRadius: 0,
+                            shadowX: 0,
+                            shadowY: 0
+                        )
                         .hoverEffect(opacity: 0.8)
                     Spacer()
                 }
                 .padding(.vertical, 15)
                 
                 ScrollView {
-                    LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 10) {
+                    LazyVGrid(
+                        columns: [
+                            GridItem(.flexible(), spacing: 20),
+                            GridItem(.flexible(), spacing: 20)
+                        ],
+                        spacing: 20
+                    ) {
                         ForEach(filteredCells) { cell in
                             Button(action: {
                                 isToolOpen = true
@@ -80,14 +94,15 @@ struct DinoLabsToolkit: View {
                                     }
                                     .padding(.bottom, 8)
                                     .padding(.leading, 4)
-                                    Text(cell.description)
-                                        .font(.system(size: 11, weight: .regular))
-                                        .foregroundColor(.white.opacity(1))
                                 }
                                 .padding()
                                 .frame(maxWidth: .infinity)
                                 .background(
-                                    LinearGradient(gradient: Gradient(colors: cell.gradientColors), startPoint: .topLeading, endPoint: .bottomTrailing)
+                                    LinearGradient(
+                                        gradient: Gradient(colors: cell.gradientColors),
+                                        startPoint: .topLeading,
+                                        endPoint: .bottomTrailing
+                                    )
                                 )
                                 .cornerRadius(8)
                             }
@@ -98,12 +113,29 @@ struct DinoLabsToolkit: View {
                     .padding([.leading, .trailing, .bottom])
                 }
             } else {
-                if toolOpenName == "DinoDigits" {
-                    DinoLabsDinoDigits(geometry: geometry, leftPanelWidthRatio: $leftPanelWidthRatio)
+                if toolOpenName == "DinoDigitsPlot" {
+                    DinoLabsDinoDigitsPlot(geometry: geometry, leftPanelWidthRatio: $leftPanelWidthRatio)
+                } else if toolOpenName == "DinoDigitsCalc" {
+                    DinoLabsDinoDigitsCalc(geometry: geometry, leftPanelWidthRatio: $leftPanelWidthRatio)
                 }
             }
         }
-        .frame(width: geometry.size.width * (1 - leftPanelWidthRatio), height: (geometry.size.height - 50) * 0.9)
-        .containerHelper(backgroundColor: Color(hex: 0x242424), borderColor: .clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+        .frame(
+            width: geometry.size.width * (1 - leftPanelWidthRatio),
+            height: (geometry.size.height - 50) * 0.9
+        )
+        .containerHelper(
+            backgroundColor: Color(hex: 0x242424),
+            borderColor: .clear,
+            borderWidth: 0,
+            topLeft: 0,
+            topRight: 0,
+            bottomLeft: 0,
+            bottomRight: 0,
+            shadowColor: .clear,
+            shadowRadius: 0,
+            shadowX: 0,
+            shadowY: 0
+        )
     }
 }
