@@ -158,7 +158,7 @@ func transformConsecutiveVariables(in expression: String) -> String {
             let nextIndex = transformed.index(after: i)
             if nextIndex < transformed.endIndex {
                 let nextChar = transformed[nextIndex]
-                if nextChar.isLetter || nextChar == "(" {
+                if nextChar.isLetter || nextChar.isNumber || nextChar == "(" {
                     transformed.insert("*", at: nextIndex)
                     i = transformed.index(after: nextIndex)
                     continue
@@ -172,11 +172,16 @@ func transformConsecutiveVariables(in expression: String) -> String {
             while end < transformed.endIndex && (transformed[end].isNumber || transformed[end] == ".") {
                 end = transformed.index(after: end)
             }
-            if end < transformed.endIndex && transformed[end] == "(" {
-                transformed.insert("*", at: end)
-                i = transformed.index(after: end)
-                continue
+            if end < transformed.endIndex {
+                let nextChar = transformed[end]
+                if nextChar.isLetter || nextChar == "(" {
+                    transformed.insert("*", at: end)
+                    i = transformed.index(after: end)
+                    continue
+                }
             }
+            i = end
+            continue
         }
         
         if transformed[i].isLetter {
@@ -203,30 +208,7 @@ func transformConsecutiveVariables(in expression: String) -> String {
             } else {
                 if end < transformed.endIndex {
                     let nextChar = transformed[end]
-                    let bracketPairs: [Character: Character] = ["[": "]", "{": "}", "(": ")"]
-                    
-                    if let closingBracket = bracketPairs[nextChar] {
-                        var bracketCount = 1
-                        var j = transformed.index(after: end)
-                        
-                        while j < transformed.endIndex && bracketCount > 0 {
-                            if transformed[j] == nextChar { bracketCount += 1 }
-                            else if transformed[j] == closingBracket { bracketCount -= 1 }
-                            j = transformed.index(after: j)
-                        }
-                        
-                        if bracketCount == 0 {
-                            let beforeBracket = String(transformed[start..<end])
-                            let afterBracketIndex = transformed.index(j, offsetBy: -1)
-                            let insideBrackets = String(transformed[transformed.index(after: end)..<afterBracketIndex])
-                            let replacement = "\(beforeBracket)*\(insideBrackets)"
-                            transformed.replaceSubrange(start..<j, with: replacement)
-                            i = transformed.index(start, offsetBy: replacement.count)
-                            continue
-                        }
-                    }
-                    
-                    if nextChar == "(" {
+                    if nextChar.isLetter || nextChar.isNumber || nextChar == "(" {
                         transformed.insert("*", at: end)
                         i = transformed.index(after: end)
                         continue
@@ -654,6 +636,9 @@ func prepareExpressionPart(_ expression: String) -> String {
     }
     if let regex = try? NSRegularExpression(pattern: "([0-9])([a-zA-Z])") {
         expr = regex.stringByReplacingMatches(in: expr, range: NSRange(expr.startIndex..., in: expr), withTemplate: "$1*$2")
+    }
+    if let regex = try? NSRegularExpression(pattern: "\\)([0-9a-zA-Z])") {
+        expr = regex.stringByReplacingMatches(in: expr, range: NSRange(expr.startIndex..., in: expr), withTemplate: ")*$1")
     }
     
     return expr
