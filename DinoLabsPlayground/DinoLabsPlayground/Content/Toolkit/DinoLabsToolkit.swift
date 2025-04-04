@@ -92,7 +92,6 @@ struct DinoLabsToolkit: View {
                                             .foregroundColor(.white)
                                         Spacer()
                                     }
-                                    .padding(.bottom, 8)
                                     .padding(.leading, 4)
                                 }
                                 .padding()

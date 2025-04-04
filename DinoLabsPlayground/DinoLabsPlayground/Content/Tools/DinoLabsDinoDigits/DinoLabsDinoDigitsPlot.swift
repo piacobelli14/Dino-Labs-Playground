@@ -646,14 +646,23 @@ func prepareExpressionPart(_ expression: String) -> String {
 
 func parseFormula(_ formula: String) -> (op: String, expression: String)? {
     let trimmed = formula.trimmingCharacters(in: .whitespaces)
-    guard trimmed.lowercased().hasPrefix("y") else { return nil }
-
-    let afterY = String(trimmed.dropFirst()).replacingOccurrences(of: " ", with: "")
+    let possibleStarts = ["y'", "∫y", "y"]
+    var foundStart: String? = nil
+    for candidate in possibleStarts {
+        if trimmed.lowercased().hasPrefix(candidate.lowercased()) {
+            foundStart = candidate
+            break
+        }
+    }
+    guard let startPrefix = foundStart else {
+        return nil
+    }
+    let afterPrefix = trimmed.dropFirst(startPrefix.count).replacingOccurrences(of: " ", with: "")
     let operators = ["<=", ">=", "<", ">", "="]
     for op in operators {
-        if afterY.hasPrefix(op) {
-            let expressionStart = afterY.index(afterY.startIndex, offsetBy: op.count)
-            let expression = String(afterY[expressionStart...])
+        if afterPrefix.hasPrefix(op) {
+            let expressionStart = afterPrefix.index(afterPrefix.startIndex, offsetBy: op.count)
+            let expression = String(afterPrefix[expressionStart...])
             
             let allowedCharacters = CharacterSet(charactersIn: "0123456789.+-*/^(),|[]{}xabcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ")
             let expressionSet = CharacterSet(charactersIn: expression)
@@ -841,6 +850,7 @@ struct GraphFormula: Identifiable {
     var text: String
     var color: Color
     var isHidden: Bool = false
+    var mode: String
 }
 
 struct GraphVariable: Identifiable {
@@ -897,45 +907,105 @@ struct GraphView: View {
         let extendedMargin = (mathMaxX - mathMinX) * 0.1
         let extendedMinX = mathMinX - extendedMargin
         let extendedMaxX = mathMaxX + extendedMargin
+        
+        func computeFinalValues(_ formula: GraphFormula,
+                                _ expression: NSExpression,
+                                fromX: Double,
+                                toX: Double,
+                                count: Int,
+                                vars: [GraphVariable]) -> [Double] {
+            var functionValues = [Double](repeating: 0.0, count: count + 1)
+            let dx = (toX - fromX) / Double(count)
+            
+            for i in 0...count {
+                let xVal = fromX + Double(i) * dx
+                var valueDict: [String: Any] = ["x": NSNumber(value: xVal)]
+                for variable in vars {
+                    valueDict[variable.name] = NSNumber(value: variable.value)
+                }
+                if let numberVal = try? expression.expressionValue(with: valueDict, context: nil) as? NSNumber {
+                    functionValues[i] = numberVal.doubleValue
+                } else {
+                    functionValues[i] = Double.nan
+                }
+            }
+            
+            if formula.mode == "derv" {
+                var dervValues = [Double](repeating: 0.0, count: count + 1)
+                if count >= 1 {
+                    dervValues[0] = (functionValues[1] - functionValues[0]) / dx
+                    dervValues[count] = (functionValues[count] - functionValues[count - 1]) / dx
+                }
+                for i in 1..<count {
+                    let rise = functionValues[i + 1] - functionValues[i - 1]
+                    dervValues[i] = rise / (2.0 * dx)
+                }
+                return dervValues
+            } else if formula.mode == "integ" {
+                var integValues = [Double](repeating: 0.0, count: count + 1)
+                for i in 1...count {
+                    if functionValues[i - 1].isFinite {
+                        integValues[i] = integValues[i - 1] + functionValues[i - 1] * dx
+                    } else {
+                        integValues[i] = integValues[i - 1]
+                    }
+                }
+                if fromX <= 0 && toX >= 0 {
+                    let i0 = (0...count).min(by: { abs(fromX + Double($0)*dx) < abs(fromX + Double($1)*dx) }) ?? 0
+                    let offset = integValues[i0]
+                    return integValues.map { $0 - offset }
+                }
+                return integValues
+            }
+            
+            return functionValues
+        }
+        
         for i in 0..<formulas.count where !formulas[i].isHidden {
             guard let parsed1 = parseFormula(formulas[i].text) else { continue }
-            guard let nsExpression1 = createExpressionSafely(prepareExpressionPart(parsed1.expression)) else { continue }
-            guard isValidExpression(prepareExpressionPart(parsed1.expression), variables: variables) else { continue }
+            let expr1 = prepareExpressionPart(parsed1.expression)
+            guard let nsExpression1 = createExpressionSafely(expr1) else { continue }
+            guard isValidExpression(expr1, variables: variables) else { continue }
             guard extractMissingVariables(from: formulas[i].text, variables: variables).isEmpty else { continue }
+            
+            let finalValues1 = computeFinalValues(formulas[i],
+                                                  nsExpression1,
+                                                  fromX: extendedMinX,
+                                                  toX: extendedMaxX,
+                                                  count: sampleCount,
+                                                  vars: variables)
+            let dx = (extendedMaxX - extendedMinX) / Double(sampleCount)
             for j in 0..<formulas.count where !formulas[j].isHidden && i != j {
                 guard let parsed2 = parseFormula(formulas[j].text) else { continue }
-                guard let nsExpression2 = createExpressionSafely(prepareExpressionPart(parsed2.expression)) else { continue }
-                guard isValidExpression(prepareExpressionPart(parsed2.expression), variables: variables) else { continue }
+                let expr2 = prepareExpressionPart(parsed2.expression)
+                guard let nsExpression2 = createExpressionSafely(expr2) else { continue }
+                guard isValidExpression(expr2, variables: variables) else { continue }
                 guard extractMissingVariables(from: formulas[j].text, variables: variables).isEmpty else { continue }
+                
+                let finalValues2 = computeFinalValues(formulas[j],
+                                                      nsExpression2,
+                                                      fromX: extendedMinX,
+                                                      toX: extendedMaxX,
+                                                      count: sampleCount,
+                                                      vars: variables)
+                
                 var previousY1: Double? = nil
                 var previousY2: Double? = nil
                 var previousX: Double? = nil
-                let dx = (extendedMaxX - extendedMinX) / Double(sampleCount)
-                var x = extendedMinX
-                for _ in 0...sampleCount {
-                    var valueDict: [String: Any] = ["x": NSNumber(value: x)]
-                    for variable in variables { valueDict[variable.name] = NSNumber(value: variable.value) }
-                    let y1: Double = {
-                        if let numberVal = try? nsExpression1.expressionValue(with: valueDict, context: nil) as? NSNumber {
-                            return numberVal.doubleValue
-                        }
-                        return Double.nan
-                    }()
-                    let y2: Double = {
-                        if let numberVal = try? nsExpression2.expressionValue(with: valueDict, context: nil) as? NSNumber {
-                            return numberVal.doubleValue
-                        }
-                        return Double.nan
-                    }()
+                var xVal = extendedMinX
+                
+                for k in 0...sampleCount {
+                    let y1 = finalValues1[k]
+                    let y2 = finalValues2[k]
                     if y1.isFinite && y2.isFinite {
-                        if let prevY1 = previousY1, let prevY2 = previousY2, let prevX = previousX {
+                        if let prevY1 = previousY1, let prevY2 = previousY2, let pX = previousX {
                             if (prevY1 > prevY2 && y1 <= y2) || (prevY1 < prevY2 && y1 >= y2) || (prevY1 == prevY2 && y1 == y2) {
                                 let diffY1 = y1 - prevY1
                                 let diffY2 = y2 - prevY2
                                 if diffY1 != diffY2 {
                                     let t = (prevY2 - prevY1) / (diffY1 - diffY2)
                                     if t.isFinite && t >= 0 && t <= 1 {
-                                        let interceptX = prevX + t * dx
+                                        let interceptX = pX + t * dx
                                         let interceptY = prevY1 + t * diffY1
                                         if interceptX >= mathMinX - extendedMargin && interceptX <= mathMaxX + extendedMargin {
                                             foundIntercepts.append(GraphIntercept(x: interceptX, y: interceptY, formulaColor: formulas[i].color))
@@ -947,49 +1017,51 @@ struct GraphView: View {
                         }
                         previousY1 = y1
                         previousY2 = y2
-                        previousX = x
+                        previousX = xVal
                     }
-                    x += dx
+                    xVal += dx
                 }
             }
-            var previousX: Double? = nil
-            var previousY: Double? = nil
-            let dx = (extendedMaxX - extendedMinX) / Double(sampleCount)
-            var x = extendedMinX
-            for _ in 0...sampleCount {
-                var valueDict: [String: Any] = ["x": NSNumber(value: x)]
-                for variable in variables { valueDict[variable.name] = NSNumber(value: variable.value) }
-                let yValue: Double = {
-                    if let numberVal = try? nsExpression1.expressionValue(with: valueDict, context: nil) as? NSNumber {
-                        return numberVal.doubleValue
-                    }
-                    return Double.nan
-                }()
+            
+            var prevX2: Double? = nil
+            var prevY2: Double? = nil
+            var xVal2 = extendedMinX
+            
+            for k in 0...sampleCount {
+                let yValue = finalValues1[k]
                 if yValue.isFinite {
-                    if let prevX = previousX, let prevY = previousY {
-                        if prevY == 0, foundIntercepts.last?.x != prevX {
-                            foundIntercepts.append(GraphIntercept(x: prevX, y: 0, formulaColor: formulas[i].color))
+                    if let pX2 = prevX2, let pY2 = prevY2 {
+                        if pY2 == 0, foundIntercepts.last?.x != pX2 {
+                            foundIntercepts.append(GraphIntercept(x: pX2, y: 0, formulaColor: formulas[i].color))
                         }
-                        if (prevY > 0 && yValue < 0) || (prevY < 0 && yValue > 0) || yValue == 0 {
-                            let t = prevY / (prevY - yValue)
-                            let interceptX = prevX + t * (x - prevX)
+                        if (pY2 > 0 && yValue < 0) || (pY2 < 0 && yValue > 0) || yValue == 0 {
+                            let t = pY2 / (pY2 - yValue)
+                            let interceptX = pX2 + t * (xVal2 - pX2)
                             foundIntercepts.append(GraphIntercept(x: interceptX, y: 0, formulaColor: formulas[i].color))
                         }
                     }
-                    previousX = x
-                    previousY = yValue
+                    prevX2 = xVal2
+                    prevY2 = yValue
                 }
-                x += dx
+                xVal2 += dx
             }
+            
             if extendedMinX <= 0 && 0 <= extendedMaxX {
                 var valueDict: [String: Any] = ["x": NSNumber(value: 0)]
-                for variable in variables { valueDict[variable.name] = NSNumber(value: variable.value) }
-                if let numberVal = try? nsExpression1.expressionValue(with: valueDict, context: nil) as? NSNumber,
-                   numberVal.doubleValue.isFinite {
-                    foundIntercepts.append(GraphIntercept(x: 0, y: numberVal.doubleValue, formulaColor: formulas[i].color))
+                for variable in variables {
+                    valueDict[variable.name] = NSNumber(value: variable.value)
+                }
+                
+                let zeroIndex = Int(round((0 - extendedMinX)/dx))
+                if zeroIndex >= 0 && zeroIndex < finalValues1.count {
+                    let yAtZero = finalValues1[zeroIndex]
+                    if yAtZero.isFinite {
+                        foundIntercepts.append(GraphIntercept(x: 0, y: yAtZero, formulaColor: formulas[i].color))
+                    }
                 }
             }
         }
+        
         var uniqueIntercepts: [GraphIntercept] = []
         for intercept in foundIntercepts {
             if !uniqueIntercepts.contains(where: { abs($0.x - intercept.x) < 1e-6 && abs($0.y - intercept.y) < 1e-6 }) {
@@ -1026,11 +1098,13 @@ struct GraphView: View {
                     let gridMinY = mathMinY
                     let gridMaxY = mathMaxY
                     context.fill(Path(CGRect(origin: .zero, size: size)), with: .color(.white))
+                    
                     func transform(_ x: Double, _ y: Double, in size: CGSize) -> CGPoint {
                         let px = CGFloat((x - gridMinX) / (gridMaxX - gridMinX)) * size.width
                         let py = size.height - CGFloat((y - gridMinY) / (gridMaxY - gridMinY)) * size.height
                         return CGPoint(x: px, y: py)
                     }
+                    
                     func niceTickStep(range: Double) -> Double {
                         let roughStep = range / 10.0
                         let exponent = floor(log10(roughStep))
@@ -1038,6 +1112,7 @@ struct GraphView: View {
                         let niceFraction: Double = fraction < 1.5 ? 1 : fraction < 3 ? 2 : fraction < 7 ? 5 : 10
                         return niceFraction * pow(10, exponent)
                     }
+                    
                     let tickStepX = niceTickStep(range: gridMaxX - gridMinX)
                     let tickStepY = niceTickStep(range: gridMaxY - gridMinY)
                     var gridPath = Path()
@@ -1073,11 +1148,13 @@ struct GraphView: View {
                         axisPath.addLine(to: end)
                     }
                     context.stroke(axisPath, with: .color(.black), lineWidth: 2)
+                    
                     func drawLabel(_ text: String, at point: CGPoint, anchor: UnitPoint) {
                         let backgroundRect = CGRect(x: point.x - 12, y: point.y - 9, width: 24, height: 18)
                         context.fill(Path(backgroundRect), with: .color(.white))
                         context.draw(Text(text).font(.caption).foregroundColor(.black), at: point, anchor: anchor)
                     }
+                    
                     if gridMinY <= 0 && gridMaxY >= 0 {
                         let axisY = transform(0, 0, in: size).y
                         let desiredSpacingX: CGFloat = 60
@@ -1094,6 +1171,7 @@ struct GraphView: View {
                             xTick2 += labelStepX
                         }
                     }
+                    
                     if gridMinX <= 0 && gridMaxX >= 0 {
                         let axisX = transform(0, gridMinY, in: size).x
                         let desiredSpacingY: CGFloat = 40
@@ -1112,109 +1190,189 @@ struct GraphView: View {
                             yTick2 += labelStepY
                         }
                     }
+                    
                     for formula in formulas where !formula.isHidden {
                         guard let parsed = parseFormula(formula.text) else { continue }
                         let preparedExpr = prepareExpressionPart(parsed.expression)
                         guard let nsExpression = createExpressionSafely(preparedExpr) else { continue }
                         guard isValidExpression(preparedExpr, variables: variables) else { continue }
                         guard extractMissingVariables(from: formula.text, variables: variables).isEmpty else { continue }
+                        
                         let samples = 1000
                         let dx = (gridMaxX - gridMinX) / Double(samples)
-                        var points: [CGPoint] = []
-                        var xValues: [Double] = []
+                        
+                        var functionValues = [Double](repeating: 0.0, count: samples+1)
+                        var xVals = [Double](repeating: 0.0, count: samples+1)
+                        
                         for i in 0...samples {
                             let xVal = gridMinX + Double(i) * dx
-                            var valueDict: [String: Any] = ["x": xVal]
-                            for variable in variables { valueDict[variable.name] = variable.value }
+                            xVals[i] = xVal
+                            var valueDict: [String: Any] = ["x": NSNumber(value: xVal)]
+                            for variable in variables { valueDict[variable.name] = NSNumber(value: variable.value) }
                             if let numberVal = try? nsExpression.expressionValue(with: valueDict, context: nil) as? NSNumber {
-                                let yVal = numberVal.doubleValue
-                                if yVal.isFinite {
-                                    points.append(transform(xVal, yVal, in: size))
-                                    xValues.append(xVal)
-                                }
+                                functionValues[i] = numberVal.doubleValue
+                            } else {
+                                functionValues[i] = Double.nan
                             }
                         }
-                        switch parsed.op {
+                        
+                        let isDerv = (formula.mode == "derv")
+                        let isInteg = (formula.mode == "integ")
+                        
+                        var finalValues = functionValues
+                        
+                        if isDerv {
+                            var dervValues = [Double](repeating: 0.0, count: samples+1)
+                            if samples >= 1 {
+                                dervValues[0] = (functionValues[1] - functionValues[0]) / dx
+                                dervValues[samples] = (functionValues[samples] - functionValues[samples - 1]) / dx
+                            }
+                            for i in 1..<samples {
+                                let rise = functionValues[i+1] - functionValues[i-1]
+                                dervValues[i] = rise / (2.0 * dx)
+                            }
+                            finalValues = dervValues
+                        }
+                        else if isInteg {
+                            var integValues = [Double](repeating: 0.0, count: samples+1)
+                            for i in 1...samples {
+                                if functionValues[i-1].isFinite {
+                                    integValues[i] = integValues[i-1] + functionValues[i-1] * dx
+                                } else {
+                                    integValues[i] = integValues[i-1]
+                                }
+                            }
+                            if gridMinX <= 0 && gridMaxX >= 0 {
+                                let i0 = xVals.enumerated().min(by: { abs($0.element) < abs($1.element) })?.offset ?? 0
+                                let offset = integValues[i0]
+                                integValues = integValues.map { $0 - offset }
+                            }
+                            finalValues = integValues
+                        }
+                        
+                        let opToUse = (isDerv || isInteg) ? "=" : parsed.op
+                        
+                        switch opToUse {
                         case "=":
+                            var points: [CGPoint] = []
+                            for i in 0..<finalValues.count {
+                                let yVal = finalValues[i]
+                                if yVal.isFinite {
+                                    points.append(transform(xVals[i], yVal, in: size))
+                                } else {
+                                    points.append(.zero)
+                                }
+                            }
                             var path = Path()
                             var i = 0
                             while i < points.count {
+                                if points[i] == .zero && !finalValues[i].isFinite {
+                                    i += 1
+                                    continue
+                                }
                                 path.move(to: points[i])
                                 i += 1
-                                while i < points.count && abs(xValues[i] - xValues[i-1]) <= dx * 1.5 {
-                                    path.addLine(to: points[i])
+                                while i < points.count {
+                                    if points[i] == .zero && !finalValues[i].isFinite {
+                                        break
+                                    }
+                                    if abs(xVals[i] - xVals[i-1]) <= dx * 1.5 {
+                                        path.addLine(to: points[i])
+                                    } else {
+                                        break
+                                    }
                                     i += 1
                                 }
                             }
                             context.stroke(path, with: .color(formula.color), lineWidth: 2)
+                            
                         case "<", "<=":
                             var regionPath = Path()
                             regionPath.move(to: CGPoint(x: 0, y: size.height))
                             var i = 0
-                            while i < points.count {
-                                regionPath.addLine(to: points[i])
-                                i += 1
-                                while i < points.count && abs(xValues[i] - xValues[i-1]) <= dx * 1.5 {
-                                    regionPath.addLine(to: points[i])
-                                    i += 1
+                            var pts: [CGPoint] = []
+                            for i in 0..<functionValues.count {
+                                let yVal = functionValues[i]
+                                if yVal.isFinite {
+                                    pts.append(transform(xVals[i], yVal, in: size))
                                 }
-                                if i == points.count {
+                            }
+                            var i2 = 0
+                            while i2 < pts.count {
+                                regionPath.addLine(to: pts[i2])
+                                i2 += 1
+                                while i2 < pts.count && abs(xVals[i2] - xVals[i2-1]) <= dx * 1.5 {
+                                    regionPath.addLine(to: pts[i2])
+                                    i2 += 1
+                                }
+                                if i2 == pts.count {
                                     regionPath.addLine(to: CGPoint(x: size.width, y: size.height))
                                 } else {
-                                    regionPath.addLine(to: transform(xValues[i-1], gridMinY, in: size))
-                                    regionPath.addLine(to: transform(xValues[i], gridMinY, in: size))
-                                    regionPath.addLine(to: points[i])
+                                    regionPath.addLine(to: transform(xVals[i2-1], gridMinY, in: size))
+                                    regionPath.addLine(to: transform(xVals[i2], gridMinY, in: size))
+                                    regionPath.addLine(to: pts[i2])
                                 }
                             }
                             regionPath.closeSubpath()
                             context.fill(regionPath, with: .color(formula.color.opacity(0.3)))
                             var boundary = Path()
-                            i = 0
-                            while i < points.count {
-                                boundary.move(to: points[i])
-                                i += 1
-                                while i < points.count && abs(xValues[i] - xValues[i-1]) <= dx * 1.5 {
-                                    boundary.addLine(to: points[i])
-                                    i += 1
+                            i2 = 0
+                            while i2 < pts.count {
+                                boundary.move(to: pts[i2])
+                                i2 += 1
+                                while i2 < pts.count && abs(xVals[i2] - xVals[i2-1]) <= dx * 1.5 {
+                                    boundary.addLine(to: pts[i2])
+                                    i2 += 1
                                 }
                             }
                             context.stroke(boundary, with: .color(formula.color), lineWidth: 2)
+                            
                         case ">", ">=":
                             var regionPath = Path()
                             regionPath.move(to: CGPoint(x: 0, y: 0))
                             var i = 0
-                            while i < points.count {
-                                regionPath.addLine(to: points[i])
-                                i += 1
-                                while i < points.count && abs(xValues[i] - xValues[i-1]) <= dx * 1.5 {
-                                    regionPath.addLine(to: points[i])
-                                    i += 1
+                            var pts: [CGPoint] = []
+                            for i in 0..<functionValues.count {
+                                let yVal = functionValues[i]
+                                if yVal.isFinite {
+                                    pts.append(transform(xVals[i], yVal, in: size))
                                 }
-                                if i == points.count {
+                            }
+                            var i3 = 0
+                            while i3 < pts.count {
+                                regionPath.addLine(to: pts[i3])
+                                i3 += 1
+                                while i3 < pts.count && abs(xVals[i3] - xVals[i3-1]) <= dx * 1.5 {
+                                    regionPath.addLine(to: pts[i3])
+                                    i3 += 1
+                                }
+                                if i3 == pts.count {
                                     regionPath.addLine(to: CGPoint(x: size.width, y: 0))
                                 } else {
-                                    regionPath.addLine(to: transform(xValues[i-1], gridMaxY, in: size))
-                                    regionPath.addLine(to: transform(xValues[i], gridMaxY, in: size))
-                                    regionPath.addLine(to: points[i])
+                                    regionPath.addLine(to: transform(xVals[i3-1], gridMaxY, in: size))
+                                    regionPath.addLine(to: transform(xVals[i3], gridMaxY, in: size))
+                                    regionPath.addLine(to: pts[i3])
                                 }
                             }
                             regionPath.closeSubpath()
                             context.fill(regionPath, with: .color(formula.color.opacity(0.3)))
                             var boundary = Path()
-                            i = 0
-                            while i < points.count {
-                                boundary.move(to: points[i])
-                                i += 1
-                                while i < points.count && abs(xValues[i] - xValues[i-1]) <= dx * 1.5 {
-                                    boundary.addLine(to: points[i])
-                                    i += 1
+                            i3 = 0
+                            while i3 < pts.count {
+                                boundary.move(to: pts[i3])
+                                i3 += 1
+                                while i3 < pts.count && abs(xVals[i3] - xVals[i3-1]) <= dx * 1.5 {
+                                    boundary.addLine(to: pts[i3])
+                                    i3 += 1
                                 }
                             }
                             context.stroke(boundary, with: .color(formula.color), lineWidth: 2)
+                            
                         default:
                             break
                         }
                     }
+                    
                     for intercept in intercepts {
                         let interceptPoint = transform(intercept.x, intercept.y, in: size)
                         let markerPath = Path(ellipseIn: CGRect(x: interceptPoint.x - 4, y: interceptPoint.y - 4, width: 8, height: 8))
@@ -1303,6 +1461,16 @@ struct GraphView: View {
     }
 }
 
+private func prefixForMode(_ mode: String) -> String {
+    switch mode {
+    case "derv":
+        return "y' = "
+    case "integ":
+        return "∫y = "
+    default:
+        return "y = "
+    }
+}
 
 struct DinoLabsDinoDigitsPlot: View {
     let geometry: GeometryProxy
@@ -1329,7 +1497,14 @@ struct DinoLabsDinoDigitsPlot: View {
                 VStack(alignment: .leading, spacing: 0) {
                     HStack {
                         ToolButtonMain {
-                            formulas.append(GraphFormula(text: "y = ", color: randomColor()))
+                            formulas.append(
+                                GraphFormula(
+                                    text: prefixForMode(isFunctionMode),
+                                    color: randomColor(),
+                                    isHidden: false,
+                                    mode: isFunctionMode
+                                )
+                            )
                         }
                         .frame(width: 18, height: 18)
                         .overlay(
@@ -1356,7 +1531,7 @@ struct DinoLabsDinoDigitsPlot: View {
                                     isFunctionMode = "derv"
                                 })
                                 .hoverEffect(opacity: 0.6, scale: 1.02, cursor: .pointingHand)
-                            Text("f∫")
+                            Text("∫f")
                                 .font(.system(size: 12, weight: .semibold))
                                 .foregroundColor(Color(hex: 0xf5f5f5).opacity(isFunctionMode == "integ" ? 1.0 : 0.6))
                                 .underline(isFunctionMode == "integ" ? true : false)
@@ -1413,33 +1588,33 @@ struct DinoLabsDinoDigitsPlot: View {
                                                 HStack(spacing: 0) {
                                                     ScrollView(.horizontal, showsIndicators: false) {
                                                         ToolTextField(placeholder: "Enter new formula...", text: $formula.text, isSecure: false, textSize: 11)
-                                                        .onChange(of: formula.text) { newValue in
-                                                            let prefix = "y = "
-                                                            let requiredPrefixCount = prefix.count
-                                                            
-                                                            if !newValue.hasPrefix(prefix) {
-                                                                DispatchQueue.main.async {
-                                                                    formula.text = prefix
+                                                            .onChange(of: formula.text) { newValue in
+                                                                let prefix = prefixForMode(formula.mode)
+                                                                let requiredPrefixCount = prefix.count
+                                                                
+                                                                if !newValue.hasPrefix(prefix) {
+                                                                    DispatchQueue.main.async {
+                                                                        formula.text = prefix
+                                                                    }
+                                                                    return
                                                                 }
-                                                                return
-                                                            }
-                                                            
-                                                            if newValue.count < requiredPrefixCount {
-                                                                DispatchQueue.main.async {
-                                                                    formula.text = prefix
+                                                                
+                                                                if newValue.count < requiredPrefixCount {
+                                                                    DispatchQueue.main.async {
+                                                                        formula.text = prefix
+                                                                    }
+                                                                    return
                                                                 }
-                                                                return
-                                                            }
-                                                            
-                                                            if newValue.prefix(requiredPrefixCount * 2) == prefix + prefix {
-                                                                DispatchQueue.main.async {
-                                                                    formula.text = prefix + String(newValue.dropFirst(requiredPrefixCount))
+                                                                
+                                                                if newValue.prefix(requiredPrefixCount * 2) == prefix + prefix {
+                                                                    DispatchQueue.main.async {
+                                                                        formula.text = prefix + String(newValue.dropFirst(requiredPrefixCount))
+                                                                    }
+                                                                    return
                                                                 }
-                                                                return
+                                                                
+                                                                intercepts = []
                                                             }
-                                                            
-                                                            intercepts = []
-                                                        }
                                                             .lineLimit(1)
                                                             .truncationMode(.tail)
                                                             .textFieldStyle(PlainTextFieldStyle())
@@ -1467,7 +1642,7 @@ struct DinoLabsDinoDigitsPlot: View {
                                                     ScrollView(.horizontal, showsIndicators: false) {
                                                         HStack {
                                                             Text("add slider:")
-                                                                .font(.system(size: 9, weight: .semibold, design: .default).italic())
+                                                                .font(.system(size: 9, weight: .semibold).italic())
                                                                 .foregroundColor(Color(hex: 0x222222))
                                                             HStack(alignment: .center) {
                                                                 ForEach(missingVars, id: \.self) { varName in
@@ -1480,9 +1655,8 @@ struct DinoLabsDinoDigitsPlot: View {
                                                                     .frame(width: 20, height: 20)
                                                                     .overlay(
                                                                         Text("\(varName)")
-                                                                            .font(.system(size: 9, weight: .semibold, design: .default).italic())
-                                                                            .foregroundColor(Color(hex: 0xf5f5f5).opacity(1.0))
-                                                                            .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
+                                                                            .font(.system(size: 9, weight: .semibold).italic())
+                                                                            .foregroundColor(Color(hex: 0xf5f5f5))
                                                                     )
                                                                 }
                                                                 ToolButtonMain {
@@ -1496,9 +1670,8 @@ struct DinoLabsDinoDigitsPlot: View {
                                                                 .frame(width: 20, height: 20)
                                                                 .overlay(
                                                                     Text("all")
-                                                                        .font(.system(size: 9, weight: .semibold, design: .default).italic())
-                                                                        .foregroundColor(Color(hex: 0xf5f5f5).opacity(1.0))
-                                                                        .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
+                                                                        .font(.system(size: 9, weight: .semibold).italic())
+                                                                        .foregroundColor(Color(hex: 0xf5f5f5))
                                                                 )
                                                             }
                                                             .frame(height: 32)
@@ -1526,7 +1699,7 @@ struct DinoLabsDinoDigitsPlot: View {
                                                 if let index = formulas.firstIndex(where: { $0.id == formula.id }) {
                                                     formulas.remove(at: index)
                                                 }
-                                                intercepts=[]
+                                                intercepts = []
                                             }
                                             .frame(width: 16, height: 16)
                                             .padding(4),
@@ -1537,21 +1710,22 @@ struct DinoLabsDinoDigitsPlot: View {
                                        height: !missingVars.isEmpty ? 80 : 50)
                                 .containerHelper(
                                     backgroundColor: Color(hex: 0xf5f5f5),
-                                    borderColor: Color(hex: 0xc1c1c1), borderWidth:3,
+                                    borderColor: Color(hex: 0xc1c1c1), borderWidth: 3,
                                     topLeft: 2, topRight: 2, bottomLeft: 2, bottomRight: 2,
-                                    shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0
+                                    shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0
                                 )
                             }
+                            
                             ForEach($variables) { $variable in
                                 HStack {
                                     VStack {
                                         HStack {
                                             Text("\(variable.name):")
-                                                .font(.system(size: 12, weight: .semibold, design: .default).italic())
+                                                .font(.system(size: 12, weight: .semibold).italic())
                                                 .foregroundColor(Color(hex: 0x222222).opacity(0.8))
                                             Text("\(variable.value, specifier: "%.1f")")
                                                 .font(.system(size: 12, weight: .heavy))
-                                                .foregroundColor(Color(hex: 0x222222).opacity(1.0))
+                                                .foregroundColor(Color(hex: 0x222222))
                                             Spacer()
                                         }
                                         .padding(.horizontal, 20)
@@ -1578,9 +1752,9 @@ struct DinoLabsDinoDigitsPlot: View {
                                 .frame(width: geometry.size.width * (1 - leftPanelWidthRatio) * 0.3, height: 70)
                                 .containerHelper(
                                     backgroundColor: Color(hex: 0xe6e6e6),
-                                    borderColor: Color(hex: 0xc1c1c1), borderWidth:3,
+                                    borderColor: Color(hex: 0xc1c1c1), borderWidth: 3,
                                     topLeft: 2, topRight: 2, bottomLeft: 2, bottomRight: 2,
-                                    shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0
+                                    shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0
                                 )
                                 .overlay(
                                     Image(systemName: "xmark")
@@ -1591,7 +1765,7 @@ struct DinoLabsDinoDigitsPlot: View {
                                             if let index = variables.firstIndex(where: { $0.id == variable.id }) {
                                                 variables.remove(at: index)
                                             }
-                                            intercepts=[]
+                                            intercepts = []
                                         }
                                         .frame(width: 16, height: 16)
                                         .padding(4),
@@ -1641,8 +1815,6 @@ struct DinoLabsDinoDigitsPlot: View {
                             .foregroundColor(Color.black.opacity(1.0)),
                         alignment: .trailing
                     )
-                    
-                    
             }
             
             if isKeyboardView {
@@ -1733,28 +1905,15 @@ struct DinoLabsDinoDigitsPlot: View {
                             }
                         }
                     }
-                    
                 }
                 .padding(.vertical, 12)
                 .padding(.horizontal, 30)
                 .frame(width: geometry.size.width * (1 - leftPanelWidthRatio))
-                .containerHelper(
-                    backgroundColor: Color(hex: 0xc6c6c6),
-                    borderColor: Color.clear, borderWidth: 0,
-                    topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0,
-                    shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0
-                )
-                .overlay(
-                    Rectangle()
-                        .frame(width: 4.0)
-                        .foregroundColor(Color.black.opacity(1.0)),
-                    alignment: .trailing
-                )
+                .containerHelper(backgroundColor: Color(hex: 0xc6c6c6), borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: Color.clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
+                .overlay(Rectangle().frame(width: 4.0).foregroundColor(Color.black.opacity(1.0)), alignment: .trailing)
             }
         }
-        .frame(width: geometry.size.width * (1 - leftPanelWidthRatio),
-               height: (geometry.size.height - 50) * 0.9)
-        
+        .frame(width: geometry.size.width * (1 - leftPanelWidthRatio), height: (geometry.size.height - 50) * 0.9)
     }
 }
 
@@ -1763,72 +1922,32 @@ extension View {
         self
             .frame(width: 18, height: 18)
             .padding(6)
-            .containerHelper(
-                backgroundColor: Color(hex: 0x414141),
-                borderColor: Color(hex: 0x222222), borderWidth: 1,
-                topLeft: 6, topRight: 6, bottomLeft: 6, bottomRight: 6,
-                shadowColor: Color.black, shadowRadius: 1, shadowX: 0, shadowY: 0
-            )
-            .overlay(
-                Text(text)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(Color(hex: 0xf5f5f5))
-                    .allowsHitTesting(false)
-            )
+            .containerHelper(backgroundColor: Color(hex: 0x414141), borderColor: Color(hex: 0x222222), borderWidth: 1, topLeft: 6, topRight: 6, bottomLeft: 6, bottomRight: 6, shadowColor: Color.black, shadowRadius: 1, shadowX: 0, shadowY: 0)
+            .overlay(Text(text).font(.system(size: 16, weight: .semibold)).foregroundColor(Color(hex: 0xf5f5f5)).allowsHitTesting(false))
             .hoverEffect(opacity: 0.6, scale: 1.05, cursor: .pointingHand)
     }
     func opKeyStyle(_ text: String) -> some View {
         self
             .frame(width: 18, height: 18)
             .padding(6)
-            .containerHelper(
-                backgroundColor: Color(hex: 0x919191),
-                borderColor: Color(hex: 0xc9c9c9), borderWidth: 1,
-                topLeft: 6, topRight: 6, bottomLeft: 6, bottomRight: 6,
-                shadowColor: Color.black, shadowRadius: 1, shadowX: 0, shadowY: 0
-            )
-            .overlay(
-                Text(text)
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundColor(.white)
-                    .allowsHitTesting(false)
-            )
+            .containerHelper(backgroundColor: Color(hex: 0x919191), borderColor: Color(hex: 0xc9c9c9), borderWidth: 1, topLeft: 6, topRight: 6, bottomLeft: 6, bottomRight: 6, shadowColor: Color.black, shadowRadius: 1, shadowX: 0, shadowY: 0)
+            .overlay(Text(text).font(.system(size: 16, weight: .semibold)).foregroundColor(.white).allowsHitTesting(false))
             .hoverEffect(opacity: 0.6, scale: 1.05, cursor: .pointingHand)
     }
     func fnKeyStyle(_ label: String) -> some View {
         self
             .frame(width: 28, height: 18)
             .padding(6)
-            .containerHelper(
-                backgroundColor: Color(hex: 0x414141),
-                borderColor: Color(hex: 0x222222), borderWidth: 1,
-                topLeft: 6, topRight: 6, bottomLeft: 6, bottomRight: 6,
-                shadowColor: Color.black, shadowRadius: 1, shadowX: 0, shadowY: 0
-            )
-            .overlay(
-                Text(label)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(Color(hex: 0xf5f5f5))
-                    .allowsHitTesting(false)
-            )
+            .containerHelper(backgroundColor: Color(hex: 0x414141), borderColor: Color(hex: 0x222222), borderWidth: 1, topLeft: 6, topRight: 6, bottomLeft: 6, bottomRight: 6, shadowColor: Color.black, shadowRadius: 1, shadowX: 0, shadowY: 0)
+            .overlay(Text(label).font(.system(size: 12, weight: .semibold)).foregroundColor(Color(hex: 0xf5f5f5)).allowsHitTesting(false))
             .hoverEffect(opacity: 0.6, scale: 1.05, cursor: .pointingHand)
     }
     func wideKeyStyle(_ label: String) -> some View {
         self
             .frame(width: 45, height: 18)
             .padding(6)
-            .containerHelper(
-                backgroundColor: Color(hex: 0x414141),
-                borderColor: Color(hex: 0x222222), borderWidth: 1,
-                topLeft: 6, topRight: 6, bottomLeft: 6, bottomRight: 6,
-                shadowColor: Color.black, shadowRadius: 1, shadowX: 0, shadowY: 0
-            )
-            .overlay(
-                Text(label)
-                    .font(.system(size: 12, weight: .semibold))
-                    .foregroundColor(Color(hex: 0xf5f5f5))
-                    .allowsHitTesting(false)
-            )
+            .containerHelper(backgroundColor: Color(hex: 0x414141), borderColor: Color(hex: 0x222222), borderWidth: 1, topLeft: 6, topRight: 6, bottomLeft: 6, bottomRight: 6, shadowColor: Color.black, shadowRadius: 1, shadowX: 0, shadowY: 0)
+            .overlay(Text(label).font(.system(size: 12, weight: .semibold)).foregroundColor(Color(hex: 0xf5f5f5)).allowsHitTesting(false))
             .hoverEffect(opacity: 0.6, scale: 1.05, cursor: .pointingHand)
     }
 }
