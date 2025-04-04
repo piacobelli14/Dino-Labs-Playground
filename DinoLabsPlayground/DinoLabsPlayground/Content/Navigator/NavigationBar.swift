@@ -1,7 +1,7 @@
 //
-//  NavigationBar.swift
+//  NetworkMonitor.swift
 //
-//  Created by Peter Iacobelli on 2/14/25.
+//  Created by Peter Iacobelli on 2/12/25.
 //
 
 import SwiftUI
@@ -29,41 +29,28 @@ struct NavigationBar: View {
                                         currentView = .RegisterAuth
                                         isHamburger = false
                                     }
-                                    .applyPopoutButtonStyle(
-                                        icon: "person.badge.plus",
-                                        text: "Sign Up",
-                                        width: geometry.size.width
-                                    )
-                                    
+                                    .applyPopoutButtonStyle(icon: "person.badge.plus", text: "Sign Up", width: geometry.size.width)
                                     NavigatorButtonMain {
                                         currentView = .LoginAuth
                                         isHamburger = false
                                     }
-                                    .applyPopoutButtonStyle(
-                                        icon: "arrow.right.square",
-                                        text: "Login",
-                                        width: geometry.size.width
-                                    )
+                                    .applyPopoutButtonStyle(icon: "arrow.right.square", text: "Login", width: geometry.size.width)
                                 } else {
                                     NavigatorButtonMain {
                                         currentView = .DinoLabsPlayground
                                         isHamburger = false
                                     }
-                                    .applyPopoutButtonStyle(
-                                        icon: "chevron.left.slash.chevron.right",
-                                        text: "Dino Labs Playground",
-                                        width: geometry.size.width
-                                    )
-                                    
+                                    .applyPopoutButtonStyle(icon: "chevron.left.slash.chevron.right", text: "Dino Labs Playground", width: geometry.size.width)
+                                    NavigatorButtonMain {
+                                        currentView = .Settings
+                                        isHamburger = false
+                                    }
+                                    .applyPopoutButtonStyle(icon: "gearshape", text: "Settings", width: geometry.size.width)
                                     NavigatorButtonMain {
                                         handleLogout()
                                         isHamburger = false
                                     }
-                                    .applyPopoutButtonStyle(
-                                        icon: "arrow.left.square",
-                                        text: "Sign Out",
-                                        width: geometry.size.width
-                                    )
+                                    .applyPopoutButtonStyle(icon: "arrow.left.square", text: "Sign Out", width: geometry.size.width)
                                 }
                                 Spacer()
                             }
@@ -76,12 +63,11 @@ struct NavigationBar: View {
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 25, height: 25)
-                VStack(alignment: .leading) {
-                    Text("Dino Labs Web IDE")
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundColor(Color(hex: 0xf5f5f5))
-                        .shadow(color: Color.white.opacity(0.5), radius: 0.5, x: 0, y: 0)
-                }
+                Text("Dino Labs Web IDE")
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundColor(Color(hex: 0xf5f5f5))
+                    .shadow(color: Color.white.opacity(0.5), radius: 0.5, x: 0, y: 0)
+                  
                 Spacer()
                 HStack {
                     Circle()
@@ -92,10 +78,27 @@ struct NavigationBar: View {
                         .font(.subheadline)
                 }
                 .padding(.trailing, 20)
+                .hoverEffect(opacity: 0.6, scale: 1.02, cursor: .pointingHand)
+                .onTapGesture {
+                    currentView = .Settings
+                }
+                
                 NavigatorButtonMain {
                     isHamburger.toggle()
                 }
-                .containerHelper(backgroundColor: Color(hex: 0x222222), borderColor: Color.clear, borderWidth: 0, topLeft: 5, topRight: 5, bottomLeft: 5, bottomRight: 5, shadowColor: Color.white.opacity(0.5), shadowRadius: 1, shadowX: 0, shadowY: 0)
+                .containerHelper(
+                    backgroundColor: Color(hex: 0x222222),
+                    borderColor: Color.clear,
+                    borderWidth: 0,
+                    topLeft: 5,
+                    topRight: 5,
+                    bottomLeft: 5,
+                    bottomRight: 5,
+                    shadowColor: Color.white.opacity(0.5),
+                    shadowRadius: 1,
+                    shadowX: 0,
+                    shadowY: 0
+                )
                 .frame(width: 25, height: 25)
                 .overlay(
                     Image(systemName: isHamburger ? "xmark" : "line.horizontal.3")
@@ -147,18 +150,15 @@ struct NavigationBar: View {
     func handleLogout() {
         auth.token = nil
         auth.isAdmin = false
-        
         let query = [
             kSecClass: kSecClassGenericPassword,
             kSecAttrAccount: "authToken",
             kSecAttrService: Bundle.main.bundleIdentifier ?? "com.dinolabs.playground"
         ] as CFDictionary
-        
         let status = SecItemDelete(query)
         if status != errSecSuccess && status != errSecItemNotFound {
             return
         }
-        
         withAnimation {
             currentView = .LoginAuth
             isHamburger = false
@@ -169,8 +169,15 @@ struct NavigationBar: View {
 extension View {
     func applyPopoutButtonStyle(icon: String, text: String, width: CGFloat) -> some View {
         self
-            .background(Color(hex: 0x242424))
-            .containerHelper(backgroundColor: Color(hex: 0x242424), borderColor: Color.clear, borderWidth: 0, topLeft: 6, topRight: 6, bottomLeft: 6, bottomRight: 6)
+            .containerHelper(
+                backgroundColor: Color(hex: 0x242424),
+                borderColor: Color.clear,
+                borderWidth: 0,
+                topLeft: 6,
+                topRight: 6,
+                bottomLeft: 6,
+                bottomRight: 6
+            )
             .frame(width: width, height: 50)
             .overlay(
                 HStack {
@@ -200,7 +207,7 @@ extension View {
                     .foregroundColor(Color(hex: 0xc1c1c1).opacity(0.4)),
                 alignment: .bottom
             )
-            .hoverEffect(opacity: 0.5)
+            .hoverEffect(opacity: 0.5, cursor: .pointingHand)
             .clickEffect(opacity: 1.0)
     }
 }
@@ -209,6 +216,7 @@ class AuthViewModel: ObservableObject {
     @Published var token: String? = nil
     @Published var isAdmin: Bool = false
     @Published var loading: Bool = false
+    
     init() {
         token = loadTokenFromKeychain()
     }

@@ -50,6 +50,7 @@
 		CBD30EF82D99E93B00FC1A4F /* ToolTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD30EF72D99E93600FC1A4F /* ToolTextField.swift */; };
 		CBD30EFA2D99E94400FC1A4F /* ToolButtonMain.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD30EF92D99E93F00FC1A4F /* ToolButtonMain.swift */; };
 		CBD30EFC2D9CC21100FC1A4F /* DinoLabsDinoDigitsCalc.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD30EFB2D9CC20900FC1A4F /* DinoLabsDinoDigitsCalc.swift */; };
+		CBD30F002DA0813200FC1A4F /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD30EFF2DA0813000FC1A4F /* Settings.swift */; };
 		CBDF23522D6807B40049F865 /* AccountTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBDF23512D6807B40049F865 /* AccountTextField.swift */; };
 		CBDF23542D6807C30049F865 /* AccountButtonMain.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBDF23532D6807C30049F865 /* AccountButtonMain.swift */; };
 		CBDF23562D681AAF0049F865 /* ToggleHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBDF23552D681AAF0049F865 /* ToggleHelper.swift */; };
@@ -133,6 +134,8 @@
 		CBD30EF72D99E93600FC1A4F /* ToolTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolTextField.swift; sourceTree = "<group>"; };
 		CBD30EF92D99E93F00FC1A4F /* ToolButtonMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolButtonMain.swift; sourceTree = "<group>"; };
 		CBD30EFB2D9CC20900FC1A4F /* DinoLabsDinoDigitsCalc.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinoLabsDinoDigitsCalc.swift; sourceTree = "<group>"; };
+		CBD30EFD2DA05E0B00FC1A4F /* Dino-Labs-Playground-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Dino-Labs-Playground-Info.plist"; sourceTree = "<group>"; };
+		CBD30EFF2DA0813000FC1A4F /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
 		CBDF23512D6807B40049F865 /* AccountTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountTextField.swift; sourceTree = "<group>"; };
 		CBDF23532D6807C30049F865 /* AccountButtonMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountButtonMain.swift; sourceTree = "<group>"; };
 		CBDF23552D681AAF0049F865 /* ToggleHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToggleHelper.swift; sourceTree = "<group>"; wrapsLines = 0; };
@@ -364,6 +367,14 @@
 			path = ToolHelpers;
 			sourceTree = "<group>";
 		};
+		CBD30EFE2DA0810B00FC1A4F /* Settings */ = {
+			isa = PBXGroup;
+			children = (
+				CBD30EFF2DA0813000FC1A4F /* Settings.swift */,
+			);
+			path = Settings;
+			sourceTree = "<group>";
+		};
 		CBDF235F2D6AA0950049F865 /* CodeHelpers */ = {
 			isa = PBXGroup;
 			children = (
@@ -376,6 +387,7 @@
 		CBEC15992D5D8A19009A0FAF = {
 			isa = PBXGroup;
 			children = (
+				CBD30EFD2DA05E0B00FC1A4F /* Dino-Labs-Playground-Info.plist */,
 				CBEC15A42D5D8A19009A0FAF /* DinoLabsPlayground */,
 				CBEC15A32D5D8A19009A0FAF /* Products */,
 			);
@@ -481,6 +493,7 @@
 				CBD30EE92D98AF0800FC1A4F /* Toolkit */,
 				CBEC15B92D5D8F8F009A0FAF /* Account */,
 				CBEC15B72D5D8EC9009A0FAF /* Authentication */,
+				CBD30EFE2DA0810B00FC1A4F /* Settings */,
 				CBF91B9A2D5EE67A00B0616D /* Main */,
 				CBF91B9B2D5EE68900B0616D /* Alert */,
 				CBEC15C02D5D8FE0009A0FAF /* DinoLabsColorPicker.swift */,
@@ -710,6 +723,7 @@
 				CB9A90B52D77DCBF00AA034A /* ImageTextField.swift in Sources */,
 				CBBB64A92D60374C008A9AEC /* BackgroundVideoHelper.swift in Sources */,
 				CBF91B9E2D5EE71F00B0616D /* AlertTextField.swift in Sources */,
+				CBD30F002DA0813200FC1A4F /* Settings.swift in Sources */,
 				CB9A90C32D7F935D00AA034A /* DinoLabsAudio.swift in Sources */,
 				CBEC15C32D5D9015009A0FAF /* DinoLabsAlert.swift in Sources */,
 				CB18D2D42D6D48E700CCFA36 /* SessionManager.swift in Sources */,
@@ -872,9 +886,10 @@
 				DEVELOPMENT_TEAM = PN37Y74W92;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Dino-Labs-Playground-Info.plist";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Needed to display the current Wi-Fi SSID";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (
@@ -908,9 +923,10 @@
 				DEVELOPMENT_TEAM = PN37Y74W92;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "Dino-Labs-Playground-Info.plist";
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Needed to display the current Wi-Fi SSID";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
-				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "UIInterfaceOrientationPortrait UIInterfaceOrientationPortraitUpsideDown UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone = "UIInterfaceOrientationPortrait UIInterfaceOrientationLandscapeLeft UIInterfaceOrientationLandscapeRight";
 				LD_RUNPATH_SEARCH_PATHS = (

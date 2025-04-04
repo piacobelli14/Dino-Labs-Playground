@@ -11,6 +11,7 @@ enum AppView {
     case LoginAuth
     case ResetAuth
     case RegisterAuth
+    case Settings
     case DinoLabsPlayground
 }
 

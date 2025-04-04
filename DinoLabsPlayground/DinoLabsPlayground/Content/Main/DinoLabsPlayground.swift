@@ -2240,8 +2240,10 @@ struct DinoLabsPlayground: View {
                     }
                     Spacer()
                 }
+                
                 NavigationBar(geometry: geometry, currentView: $currentView)
                     .frame(width: geometry.size.width)
+                
                 DinoLabsAlert(
                     geometry: geometry,
                     visible: showAlert,
