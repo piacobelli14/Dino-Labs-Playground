@@ -113,6 +113,7 @@ struct DinoLabsAlert: View {
                             .shadow(color: .gray.opacity(0.5), radius: 0.5, x: 0, y: 0)
                             .multilineTextAlignment(.center)
                             .frame(width: geometry.size.width * 0.32)
+                            .fixedSize(horizontal: false, vertical: true)
                             .padding(.horizontal, 16)
                     }
                     .padding(.bottom, 20)

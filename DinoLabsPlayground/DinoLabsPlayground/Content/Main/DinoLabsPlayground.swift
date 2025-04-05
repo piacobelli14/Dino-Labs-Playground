@@ -465,89 +465,10 @@ struct DinoLabsPlayground: View {
 
     private func openTab(url: URL, lineNumber: Int?) {
         let ext = url.pathExtension.lowercased()
+        let allowedExtensions: Set<String> = ["stl", "obj", "iges", "step", "pdf", "csv", "txt", "md", "png", "jpg", "jpeg", "svg", "mp4", "mkv", "avi", "mov", "webm", "mp3", "wav", "flac"]
         
-        if ["3mf", "stl", "obj", "iges", "step"].contains(ext) {
-            if let existingTab = openTabs.first(where: { $0.fileURL == url }) {
-                activeTabId = existingTab.id
-                noFileSelected = false
-            } else {
-                let newTab = FileTab(fileName: url.lastPathComponent, fileURL: url)
-                openTabs.append(newTab)
-                activeTabId = newTab.id
-                noFileSelected = false
-            }
-            return
-        }
-        else if ext == "pdf" {
-            if let existingTab = openTabs.first(where: { $0.fileURL == url }) {
-                activeTabId = existingTab.id
-                noFileSelected = false
-            } else {
-                let newTab = FileTab(fileName: url.lastPathComponent, fileURL: url)
-                openTabs.append(newTab)
-                activeTabId = newTab.id
-                noFileSelected = false
-            }
-            return
-        }
-        else if ext == "csv" {
-            if let existingTab = openTabs.first(where: { $0.fileURL == url }) {
-                activeTabId = existingTab.id
-                noFileSelected = false
-            } else {
-                let newTab = FileTab(fileName: url.lastPathComponent, fileURL: url)
-                openTabs.append(newTab)
-                activeTabId = newTab.id
-                noFileSelected = false
-            }
-            return
-        }
-        else if ["txt", "md"].contains(ext) {
-            if let existingTab = openTabs.first(where: { $0.fileURL == url }) {
-                activeTabId = existingTab.id
-                noFileSelected = false
-            } else {
-                let newTab = FileTab(fileName: url.lastPathComponent, fileURL: url)
-                openTabs.append(newTab)
-                activeTabId = newTab.id
-                noFileSelected = false
-            }
-            return
-        }
-        else if ["png", "jpg", "jpeg", "svg"].contains(ext) {
-            if let existingTab = openTabs.first(where: { $0.fileURL == url }) {
-                activeTabId = existingTab.id
-                noFileSelected = false
-            } else {
-                let newTab = FileTab(fileName: url.lastPathComponent, fileURL: url)
-                openTabs.append(newTab)
-                activeTabId = newTab.id
-                noFileSelected = false
-            }
-            return
-        }
-        else if ["mp4", "mkv", "avi", "mov", "webm"].contains(ext) {
-            if let existingTab = openTabs.first(where: { $0.fileURL == url }) {
-                activeTabId = existingTab.id
-                noFileSelected = false
-            } else {
-                let newTab = FileTab(fileName: url.lastPathComponent, fileURL: url)
-                openTabs.append(newTab)
-                activeTabId = newTab.id
-                noFileSelected = false
-            }
-            return
-        }
-        else if ["mp3", "wav", "flac"].contains(ext) {
-            if let existingTab = openTabs.first(where: { $0.fileURL == url }) {
-                activeTabId = existingTab.id
-                noFileSelected = false
-            } else {
-                let newTab = FileTab(fileName: url.lastPathComponent, fileURL: url)
-                openTabs.append(newTab)
-                activeTabId = newTab.id
-                noFileSelected = false
-            }
+        if allowedExtensions.contains(ext) {
+            openOrActivateTab(url: url)
             return
         }
         
@@ -564,11 +485,7 @@ struct DinoLabsPlayground: View {
             noFileSelected = false
             if let lineNumber = lineNumber {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
-                    NotificationCenter.default.post(
-                        name: Notification.Name("NavigateToLine"),
-                        object: nil,
-                        userInfo: ["lineNumber": lineNumber]
-                    )
+                    NotificationCenter.default.post(name: Notification.Name("NavigateToLine"), object: nil, userInfo: ["lineNumber": lineNumber])
                 }
             }
         } else {
@@ -578,13 +495,21 @@ struct DinoLabsPlayground: View {
             noFileSelected = false
             if let lineNumber = lineNumber {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                    NotificationCenter.default.post(
-                        name: Notification.Name("NavigateToLine"),
-                        object: nil,
-                        userInfo: ["lineNumber": lineNumber]
-                    )
+                    NotificationCenter.default.post(name: Notification.Name("NavigateToLine"), object: nil, userInfo: ["lineNumber": lineNumber])
                 }
             }
+        }
+    }
+
+    private func openOrActivateTab(url: URL) {
+        if let existingTab = openTabs.first(where: { $0.fileURL == url }) {
+            activeTabId = existingTab.id
+            noFileSelected = false
+        } else {
+            let newTab = FileTab(fileName: url.lastPathComponent, fileURL: url)
+            openTabs.append(newTab)
+            activeTabId = newTab.id
+            noFileSelected = false
         }
     }
     
