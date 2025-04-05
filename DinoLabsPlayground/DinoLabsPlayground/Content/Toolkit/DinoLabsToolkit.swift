@@ -22,7 +22,9 @@ struct DinoLabsToolkit: View {
     
     private let cells: [ToolCell] = [
         ToolCell(toolOpenName: "DinoDigitsCalc", title: "Dino Digits - Calc", description: "", imageName: "plus.forwardslash.minus", gradientColors: [Color(hex: 0x008167), Color(hex: 0x4BBDB4)]),
-        ToolCell(toolOpenName: "DinoDigitsPlot", title: "Dino Digits - Plot", description: "", imageName: "chart.dots.scatter", gradientColors: [Color(hex: 0x008143), Color(hex: 0x4BBD90)])
+        ToolCell(toolOpenName: "DinoDigitsPlot", title: "Dino Digits - Plot", description: "", imageName: "chart.dots.scatter", gradientColors: [Color(hex: 0x008143), Color(hex: 0x4BBD90)]),
+        ToolCell(toolOpenName: "DinoDictionary", title: "Dino Dictionary", description: "", imageName: "book.closed", gradientColors: [Color(hex: 0xBD4BBB), Color(hex: 0x845683)]),
+        ToolCell(toolOpenName: "DinoThesaurus", title: "Dino Thesaurus", description: "", imageName: "book.pages.fill", gradientColors: [Color(hex: 0x954BBD), Color(hex: 0x775C86)])
     ]
     
     private var filteredCells: [ToolCell] {
@@ -116,6 +118,10 @@ struct DinoLabsToolkit: View {
                     DinoLabsDinoDigitsPlot(geometry: geometry, leftPanelWidthRatio: $leftPanelWidthRatio)
                 } else if toolOpenName == "DinoDigitsCalc" {
                     DinoLabsDinoDigitsCalc(geometry: geometry, leftPanelWidthRatio: $leftPanelWidthRatio)
+                } else if toolOpenName == "DinoDictionary" {
+                    DinoLabsDinoDictionary(geometry: geometry, leftPanelWidthRatio: $leftPanelWidthRatio)
+                } else if toolOpenName == "DinoThesaurus" {
+                    DinoLabsDinoThesaurus(geometry: geometry, leftPanelWidthRatio: $leftPanelWidthRatio)
                 }
             }
         }
@@ -124,7 +130,7 @@ struct DinoLabsToolkit: View {
             height: (geometry.size.height - 50) * 0.9
         )
         .containerHelper(
-            backgroundColor: Color(hex: 0x242424),
+            backgroundColor: Color(hex: 0x171717),
             borderColor: .clear,
             borderWidth: 0,
             topLeft: 0,

@@ -12,6 +12,7 @@ struct ToolTextField: NSViewRepresentable {
     @Binding var text: String
     var isSecure: Bool = false
     var textSize: CGFloat = 11
+    var textColor: NSColor = .black
 
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
@@ -19,7 +20,6 @@ struct ToolTextField: NSViewRepresentable {
 
     func makeNSView(context: Context) -> NSTextField {
         let textField: NSTextField
-
         if isSecure {
             let secureField = ClickableNSSecureTextField()
             secureField.isBordered = false
@@ -29,7 +29,7 @@ struct ToolTextField: NSViewRepresentable {
             secureField.isEditable = true
             secureField.isSelectable = true
             secureField.font = .systemFont(ofSize: textSize, weight: .semibold)
-            secureField.textColor = .black
+            secureField.textColor = textColor
             secureField.cell?.wraps = false
             secureField.cell?.isScrollable = true
             textField = secureField
@@ -42,24 +42,18 @@ struct ToolTextField: NSViewRepresentable {
             normalField.isEditable = true
             normalField.isSelectable = true
             normalField.font = .systemFont(ofSize: textSize, weight: .semibold)
-            normalField.textColor = .black
+            normalField.textColor = textColor
             normalField.cell?.wraps = false
             normalField.cell?.isScrollable = true
             textField = normalField
         }
-
         let placeholderColor = NSColor(srgbRed: 192/255, green: 192/255, blue: 192/255, alpha: 1)
         let placeholderAttributes: [NSAttributedString.Key: Any] = [
             .foregroundColor: placeholderColor,
             .font: NSFont.systemFont(ofSize: textSize, weight: .semibold)
         ]
-        textField.placeholderAttributedString = NSAttributedString(
-            string: placeholder,
-            attributes: placeholderAttributes
-        )
-
+        textField.placeholderAttributedString = NSAttributedString(string: placeholder, attributes: placeholderAttributes)
         textField.delegate = context.coordinator
-
         return textField
     }
 
@@ -69,17 +63,15 @@ struct ToolTextField: NSViewRepresentable {
         }
         if nsView.window?.firstResponder == nsView,
            let editor = nsView.window?.fieldEditor(true, for: nsView) as? NSTextView {
-            editor.insertionPointColor = NSColor.black
+            editor.insertionPointColor = textColor
         }
     }
 
     class Coordinator: NSObject, NSTextFieldDelegate {
         var parent: ToolTextField
-
         init(_ parent: ToolTextField) {
             self.parent = parent
         }
-
         func controlTextDidChange(_ notification: Notification) {
             if let textField = notification.object as? NSTextField {
                 parent.text = textField.stringValue
@@ -87,3 +79,4 @@ struct ToolTextField: NSViewRepresentable {
         }
     }
 }
+

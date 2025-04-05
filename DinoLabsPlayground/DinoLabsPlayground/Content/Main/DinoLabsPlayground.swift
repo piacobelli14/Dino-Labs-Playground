@@ -2373,3 +2373,39 @@ struct DinoLabsPlayground: View {
         return languageMapping[ext] ?? "plaintext"
     }
 }
+
+extension View {
+    func basicKeyStyle(_ text: String) -> some View {
+        self
+            .frame(width: 18, height: 18)
+            .padding(6)
+            .containerHelper(backgroundColor: Color(hex: 0x414141), borderColor: Color(hex: 0x222222), borderWidth: 1, topLeft: 6, topRight: 6, bottomLeft: 6, bottomRight: 6, shadowColor: Color.black, shadowRadius: 1, shadowX: 0, shadowY: 0)
+            .overlay(Text(text).font(.system(size: 16, weight: .semibold)).foregroundColor(Color(hex: 0xf5f5f5)).allowsHitTesting(false))
+            .hoverEffect(opacity: 0.6, scale: 1.05, cursor: .pointingHand)
+    }
+    func opKeyStyle(_ text: String) -> some View {
+        self
+            .frame(width: 18, height: 18)
+            .padding(6)
+            .containerHelper(backgroundColor: Color(hex: 0x919191), borderColor: Color(hex: 0xc9c9c9), borderWidth: 1, topLeft: 6, topRight: 6, bottomLeft: 6, bottomRight: 6, shadowColor: Color.black, shadowRadius: 1, shadowX: 0, shadowY: 0)
+            .overlay(Text(text).font(.system(size: 16, weight: .semibold)).foregroundColor(.white).allowsHitTesting(false))
+            .hoverEffect(opacity: 0.6, scale: 1.05, cursor: .pointingHand)
+    }
+    func fnKeyStyle(_ label: String) -> some View {
+        self
+            .frame(width: 28, height: 18)
+            .padding(6)
+            .containerHelper(backgroundColor: Color(hex: 0x414141), borderColor: Color(hex: 0x222222), borderWidth: 1, topLeft: 6, topRight: 6, bottomLeft: 6, bottomRight: 6, shadowColor: Color.black, shadowRadius: 1, shadowX: 0, shadowY: 0)
+            .overlay(Text(label).font(.system(size: 12, weight: .semibold)).foregroundColor(Color(hex: 0xf5f5f5)).allowsHitTesting(false))
+            .hoverEffect(opacity: 0.6, scale: 1.05, cursor: .pointingHand)
+    }
+    func wideKeyStyle(_ label: String) -> some View {
+        self
+            .frame(width: 45, height: 18)
+            .padding(6)
+            .containerHelper(backgroundColor: Color(hex: 0x414141), borderColor: Color(hex: 0x222222), borderWidth: 1, topLeft: 6, topRight: 6, bottomLeft: 6, bottomRight: 6, shadowColor: Color.black, shadowRadius: 1, shadowX: 0, shadowY: 0)
+            .overlay(Text(label).font(.system(size: 12, weight: .semibold)).foregroundColor(Color(hex: 0xf5f5f5)).allowsHitTesting(false))
+            .hoverEffect(opacity: 0.6, scale: 1.05, cursor: .pointingHand)
+    }
+}
+

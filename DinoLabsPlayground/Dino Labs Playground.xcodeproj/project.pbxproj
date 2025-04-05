@@ -51,6 +51,10 @@
 		CBD30EFA2D99E94400FC1A4F /* ToolButtonMain.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD30EF92D99E93F00FC1A4F /* ToolButtonMain.swift */; };
 		CBD30EFC2D9CC21100FC1A4F /* DinoLabsDinoDigitsCalc.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD30EFB2D9CC20900FC1A4F /* DinoLabsDinoDigitsCalc.swift */; };
 		CBD30F002DA0813200FC1A4F /* Settings.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD30EFF2DA0813000FC1A4F /* Settings.swift */; };
+		CBD30F022DA0998E00FC1A4F /* DinoLabsDinoDictionary.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD30F012DA0998800FC1A4F /* DinoLabsDinoDictionary.swift */; };
+		CBD30F062DA099C700FC1A4F /* DinolabsMathEngine.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD30F052DA099C100FC1A4F /* DinolabsMathEngine.swift */; };
+		CBD30F0C2DA1C69100FC1A4F /* Secrets.plist in Resources */ = {isa = PBXBuildFile; fileRef = CBD30F0B2DA1C4B800FC1A4F /* Secrets.plist */; };
+		CBD30F0E2DA1C7FC00FC1A4F /* DinoLabsDinoThesaurus.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBD30F0D2DA1C7F600FC1A4F /* DinoLabsDinoThesaurus.swift */; };
 		CBDF23522D6807B40049F865 /* AccountTextField.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBDF23512D6807B40049F865 /* AccountTextField.swift */; };
 		CBDF23542D6807C30049F865 /* AccountButtonMain.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBDF23532D6807C30049F865 /* AccountButtonMain.swift */; };
 		CBDF23562D681AAF0049F865 /* ToggleHelper.swift in Sources */ = {isa = PBXBuildFile; fileRef = CBDF23552D681AAF0049F865 /* ToggleHelper.swift */; };
@@ -127,7 +131,7 @@
 		CBD30EE12D98885400FC1A4F /* PDFTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFTextField.swift; sourceTree = "<group>"; };
 		CBD30EE52D98887C00FC1A4F /* PDFButtonMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PDFButtonMain.swift; sourceTree = "<group>"; };
 		CBD30EE72D98888A00FC1A4F /* DinoLabsPDF.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinoLabsPDF.swift; sourceTree = "<group>"; };
-		CBD30EEB2D98AF5200FC1A4F /* DinoLabsToolkit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinoLabsToolkit.swift; sourceTree = "<group>"; };
+		CBD30EEB2D98AF5200FC1A4F /* DinoLabsToolkit.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinoLabsToolkit.swift; sourceTree = "<group>"; wrapsLines = 0; };
 		CBD30EED2D98AF6800FC1A4F /* ToolkitTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolkitTextField.swift; sourceTree = "<group>"; };
 		CBD30EEF2D98AF7000FC1A4F /* ToolkitButtonMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToolkitButtonMain.swift; sourceTree = "<group>"; };
 		CBD30EF32D98C37600FC1A4F /* DinoLabsDinoDigitsPlot.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinoLabsDinoDigitsPlot.swift; sourceTree = "<group>"; wrapsLines = 0; };
@@ -136,6 +140,10 @@
 		CBD30EFB2D9CC20900FC1A4F /* DinoLabsDinoDigitsCalc.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinoLabsDinoDigitsCalc.swift; sourceTree = "<group>"; };
 		CBD30EFD2DA05E0B00FC1A4F /* Dino-Labs-Playground-Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = "Dino-Labs-Playground-Info.plist"; sourceTree = "<group>"; };
 		CBD30EFF2DA0813000FC1A4F /* Settings.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = Settings.swift; sourceTree = "<group>"; };
+		CBD30F012DA0998800FC1A4F /* DinoLabsDinoDictionary.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinoLabsDinoDictionary.swift; sourceTree = "<group>"; wrapsLines = 0; };
+		CBD30F052DA099C100FC1A4F /* DinolabsMathEngine.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinolabsMathEngine.swift; sourceTree = "<group>"; };
+		CBD30F0B2DA1C4B800FC1A4F /* Secrets.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Secrets.plist; sourceTree = "<group>"; };
+		CBD30F0D2DA1C7F600FC1A4F /* DinoLabsDinoThesaurus.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinoLabsDinoThesaurus.swift; sourceTree = "<group>"; };
 		CBDF23512D6807B40049F865 /* AccountTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountTextField.swift; sourceTree = "<group>"; };
 		CBDF23532D6807C30049F865 /* AccountButtonMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AccountButtonMain.swift; sourceTree = "<group>"; };
 		CBDF23552D681AAF0049F865 /* ToggleHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ToggleHelper.swift; sourceTree = "<group>"; wrapsLines = 0; };
@@ -343,6 +351,7 @@
 		CBD30EF12D98C35300FC1A4F /* Tools */ = {
 			isa = PBXGroup;
 			children = (
+				CBD30F032DA099A000FC1A4F /* Math Helpers */,
 				CBD30EF62D99E92E00FC1A4F /* ToolHelpers */,
 				CBD30EF22D98C35D00FC1A4F /* DinoLabsDinoDigits */,
 			);
@@ -352,6 +361,8 @@
 		CBD30EF22D98C35D00FC1A4F /* DinoLabsDinoDigits */ = {
 			isa = PBXGroup;
 			children = (
+				CBD30F0D2DA1C7F600FC1A4F /* DinoLabsDinoThesaurus.swift */,
+				CBD30F012DA0998800FC1A4F /* DinoLabsDinoDictionary.swift */,
 				CBD30EFB2D9CC20900FC1A4F /* DinoLabsDinoDigitsCalc.swift */,
 				CBD30EF32D98C37600FC1A4F /* DinoLabsDinoDigitsPlot.swift */,
 			);
@@ -375,6 +386,14 @@
 			path = Settings;
 			sourceTree = "<group>";
 		};
+		CBD30F032DA099A000FC1A4F /* Math Helpers */ = {
+			isa = PBXGroup;
+			children = (
+				CBD30F052DA099C100FC1A4F /* DinolabsMathEngine.swift */,
+			);
+			path = "Math Helpers";
+			sourceTree = "<group>";
+		};
 		CBDF235F2D6AA0950049F865 /* CodeHelpers */ = {
 			isa = PBXGroup;
 			children = (
@@ -387,6 +406,7 @@
 		CBEC15992D5D8A19009A0FAF = {
 			isa = PBXGroup;
 			children = (
+				CBD30F0B2DA1C4B800FC1A4F /* Secrets.plist */,
 				CBD30EFD2DA05E0B00FC1A4F /* Dino-Labs-Playground-Info.plist */,
 				CBEC15A42D5D8A19009A0FAF /* DinoLabsPlayground */,
 				CBEC15A32D5D8A19009A0FAF /* Products */,
@@ -656,6 +676,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				CBD30F0C2DA1C69100FC1A4F /* Secrets.plist in Resources */,
 				CBEC15AD2D5D8A1D009A0FAF /* Preview Assets.xcassets in Resources */,
 				CBEC15AA2D5D8A1D009A0FAF /* Assets.xcassets in Resources */,
 				CBEC15D22D5D978B009A0FAF /* SolarSystemBackground.mp4 in Resources */,
@@ -684,6 +705,7 @@
 				CB9A90A92D74A20F00AA034A /* DinoLabsTabularConstructors.swift in Sources */,
 				CB5B4ADB2D5FC6BF00492970 /* InputButtonManager.swift in Sources */,
 				CBEC15C52D5D906F009A0FAF /* LoginAuth.swift in Sources */,
+				CBD30F062DA099C700FC1A4F /* DinolabsMathEngine.swift in Sources */,
 				CB5B4AE62D601B5F00492970 /* NavigatorButtonMain.swift in Sources */,
 				CBFDF9D52D614AF4008C580D /* ContainerHelper.swift in Sources */,
 				CBEC15D82D5E64C7009A0FAF /* AuthenticationButtonMain.swift in Sources */,
@@ -707,10 +729,12 @@
 				CBD30EF02D98AF7700FC1A4F /* ToolkitButtonMain.swift in Sources */,
 				CBEC15C92D5D9159009A0FAF /* SecurityManager.swift in Sources */,
 				CBD30EE22D98886500FC1A4F /* PDFTextField.swift in Sources */,
+				CBD30F022DA0998E00FC1A4F /* DinoLabsDinoDictionary.swift in Sources */,
 				CBD30ED82D9376A600FC1A4F /* DinoLabs3DModel.swift in Sources */,
 				CB5B4AD92D5FC68C00492970 /* InputFieldManager.swift in Sources */,
 				CBB19EF92D6EB12C002E7805 /* DinoLabsTabular.swift in Sources */,
 				CBFDF9D32D612FD0008C580D /* CursorHelper.swift in Sources */,
+				CBD30F0E2DA1C7FC00FC1A4F /* DinoLabsDinoThesaurus.swift in Sources */,
 				CBEC15C72D5D90F3009A0FAF /* DateManager.swift in Sources */,
 				CBD30EEE2D98AF6D00FC1A4F /* ToolkitTextField.swift in Sources */,
 				CBFDA88F2D65C97800EA87BB /* DinoLabsSearch.swift in Sources */,
