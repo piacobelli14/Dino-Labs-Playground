@@ -50,21 +50,55 @@ struct TerminalView: View {
                         } catch {
                             self.textBuffer.append("Error launching shell: \(error)\n")
                         }
+                        
                         pty.masterFileHandle?.readabilityHandler = { handle in
                             let data = handle.availableData
                             if !data.isEmpty {
-                                let output = String(data: data, encoding: .utf8) ?? ""
+                                var output = String(data: data, encoding: .utf8) ?? ""
+                                
+                                output = output
+                                    .replacingOccurrences(of: "\u{0007}", with: "")
+                                    .replacingOccurrences(of: "\u{0008}[\u{0020}\u{0008}]?", with: "", options: .regularExpression)
+                                    .replacingOccurrences(of: "\u{001B}\\[[0-9;]*[KJ]", with: "", options: .regularExpression)
+                                
                                 DispatchQueue.main.async {
-                                    self.textBuffer.append(output)
+                                    let currentPrompt = self.prompt
+                                    
+                                    if self.textBuffer.hasSuffix(currentPrompt) {
+                                        self.textBuffer.removeLast(currentPrompt.count)
+                                    }
+                                    
+                                    let chunks = output.components(separatedBy: "\r")
+                                    for (i, chunk) in chunks.enumerated() {
+                                        if i > 0 {
+                                            if let rangeOfLastNewline = self.textBuffer.range(of: "\n", options: .backwards) {
+                                                self.textBuffer.removeSubrange(rangeOfLastNewline.upperBound..<self.textBuffer.endIndex)
+                                            } else if let rangeOfPrompt = self.textBuffer.range(of: currentPrompt, options: .backwards) {
+                                                self.textBuffer.removeSubrange(rangeOfPrompt.upperBound..<self.textBuffer.endIndex)
+                                            }
+                                        }
+                                        if chunk.contains("%") && chunk.contains("[") && chunk.contains("]") {
+                                            self.textBuffer.append("\n")
+                                            self.textBuffer.append(chunk)
+                                            self.textBuffer.append("\n")
+                                        } else {
+                                            self.textBuffer.append(chunk)
+                                        }
+                                    }
+                                    
+                                    if output.hasSuffix("\n") || !self.textBuffer.hasSuffix(currentPrompt) {
+                                        self.textBuffer.append(currentPrompt)
+                                        self.lastPromptLocation = self.textBuffer.count - currentPrompt.count
+                                    }
+                                    
                                     self.oldTextBuffer = self.textBuffer
-                                    self.lastPromptLocation = self.textBuffer.count
                                 }
                             }
                         }
                     }
                     textBuffer = prompt
                     oldTextBuffer = textBuffer
-                    lastPromptLocation = textBuffer.count
+                    lastPromptLocation = textBuffer.count - prompt.count
                 }
                 .onChange(of: showFullRoot) { newValue in
                     let newPrompt: String = {
@@ -76,7 +110,7 @@ struct TerminalView: View {
                     }()
                     textBuffer = newPrompt
                     oldTextBuffer = newPrompt
-                    lastPromptLocation = newPrompt.count
+                    lastPromptLocation = textBuffer.count - newPrompt.count
                 }
             Spacer()
         }
@@ -85,29 +119,41 @@ struct TerminalView: View {
     }
     
     private func handleTextChange() {
-        let oldPrefix = oldTextBuffer.prefix(lastPromptLocation)
-        let newPrefix = textBuffer.prefix(lastPromptLocation)
-        if newPrefix != oldPrefix {
-            textBuffer = String(oldPrefix + textBuffer.dropFirst(lastPromptLocation))
+        guard textBuffer.last == "\n", textBuffer != oldTextBuffer else {
+            oldTextBuffer = textBuffer
+            return
         }
-        if textBuffer.last == "\n" {
-            let commandRange = textBuffer.index(textBuffer.startIndex, offsetBy: lastPromptLocation)
-                ..< textBuffer.index(before: textBuffer.endIndex)
-            
-            let command = String(textBuffer[commandRange]).trimmingCharacters(in: .whitespacesAndNewlines)
-            runCommand(command)
+        guard let promptRange = textBuffer.range(of: prompt, options: .backwards) else {
+            textBuffer.append(prompt)
+            oldTextBuffer = textBuffer
+            lastPromptLocation = textBuffer.count - prompt.count
+            return
         }
-        oldTextBuffer = textBuffer
+        let commandRange = promptRange.upperBound..<textBuffer.index(before: textBuffer.endIndex)
+        let rawCommand = String(textBuffer[commandRange]).trimmingCharacters(in: .whitespacesAndNewlines)
+        let cleanCommand = rawCommand
+            .replacingOccurrences(of: "\u{0007}", with: "")
+            .replacingOccurrences(of: "\u{0008}", with: "")
+            .replacingOccurrences(of: "\u{001B}\\[K", with: "", options: .regularExpression)
+            .components(separatedBy: .newlines).first ?? ""
+        if !cleanCommand.isEmpty {
+            runCommand(cleanCommand)
+        } else {
+            textBuffer.append(prompt)
+            oldTextBuffer = textBuffer
+            lastPromptLocation = textBuffer.count - prompt.count
+        }
     }
     
     private func runCommand(_ command: String) {
         guard let pty = self.pty else {
             textBuffer.append("PTY not initialized.\n" + prompt)
             oldTextBuffer = textBuffer
-            lastPromptLocation = textBuffer.count
+            lastPromptLocation = textBuffer.count - prompt.count
             return
         }
-        if let data = (command + "\n").data(using: .utf8) {
+        let fullCommand = command + "\n"
+        if let data = fullCommand.data(using: .utf8) {
             pty.write(data)
         }
     }
@@ -130,6 +176,8 @@ struct TerminalEditor: NSViewRepresentable {
             textView.isAutomaticDashSubstitutionEnabled = false
             textView.isAutomaticTextReplacementEnabled = false
             textView.isAutomaticSpellingCorrectionEnabled = false
+            textView.isEditable = true
+            textView.isSelectable = true
         }
         return scrollView
     }
@@ -137,7 +185,10 @@ struct TerminalEditor: NSViewRepresentable {
     func updateNSView(_ nsView: NSScrollView, context: Context) {
         if let textView = nsView.documentView as? NSTextView {
             let attrString = parseANSI(text)
-            textView.textStorage?.setAttributedString(attrString)
+            if textView.string != attrString.string {
+                textView.textStorage?.setAttributedString(attrString)
+                textView.scrollToEndOfDocument(nil)
+            }
         }
     }
     
@@ -167,13 +218,11 @@ func runShellCommand(_ command: String) -> String {
     task.standardError = pipe
     task.launchPath = "/bin/bash"
     task.arguments = ["-c", command]
-    
     do {
         try task.run()
     } catch {
         return "Error launching process: \(error)\n"
     }
-    
     task.waitUntilExit()
     let data = pipe.fileHandleForReading.readDataToEndOfFile()
     return String(data: data, encoding: .utf8) ?? ""
@@ -251,7 +300,7 @@ func parseANSI(_ string: String) -> NSAttributedString {
     let attributed = NSMutableAttributedString()
     let regexPattern = "\u{001B}\\[[0-9;]*m"
     guard let regex = try? NSRegularExpression(pattern: regexPattern, options: []) else {
-         return NSAttributedString(string: string)
+        return NSAttributedString(string: string)
     }
     var currentAttributes: [NSAttributedString.Key: Any] = [
        .font: NSFont.monospacedSystemFont(ofSize: 10, weight: .semibold),
@@ -262,125 +311,127 @@ func parseANSI(_ string: String) -> NSAttributedString {
     let nsString = string as NSString
     let matches = regex.matches(in: string, options: [], range: NSRange(location: 0, length: nsString.length))
     for match in matches {
-         guard let range = Range(match.range, in: string) else { continue }
-         let precedingText = String(string[lastIndex..<range.lowerBound])
-         let attrPrecedingText = NSAttributedString(string: precedingText, attributes: currentAttributes)
-         attributed.append(attrPrecedingText)
-         let codeString = String(string[range])
-         let trimmed = codeString.dropFirst(2).dropLast()
-         let codeValues = trimmed.split(separator: ";").compactMap { Int($0) }
-         var i = 0
-         while i < codeValues.count {
-             let code = codeValues[i]
-             switch code {
-             case 0:
-                 currentAttributes[.font] = NSFont.monospacedSystemFont(ofSize: 10, weight: .semibold)
-                 currentAttributes[.foregroundColor] = NSColor.white
-                 currentAttributes[.backgroundColor] = NSColor.clear
-                 currentAttributes[.underlineStyle] = nil
-                 currentAttributes[.strikethroughStyle] = nil
-             case 1:
-                 if let font = currentAttributes[.font] as? NSFont {
-                     currentAttributes[.font] = NSFontManager.shared.convert(font, toHaveTrait: .boldFontMask)
-                 }
-             case 2:
-                 currentAttributes[.foregroundColor] = (currentAttributes[.foregroundColor] as? NSColor)?.withAlphaComponent(0.6)
-             case 3:
-                 if let font = currentAttributes[.font] as? NSFont {
-                     currentAttributes[.font] = NSFontManager.shared.convert(font, toHaveTrait: .italicFontMask)
-                 }
-             case 4:
-                 currentAttributes[.underlineStyle] = NSUnderlineStyle.single.rawValue
-             case 5, 6:
-                 break
-             case 7:
-                 let fg = currentAttributes[.foregroundColor] as? NSColor ?? NSColor.white
-                 let bg = currentAttributes[.backgroundColor] as? NSColor ?? NSColor.clear
-                 currentAttributes[.foregroundColor] = bg
-                 currentAttributes[.backgroundColor] = fg
-             case 8:
-                 currentAttributes[.foregroundColor] = NSColor.clear
-             case 9:
-                 currentAttributes[.strikethroughStyle] = NSUnderlineStyle.single.rawValue
-             case 21:
-                 if let font = currentAttributes[.font] as? NSFont {
-                     currentAttributes[.font] = NSFontManager.shared.convert(font, toNotHaveTrait: .boldFontMask)
-                 }
-             case 22:
-                 if let font = currentAttributes[.font] as? NSFont {
-                     currentAttributes[.font] = NSFont.monospacedSystemFont(ofSize: 10, weight: .semibold)
-                 }
-                 currentAttributes[.foregroundColor] = (currentAttributes[.foregroundColor] as? NSColor)?.withAlphaComponent(1.0)
-             case 23:
-                 if let font = currentAttributes[.font] as? NSFont {
-                     currentAttributes[.font] = NSFontManager.shared.convert(font, toNotHaveTrait: .italicFontMask)
-                 }
-             case 24:
-                 currentAttributes[.underlineStyle] = nil
-             case 25:
-                 break
-             case 27:
-                 break
-             case 28:
-                 break
-             case 29:
-                 currentAttributes[.strikethroughStyle] = nil
-             case 30...37:
-                 let colors: [NSColor] = [.black, .red, .green, .yellow, .blue, .magenta, .cyan, .white]
-                 currentAttributes[.foregroundColor] = colors[code - 30]
-             case 38:
-                 if i + 1 < codeValues.count {
-                     let mode = codeValues[i + 1]
-                     if mode == 5, i + 2 < codeValues.count {
-                         let colorIndex = codeValues[i + 2]
-                         currentAttributes[.foregroundColor] = colorFrom256Color(colorIndex)
-                         i += 2
-                     } else if mode == 2, i + 4 < codeValues.count {
-                         let r = CGFloat(codeValues[i + 2]) / 255.0
-                         let g = CGFloat(codeValues[i + 3]) / 255.0
-                         let b = CGFloat(codeValues[i + 4]) / 255.0
-                         currentAttributes[.foregroundColor] = NSColor(calibratedRed: r, green: g, blue: b, alpha: 1.0)
-                         i += 4
-                     }
-                 }
-             case 39:
-                 currentAttributes[.foregroundColor] = NSColor.white
-             case 40...47:
-                 let colors: [NSColor] = [.black, .red, .green, .yellow, .blue, .magenta, .cyan, .white]
-                 currentAttributes[.backgroundColor] = colors[code - 40]
-             case 48:
-                 if i + 1 < codeValues.count {
-                     let mode = codeValues[i + 1]
-                     if mode == 5, i + 2 < codeValues.count {
-                         let colorIndex = codeValues[i + 2]
-                         currentAttributes[.backgroundColor] = colorFrom256Color(colorIndex)
-                         i += 2
-                     } else if mode == 2, i + 4 < codeValues.count {
-                         let r = CGFloat(codeValues[i + 2]) / 255.0
-                         let g = CGFloat(codeValues[i + 3]) / 255.0
-                         let b = CGFloat(codeValues[i + 4]) / 255.0
-                         currentAttributes[.backgroundColor] = NSColor(calibratedRed: r, green: g, blue: b, alpha: 1.0)
-                         i += 4
-                     }
-                 }
-             case 49:
-                 currentAttributes[.backgroundColor] = NSColor.clear
-             case 90...97:
-                 let brightColors: [NSColor] = [.darkGray, .systemRed, .systemGreen, .systemYellow, .systemBlue, .systemPink, .systemTeal, .white]
-                 currentAttributes[.foregroundColor] = brightColors[code - 90]
-             case 100...107:
-                 let brightColors: [NSColor] = [.darkGray, .systemRed, .systemGreen, .systemYellow, .systemBlue, .systemPink, .systemTeal, .white]
-                 currentAttributes[.backgroundColor] = brightColors[code - 100]
-             default:
-                 break
-             }
-             i += 1
-         }
-         lastIndex = range.upperBound
+        guard let range = Range(match.range, in: string) else { continue }
+        let precedingText = String(string[lastIndex..<range.lowerBound])
+        let attrPrecedingText = NSAttributedString(string: precedingText, attributes: currentAttributes)
+        attributed.append(attrPrecedingText)
+        
+        let codeString = String(string[range])
+        let trimmed = codeString.dropFirst(2).dropLast()
+        let codeValues = trimmed.split(separator: ";").compactMap { Int($0) }
+        
+        var i = 0
+        while i < codeValues.count {
+            let code = codeValues[i]
+            switch code {
+            case 0:
+                currentAttributes[.font] = NSFont.monospacedSystemFont(ofSize: 10, weight: .semibold)
+                currentAttributes[.foregroundColor] = NSColor.white
+                currentAttributes[.backgroundColor] = NSColor.clear
+                currentAttributes[.underlineStyle] = nil
+                currentAttributes[.strikethroughStyle] = nil
+            case 1:
+                if let font = currentAttributes[.font] as? NSFont {
+                    currentAttributes[.font] = NSFontManager.shared.convert(font, toHaveTrait: .boldFontMask)
+                }
+            case 2:
+                currentAttributes[.foregroundColor] = (currentAttributes[.foregroundColor] as? NSColor)?.withAlphaComponent(0.6)
+            case 3:
+                if let font = currentAttributes[.font] as? NSFont {
+                    currentAttributes[.font] = NSFontManager.shared.convert(font, toHaveTrait: .italicFontMask)
+                }
+            case 4:
+                currentAttributes[.underlineStyle] = NSUnderlineStyle.single.rawValue
+            case 5, 6:
+                break
+            case 7:
+                let fg = currentAttributes[.foregroundColor] as? NSColor ?? NSColor.white
+                let bg = currentAttributes[.backgroundColor] as? NSColor ?? NSColor.clear
+                currentAttributes[.foregroundColor] = bg
+                currentAttributes[.backgroundColor] = fg
+            case 8:
+                currentAttributes[.foregroundColor] = NSColor.clear
+            case 9:
+                currentAttributes[.strikethroughStyle] = NSUnderlineStyle.single.rawValue
+            case 21:
+                if let font = currentAttributes[.font] as? NSFont {
+                    currentAttributes[.font] = NSFontManager.shared.convert(font, toNotHaveTrait: .boldFontMask)
+                }
+            case 22:
+                if let font = currentAttributes[.font] as? NSFont {
+                    currentAttributes[.font] = NSFont.monospacedSystemFont(ofSize: 10, weight: .semibold)
+                }
+                currentAttributes[.foregroundColor] = (currentAttributes[.foregroundColor] as? NSColor)?.withAlphaComponent(1.0)
+            case 23:
+                if let font = currentAttributes[.font] as? NSFont {
+                    currentAttributes[.font] = NSFontManager.shared.convert(font, toNotHaveTrait: .italicFontMask)
+                }
+            case 24:
+                currentAttributes[.underlineStyle] = nil
+            case 25:
+                break
+            case 27:
+                break
+            case 28:
+                break
+            case 29:
+                currentAttributes[.strikethroughStyle] = nil
+            case 30...37:
+                let colors: [NSColor] = [.black, .red, .green, .yellow, .blue, .magenta, .cyan, .white]
+                currentAttributes[.foregroundColor] = colors[code - 30]
+            case 38:
+                if i + 1 < codeValues.count {
+                    let mode = codeValues[i + 1]
+                    if mode == 5, i + 2 < codeValues.count {
+                        let colorIndex = codeValues[i + 2]
+                        currentAttributes[.foregroundColor] = colorFrom256Color(colorIndex)
+                        i += 2
+                    } else if mode == 2, i + 4 < codeValues.count {
+                        let r = CGFloat(codeValues[i + 2]) / 255.0
+                        let g = CGFloat(codeValues[i + 3]) / 255.0
+                        let b = CGFloat(codeValues[i + 4]) / 255.0
+                        currentAttributes[.foregroundColor] = NSColor(calibratedRed: r, green: g, blue: b, alpha: 1.0)
+                        i += 4
+                    }
+                }
+            case 39:
+                currentAttributes[.foregroundColor] = NSColor.white
+            case 40...47:
+                let colors: [NSColor] = [.black, .red, .green, .yellow, .blue, .magenta, .cyan, .white]
+                currentAttributes[.backgroundColor] = colors[code - 40]
+            case 48:
+                if i + 1 < codeValues.count {
+                    let mode = codeValues[i + 1]
+                    if mode == 5, i + 2 < codeValues.count {
+                        let colorIndex = codeValues[i + 2]
+                        currentAttributes[.backgroundColor] = colorFrom256Color(colorIndex)
+                        i += 2
+                    } else if mode == 2, i + 4 < codeValues.count {
+                        let r = CGFloat(codeValues[i + 2]) / 255.0
+                        let g = CGFloat(codeValues[i + 3]) / 255.0
+                        let b = CGFloat(codeValues[i + 4]) / 255.0
+                        currentAttributes[.backgroundColor] = NSColor(calibratedRed: r, green: g, blue: b, alpha: 1.0)
+                        i += 4
+                    }
+                }
+            case 49:
+                currentAttributes[.backgroundColor] = NSColor.clear
+            case 90...97:
+                let brightColors: [NSColor] = [.darkGray, .systemRed, .systemGreen, .systemYellow, .systemBlue, .systemPink, .systemTeal, .white]
+                currentAttributes[.foregroundColor] = brightColors[code - 90]
+            case 100...107:
+                let brightColors: [NSColor] = [.darkGray, .systemRed, .systemGreen, .systemYellow, .systemBlue, .systemPink, .systemTeal, .white]
+                currentAttributes[.backgroundColor] = brightColors[code - 100]
+            default:
+                break
+            }
+            i += 1
+        }
+        
+        lastIndex = range.upperBound
     }
     let remainingText = String(string[lastIndex..<string.endIndex])
     let attrRemainingText = NSAttributedString(string: remainingText, attributes: currentAttributes)
     attributed.append(attrRemainingText)
-    
     return attributed
 }
