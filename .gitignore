@@ -129,6 +129,6 @@ dist
 .yarn/install-state.gz
 .pnp.*
 
-# Directory to ignore
+# directory to ignore
 info/
 DinoLabsPlayground/Secrets.plist
