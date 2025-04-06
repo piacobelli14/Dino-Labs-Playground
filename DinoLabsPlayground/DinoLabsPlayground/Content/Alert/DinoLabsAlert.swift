@@ -90,7 +90,7 @@ struct DinoLabsAlert: View {
                 
                 VStack {
                     VStack {
-                        Image("DinoLabsLogo-White")
+                        Image("DinoLabsLogo")
                             .resizable()
                             .scaledToFit()
                             .frame(width: 80, height: 80)

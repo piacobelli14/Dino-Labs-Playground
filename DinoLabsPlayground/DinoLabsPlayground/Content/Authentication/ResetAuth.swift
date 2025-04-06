@@ -65,17 +65,11 @@ struct ResetAuth: View {
                                     Spacer()
                                     
                                     if isEmail {
-                                        Text("Password Reset")
-                                            .font(.system(size: 32, weight: .bold))
-                                            .foregroundColor(Color(hex: 0xf5f5f5))
-                                            .shadow(color: .white.opacity(0.5), radius: 0.5, x: 0, y: 0)
-                                            .padding(.bottom, geometry.size.height * 0.005)
-                                        
-                                        Text("Enter the email address associated with your Dino Labs account.")
-                                            .font(.system(size: 12, weight: .semibold))
-                                            .foregroundColor(Color(hex: 0xf5f5f5).opacity(0.6))
-                                            .shadow(color: .gray.opacity(0.5), radius: 0.5, x: 0, y: 0)
-                                            .padding(.bottom, 4)
+                                        Image("DinoLabsLogo-Letters")
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fit)
+                                            .frame(width: 150, height: 150)
+                                            .padding(.top, 4)
                                         
                                         VStack {
                                             AuthenticationTextField(placeholder: "Enter Your Email", text: $resetEmail)
@@ -112,21 +106,15 @@ struct ResetAuth: View {
                                             .hoverEffect(opacity: 0.5)
                                             .clickEffect(opacity: 0.1)
                                         }
-                                        .padding(.top, geometry.size.height * 0.02)
+                                        .padding(.top, geometry.size.height * 0.01)
                                     }
                                     
                                     if isCode {
-                                        Text("Password Reset")
-                                            .font(.system(size: 32, weight: .bold))
-                                            .foregroundColor(Color(hex: 0xf5f5f5))
-                                            .shadow(color: .white.opacity(0.5), radius: 0.5, x: 0, y: 0)
-                                            .padding(.bottom, geometry.size.height * 0.005)
-                                        
-                                        Text("Enter the six digit code that was sent to your email address.")
-                                            .font(.system(size: 12, weight: .semibold))
-                                            .foregroundColor(Color(hex: 0xf5f5f5).opacity(0.6))
-                                            .shadow(color: .gray.opacity(0.5), radius: 0.5, x: 0, y: 0)
-                                            .padding(.bottom, 4)
+                                        Image("DinoLabsLogo-Letters")
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fit)
+                                            .frame(width: 150, height: 150)
+                                            .padding(.top, 4)
                                         
                                         VStack {
                                             AuthenticationTextField(placeholder: "Enter Your Six Digit Code", text: $resetCode)
@@ -144,21 +132,15 @@ struct ResetAuth: View {
                                                     checkResetCode()
                                                 }
                                         }
-                                        .padding(.top, geometry.size.height * 0.02)
+                                        .padding(.top, geometry.size.height * 0.01)
                                     }
                                     
                                     if isReset {
-                                        Text("Reset Password")
-                                            .font(.system(size: 32, weight: .bold))
-                                            .foregroundColor(Color(hex: 0xf5f5f5))
-                                            .shadow(color: .white.opacity(0.5), radius: 0.5, x: 0, y: 0)
-                                            .padding(.bottom, geometry.size.height * 0.005)
-                                        
-                                        Text("Enter and confirm your new password.")
-                                            .font(.system(size: 12, weight: .semibold))
-                                            .foregroundColor(Color(hex: 0xf5f5f5).opacity(0.6))
-                                            .shadow(color: .gray.opacity(0.5), radius: 0.5, x: 0, y: 0)
-                                            .padding(.bottom, 4)
+                                        Image("DinoLabsLogo-Letters")
+                                            .resizable()
+                                            .aspectRatio(contentMode: .fit)
+                                            .frame(width: 150, height: 150)
+                                            .padding(.top, 4)
                                         
                                         VStack {
                                             ZStack(alignment: .trailing) {
@@ -242,7 +224,7 @@ struct ResetAuth: View {
                                             .hoverEffect(opacity: 0.5)
                                             .clickEffect(opacity: 0.1)
                                         }
-                                        .padding(.top, geometry.size.height * 0.02)
+                                        .padding(.top, geometry.size.height * 0.01)
                                     }
                                     
                                     VStack {
@@ -259,7 +241,7 @@ struct ResetAuth: View {
                                     
                                     Spacer()
                                 }
-                                .frame(width: geometry.size.width * 0.5, height: geometry.size.height * 0.7)
+                                .frame(width: geometry.size.width * 0.5, height: geometry.size.height * 0.6)
                                 .containerHelper(backgroundColor: Color(hex: 0x171717).opacity(0.9), borderColor: Color.clear, borderWidth: 0, topLeft: 10, topRight: 10, bottomLeft: 10, bottomRight: 10, shadowColor: .black.opacity(0.6), shadowRadius: 15, shadowX: 0, shadowY: 0)
                                 Spacer()
                             }

@@ -66,16 +66,11 @@ struct LoginAuth: View {
                                 VStack {
                                     Spacer()
                                     
-                                    Text("Login to Dino Labs")
-                                        .font(.system(size: 32, weight: .bold))
-                                        .foregroundColor(Color(hex: 0xf5f5f5))
-                                        .shadow(color: .white.opacity(0.5), radius: 0.5, x: 0, y: 0)
-                                        .padding(.bottom, geometry.size.height * 0.005)
-                                    
-                                    Text("Use your Dino Labs Credentials or create an account below.")
-                                        .font(.system(size: 12, weight: .semibold))
-                                        .foregroundColor(Color(hex: 0xf5f5f5).opacity(0.6))
-                                        .shadow(color: .gray.opacity(0.5), radius: 0.5, x: 0, y: 0)
+                                    Image("DinoLabsLogo-Letters")
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fit)
+                                        .frame(width: 150, height: 150)
+                                        .padding(.top, 4)
                                     
                                     VStack {
                                         AuthenticationTextField(placeholder: "Email Address or Username", text: $email)
@@ -90,8 +85,9 @@ struct LoginAuth: View {
                                             .containerHelper(backgroundColor: Color.white, borderColor: Color.black, borderWidth: 2, topLeft: 8, topRight: 8, bottomLeft: 8, bottomRight: 8, shadowColor: .white.opacity(0.6), shadowRadius: 1.5, shadowX: 0, shadowY: 0)
                                             .padding(.bottom, 4)
                                             .onSubmit {
-                                                isEmail = true
+                                                continueWithEmail()
                                             }
+                                            .submitLabel(.next)
                                         
                                         if isEmail {
                                             VStack {
@@ -180,7 +176,7 @@ struct LoginAuth: View {
                                             
                                         } else {
                                             AuthenticationButtonMain {
-                                                isEmail = true
+                                                continueWithEmail()
                                             }
                                             .frame(width: geometry.size.width * 0.32, height: 40)
                                             .overlay(
@@ -244,25 +240,26 @@ struct LoginAuth: View {
                                             }
                                             .frame(width: geometry.size.width * 0.32, height: 40)
                                             .overlay(
-                                                HStack {
+                                                HStack(spacing: 0) {
                                                     Spacer()
-                                                    Text("Forgot password?")
+                                                    Text("Forgot password? ")
                                                         .font(.system(size: 12, weight: .bold))
                                                         .foregroundColor(.white)
-                                                    Text("Create an Account")
-                                                        .font(.system(size: 12 * 0.018, weight: .semibold))
+                                                    Text("Click here to reset.")
+                                                        .font(.system(size: 12, weight: .bold))
                                                         .foregroundColor(Color(hex: 0xD8C1F5))
                                                     Spacer()
                                                 }
-                                                    .padding(.vertical, 14)
-                                                    .padding(.horizontal, 14)
-                                                    .allowsHitTesting(false)
+                                                .padding(.top, 4)
+                                                .padding(.bottom, 14)
+                                                .padding(.horizontal, 14)
+                                                .allowsHitTesting(false)
                                             )
                                             .hoverEffect(opacity: 0.5, scale: 1.05)
                                             .clickEffect(opacity: 0.1)
                                         }
                                     }
-                                    .padding(.top, geometry.size.height * 0.02)
+                                    .padding(.top, geometry.size.height * 0.01)
                                     Spacer()
                                 }
                                 .frame(width: geometry.size.width * 0.5, height: geometry.size.height * 0.7)
@@ -280,6 +277,10 @@ struct LoginAuth: View {
                 Spacer()
             }
         }
+    }
+    
+    private func continueWithEmail() {
+        isEmail = true
     }
     
     private func authenticateUser() {

@@ -59,7 +59,7 @@ struct NavigationBar: View {
             }
             
             HStack {
-                Image("DinoLabsLogo-White")
+                Image("DinoLabsLogo")
                     .resizable()
                     .aspectRatio(contentMode: .fit)
                     .frame(width: 25, height: 25)
