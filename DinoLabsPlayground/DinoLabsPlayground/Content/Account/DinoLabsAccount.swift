@@ -1572,7 +1572,7 @@ struct DinoLabsAccount: View {
         guard let token = loadTokenFromKeychain() else {
             return
         }
-        let url = URL(string: "https://www.dinolaboratories.com/dinolabs/dinolabs-web-api/user-info")!
+        let url = URL(string: "http://localhost:3001/user-info")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
@@ -1638,7 +1638,7 @@ struct DinoLabsAccount: View {
     
     func updateShowColumnValue(userID: String, organizationID: String, showColumn: String, showColumnValue: Bool) {
         guard let token = loadTokenFromKeychain() else { return }
-        let url = URL(string: "https://www.dinolaboratories.com/dinolabs/dinolabs-web-api/update-user-show-values")!
+        let url = URL(string: "http://localhost:3001/update-user-show-values")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
@@ -1675,7 +1675,7 @@ struct DinoLabsAccount: View {
     
     func saveUserKeyBinds(userID: String, organizationID: String, updatedKeyBinds: [String: String]) {
         guard let token = loadTokenFromKeychain() else { return }
-        let url = URL(string: "https://www.dinolaboratories.com/dinolabs/dinolabs-web-api/update-user-keybinds")!
+        let url = URL(string: "http://localhost:3001/update-user-keybinds")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
@@ -1702,7 +1702,7 @@ struct DinoLabsAccount: View {
     
     func saveUserPreferences(userID: String, organizationID: String, zoomLevel: Double, colorTheme: String) {
         guard let token = loadTokenFromKeychain() else { return }
-        let url = URL(string: "https://www.dinolaboratories.com/dinolabs/dinolabs-web-api/update-user-preferences")!
+        let url = URL(string: "http://localhost:3001/update-user-preferences")!
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         request.addValue("Bearer \(token)", forHTTPHeaderField: "Authorization")

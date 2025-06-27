@@ -1005,24 +1005,23 @@ struct DinoLabsPlayground: View {
                                 .padding(.vertical, 10)
                                 .containerHelper(backgroundColor: Color(hex: 0x111111), borderColor: Color.clear, borderWidth: 0, topLeft: 0, topRight: 0, bottomLeft: 0, bottomRight: 0, shadowColor: .clear, shadowRadius: 0, shadowX: 0, shadowY: 0)
                                 .overlay(
-                                    HStack {
+                                    HStack(alignment: .center) {
                                         Image(systemName: "folder.fill")
                                             .resizable()
                                             .aspectRatio(contentMode: .fit)
-                                            .frame(width: 10, height: 10)
+                                            .frame(width: 12, height: 12)
                                             .foregroundColor(.white.opacity(0.8))
                                             .padding(.trailing, 4)
+                                            .padding(.leading, 10)
                                             .allowsHitTesting(false)
                                         Text("Load Directory")
                                             .foregroundColor(.white.opacity(0.8))
-                                            .font(.system(size: 9, weight: .semibold))
+                                            .font(.system(size: 10, weight: .bold))
                                             .lineLimit(1)
                                             .truncationMode(.tail)
                                             .allowsHitTesting(false)
                                         Spacer()
                                     }
-                                    .padding(.leading, 10)
-                                    .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
                                 )
                                 .overlay(
                                     Rectangle()
@@ -1030,6 +1029,8 @@ struct DinoLabsPlayground: View {
                                         .foregroundColor(Color(hex: 0xc1c1c1).opacity(0.2)),
                                     alignment: .bottom
                                 )
+                                .hoverEffect(opacity: 0.5, cursor: .pointingHand)
+                                
                                 MainButtonMain {
                                     loadFile()
                                 }
@@ -1041,20 +1042,19 @@ struct DinoLabsPlayground: View {
                                         Image(systemName: "doc.text")
                                             .resizable()
                                             .aspectRatio(contentMode: .fit)
-                                            .frame(width: 10, height: 10)
+                                            .frame(width: 12, height: 12)
                                             .foregroundColor(.white.opacity(0.8))
                                             .allowsHitTesting(false)
                                             .padding(.trailing, 4)
+                                            .padding(.leading, 10)
                                         Text("Load File")
                                             .foregroundColor(.white.opacity(0.8))
-                                            .font(.system(size: 9, weight: .semibold))
+                                            .font(.system(size: 10, weight: .semibold))
                                             .lineLimit(1)
                                             .truncationMode(.tail)
                                             .allowsHitTesting(false)
                                         Spacer()
                                     }
-                                    .padding(.leading, 10)
-                                    .hoverEffect(opacity: 0.5, scale: 1.02, cursor: .pointingHand)
                                 )
                                 .overlay(
                                     Rectangle()
@@ -1062,6 +1062,8 @@ struct DinoLabsPlayground: View {
                                         .foregroundColor(Color(hex: 0xc1c1c1).opacity(0.2)),
                                     alignment: .bottom
                                 )
+                                .hoverEffect(opacity: 0.5, cursor: .pointingHand)
+                                
                                 Spacer()
                             }
                             .frame(width: geometry.size.width * leftPanelWidthRatio,
@@ -2202,7 +2204,7 @@ struct DinoLabsPlayground: View {
     }
     
     private func fetchUsageData() {
-        guard let url = URL(string: "https://www.dinolaboratories.com/dinolabs/dinolabs-web-api/usage-info") else { return }
+        guard let url = URL(string: "http://localhost:3001/usage-info") else { return }
         var request = URLRequest(url: url)
         request.httpMethod = "POST"
         if let token = loadTokenFromKeychain() {

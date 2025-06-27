@@ -56,68 +56,94 @@ struct ResetAuth: View {
                                 }
                             }
                         
-                        VStack {
+                        
+                        HStack(alignment: .center) {
                             Spacer()
-                            
-                            HStack {
+                            VStack {
                                 Spacer()
-                                VStack {
-                                    Spacer()
+                                
+                                if isEmail {
+                                    Image("DinoLabsLogo-Letters")
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fit)
+                                        .frame(width: 150, height: 150)
+                                        .padding(.top, 4)
                                     
-                                    if isEmail {
-                                        Image("DinoLabsLogo-Letters")
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fit)
-                                            .frame(width: 150, height: 150)
-                                            .padding(.top, 4)
-                                        
-                                        VStack {
-                                            AuthenticationTextField(placeholder: "Enter Your Email", text: $resetEmail)
-                                                .textFieldStyle(PlainTextFieldStyle())
-                                                .foregroundColor(.black)
-                                                .font(.system(size: 8))
-                                                .hoverEffect(opacity: 0.5)
-                                                .clickEffect(opacity: 1.0)
-                                                .padding(.vertical, 14)
-                                                .padding(.horizontal, 14)
-                                                .frame(width: geometry.size.width * 0.32)
-                                                .containerHelper(backgroundColor: Color.white, borderColor: Color.black, borderWidth: 2, topLeft: 8, topRight: 8, bottomLeft: 8, bottomRight: 8, shadowColor: .white.opacity(0.5), shadowRadius: 1.5, shadowX: 0, shadowY: 0)
-                                                .padding(.bottom, 4)
-                                                .onSubmit {
-                                                    handleEmail()
-                                                }
-                                            
-                                            AuthenticationButtonMain {
+                                    VStack {
+                                        AuthenticationTextField(placeholder: "Enter Your Email", text: $resetEmail)
+                                            .textFieldStyle(PlainTextFieldStyle())
+                                            .foregroundColor(.black)
+                                            .font(.system(size: 8))
+                                            .hoverEffect(opacity: 0.5)
+                                            .clickEffect(opacity: 1.0)
+                                            .padding(.vertical, 14)
+                                            .padding(.horizontal, 14)
+                                            .frame(width: geometry.size.width * 0.32)
+                                            .containerHelper(backgroundColor: Color.white, borderColor: Color.black, borderWidth: 2, topLeft: 8, topRight: 8, bottomLeft: 8, bottomRight: 8, shadowColor: .white.opacity(0.5), shadowRadius: 1.5, shadowX: 0, shadowY: 0)
+                                            .padding(.bottom, 4)
+                                            .onSubmit {
                                                 handleEmail()
                                             }
-                                            .frame(width: geometry.size.width * 0.32, height: 40)
-                                            .overlay(
-                                                HStack {
-                                                    Spacer()
-                                                    Text("Continue")
-                                                        .font(.system(size: 12, weight: .bold))
-                                                        .foregroundColor(.white)
-                                                    Spacer()
-                                                }
-                                                    .allowsHitTesting(false)
-                                            )
-                                            .containerHelper(backgroundColor: Color(hex: 0x4E3270), borderColor: Color.clear, borderWidth: 0, topLeft: 6, topRight: 6, bottomLeft: 6, bottomRight: 6, shadowColor: .white.opacity(0.5), shadowRadius: 1.5, shadowX: 0, shadowY: 0)
-                                            .padding(.bottom, 2)
-                                            .hoverEffect(opacity: 0.5)
-                                            .clickEffect(opacity: 0.1)
-                                        }
-                                        .padding(.top, geometry.size.height * 0.01)
-                                    }
-                                    
-                                    if isCode {
-                                        Image("DinoLabsLogo-Letters")
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fit)
-                                            .frame(width: 150, height: 150)
-                                            .padding(.top, 4)
                                         
-                                        VStack {
-                                            AuthenticationTextField(placeholder: "Enter Your Six Digit Code", text: $resetCode)
+                                        AuthenticationButtonMain {
+                                            handleEmail()
+                                        }
+                                        .frame(width: geometry.size.width * 0.32, height: 40)
+                                        .overlay(
+                                            HStack {
+                                                Spacer()
+                                                Text("Continue")
+                                                    .font(.system(size: 12, weight: .bold))
+                                                    .foregroundColor(.white)
+                                                Spacer()
+                                            }
+                                                .allowsHitTesting(false)
+                                        )
+                                        .containerHelper(backgroundColor: Color(hex: 0x4E3270), borderColor: Color.clear, borderWidth: 0, topLeft: 6, topRight: 6, bottomLeft: 6, bottomRight: 6, shadowColor: .white.opacity(0.5), shadowRadius: 1.5, shadowX: 0, shadowY: 0)
+                                        .padding(.bottom, 2)
+                                        .hoverEffect(opacity: 0.5)
+                                        .clickEffect(opacity: 0.1)
+                                    }
+                                    .padding(.top, geometry.size.height * 0.01)
+                                }
+                                
+                                if isCode {
+                                    Image("DinoLabsLogo-Letters")
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fit)
+                                        .frame(width: 150, height: 150)
+                                        .padding(.top, 4)
+                                    
+                                    VStack {
+                                        AuthenticationTextField(placeholder: "Enter Your Six Digit Code", text: $resetCode)
+                                            .textFieldStyle(PlainTextFieldStyle())
+                                            .foregroundColor(.black)
+                                            .font(.system(size: 8))
+                                            .hoverEffect(opacity: 0.5)
+                                            .clickEffect(opacity: 1.0)
+                                            .padding(.vertical, 14)
+                                            .padding(.horizontal, 14)
+                                            .frame(width: geometry.size.width * 0.32)
+                                            .containerHelper(backgroundColor: Color.white, borderColor: Color.black, borderWidth: 2, topLeft: 8, topRight: 8, bottomLeft: 8, bottomRight: 8, shadowColor: .white.opacity(0.4), shadowRadius: 1.5, shadowX: 0, shadowY: 0)
+                                            .padding(.bottom, 4)
+                                            .onSubmit {
+                                                checkResetCode()
+                                            }
+                                    }
+                                    .padding(.top, geometry.size.height * 0.01)
+                                }
+                                
+                                if isReset {
+                                    Image("DinoLabsLogo-Letters")
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fit)
+                                        .frame(width: 150, height: 150)
+                                        .padding(.top, 4)
+                                    
+                                    VStack {
+                                        ZStack(alignment: .trailing) {
+                                            AuthenticationTextField(placeholder: "New Password", text: $newPassword, isSecure: !newPasswordVisible)
+                                                .id(newPasswordVisible ? "visible" : "secure")
                                                 .textFieldStyle(PlainTextFieldStyle())
                                                 .foregroundColor(.black)
                                                 .font(.system(size: 8))
@@ -129,133 +155,105 @@ struct ResetAuth: View {
                                                 .containerHelper(backgroundColor: Color.white, borderColor: Color.black, borderWidth: 2, topLeft: 8, topRight: 8, bottomLeft: 8, bottomRight: 8, shadowColor: .white.opacity(0.4), shadowRadius: 1.5, shadowX: 0, shadowY: 0)
                                                 .padding(.bottom, 4)
                                                 .onSubmit {
-                                                    checkResetCode()
+                                                    handlePassword()
                                                 }
-                                        }
-                                        .padding(.top, geometry.size.height * 0.01)
-                                    }
-                                    
-                                    if isReset {
-                                        Image("DinoLabsLogo-Letters")
-                                            .resizable()
-                                            .aspectRatio(contentMode: .fit)
-                                            .frame(width: 150, height: 150)
-                                            .padding(.top, 4)
-                                        
-                                        VStack {
-                                            ZStack(alignment: .trailing) {
-                                                AuthenticationTextField(placeholder: "New Password", text: $newPassword, isSecure: !newPasswordVisible)
-                                                    .id(newPasswordVisible ? "visible" : "secure")
-                                                    .textFieldStyle(PlainTextFieldStyle())
-                                                    .foregroundColor(.black)
-                                                    .font(.system(size: 8))
-                                                    .hoverEffect(opacity: 0.5)
-                                                    .clickEffect(opacity: 1.0)
-                                                    .padding(.vertical, 14)
-                                                    .padding(.horizontal, 14)
-                                                    .frame(width: geometry.size.width * 0.32)
-                                                    .containerHelper(backgroundColor: Color.white, borderColor: Color.black, borderWidth: 2, topLeft: 8, topRight: 8, bottomLeft: 8, bottomRight: 8, shadowColor: .white.opacity(0.4), shadowRadius: 1.5, shadowX: 0, shadowY: 0)
-                                                    .padding(.bottom, 4)
-                                                    .onSubmit {
-                                                        handlePassword()
-                                                    }
-                                                
-                                                AuthenticationButtonMain {
-                                                    newPasswordVisible.toggle()
-                                                }
-                                                .frame(width: 20, height: 20)
-                                                .overlay(
-                                                    Image(systemName: newPasswordVisible ? "eye.slash.fill" : "eye.fill")
-                                                        .font(.system(size: 14, weight: .semibold))
-                                                        .foregroundColor(Color(hex: 0x222222))
-                                                        .shadow(color: Color.gray.opacity(0.5), radius: 1, x: 0, y: 0)
-                                                        .allowsHitTesting(false)
-                                                )
-                                                .padding(.trailing, 8)
-                                            }
-                                            
-                                            ZStack(alignment: .trailing) {
-                                                AuthenticationTextField(placeholder: "Confirm Password", text: $confirmPassword, isSecure: !confirmPasswordVisible)
-                                                    .id(confirmPasswordVisible ? "visible" : "secure")
-                                                    .textFieldStyle(PlainTextFieldStyle())
-                                                    .foregroundColor(.black)
-                                                    .font(.system(size: 8))
-                                                    .hoverEffect(opacity: 0.5)
-                                                    .clickEffect(opacity: 1.0)
-                                                    .padding(.vertical, 14)
-                                                    .padding(.horizontal, 14)
-                                                    .frame(width: geometry.size.width * 0.32)
-                                                    .containerHelper(backgroundColor: Color.white, borderColor: Color.black, borderWidth: 2, topLeft: 8, topRight: 8, bottomLeft: 8, bottomRight: 8, shadowColor: .white.opacity(0.4), shadowRadius: 1.5, shadowX: 0, shadowY: 0)
-                                                    .padding(.bottom, 4)
-                                                    .onSubmit {
-                                                        handlePassword()
-                                                    }
-                                                
-                                                AuthenticationButtonMain {
-                                                    confirmPasswordVisible.toggle()
-                                                }
-                                                .frame(width: 20, height: 20)
-                                                .overlay(
-                                                    Image(systemName: confirmPasswordVisible ? "eye.slash.fill" : "eye.fill")
-                                                        .font(.system(size: 14, weight: .semibold))
-                                                        .foregroundColor(Color(hex: 0x222222))
-                                                        .shadow(color: Color.gray.opacity(0.5), radius: 1, x: 0, y: 0)
-                                                        .allowsHitTesting(false)
-                                                )
-                                                .padding(.trailing, 8)
-                                            }
                                             
                                             AuthenticationButtonMain {
-                                                handlePassword()
+                                                newPasswordVisible.toggle()
                                             }
-                                            .frame(width: geometry.size.width * 0.32, height: 40)
+                                            .frame(width: 20, height: 20)
                                             .overlay(
-                                                HStack {
-                                                    Spacer()
-                                                    Text("Set New Password")
-                                                        .font(.system(size: 12, weight: .bold))
-                                                        .foregroundColor(.white)
-                                                    Spacer()
-                                                }
-                                                .allowsHitTesting(false)
+                                                Image(systemName: newPasswordVisible ? "eye.slash.fill" : "eye.fill")
+                                                    .font(.system(size: 14, weight: .semibold))
+                                                    .foregroundColor(Color(hex: 0x222222))
+                                                    .shadow(color: Color.gray.opacity(0.5), radius: 1, x: 0, y: 0)
+                                                    .allowsHitTesting(false)
                                             )
-                                            .containerHelper(backgroundColor: Color(hex: 0x4E3270), borderColor: Color.clear, borderWidth: 0, topLeft: 6, topRight: 6, bottomLeft: 6, bottomRight: 6, shadowColor: .white.opacity(0.4), shadowRadius: 1.5, shadowX: 0, shadowY: 0)
-                                            .padding(.bottom, 2)
-                                            .hoverEffect(opacity: 0.5)
-                                            .clickEffect(opacity: 0.1)
+                                            .padding(.trailing, 8)
                                         }
-                                        .padding(.top, geometry.size.height * 0.01)
-                                    }
-                                    
-                                    VStack {
-                                        if let error = errorMessage, !error.isEmpty {
-                                            Spacer()
-                                            Text(error)
-                                                .foregroundColor(Color(hex: 0xE54B4B))
-                                                .font(.system(size: 12, weight: .bold))
-                                            Spacer()
+                                        
+                                        ZStack(alignment: .trailing) {
+                                            AuthenticationTextField(placeholder: "Confirm Password", text: $confirmPassword, isSecure: !confirmPasswordVisible)
+                                                .id(confirmPasswordVisible ? "visible" : "secure")
+                                                .textFieldStyle(PlainTextFieldStyle())
+                                                .foregroundColor(.black)
+                                                .font(.system(size: 8))
+                                                .hoverEffect(opacity: 0.5)
+                                                .clickEffect(opacity: 1.0)
+                                                .padding(.vertical, 14)
+                                                .padding(.horizontal, 14)
+                                                .frame(width: geometry.size.width * 0.32)
+                                                .containerHelper(backgroundColor: Color.white, borderColor: Color.black, borderWidth: 2, topLeft: 8, topRight: 8, bottomLeft: 8, bottomRight: 8, shadowColor: .white.opacity(0.4), shadowRadius: 1.5, shadowX: 0, shadowY: 0)
+                                                .padding(.bottom, 4)
+                                                .onSubmit {
+                                                    handlePassword()
+                                                }
+                                            
+                                            AuthenticationButtonMain {
+                                                confirmPasswordVisible.toggle()
+                                            }
+                                            .frame(width: 20, height: 20)
+                                            .overlay(
+                                                Image(systemName: confirmPasswordVisible ? "eye.slash.fill" : "eye.fill")
+                                                    .font(.system(size: 14, weight: .semibold))
+                                                    .foregroundColor(Color(hex: 0x222222))
+                                                    .shadow(color: Color.gray.opacity(0.5), radius: 1, x: 0, y: 0)
+                                                    .allowsHitTesting(false)
+                                            )
+                                            .padding(.trailing, 8)
                                         }
+                                        
+                                        AuthenticationButtonMain {
+                                            handlePassword()
+                                        }
+                                        .frame(width: geometry.size.width * 0.32, height: 40)
+                                        .overlay(
+                                            HStack {
+                                                Spacer()
+                                                Text("Set New Password")
+                                                    .font(.system(size: 12, weight: .bold))
+                                                    .foregroundColor(.white)
+                                                Spacer()
+                                            }
+                                                .allowsHitTesting(false)
+                                        )
+                                        .containerHelper(backgroundColor: Color(hex: 0x4E3270), borderColor: Color.clear, borderWidth: 0, topLeft: 6, topRight: 6, bottomLeft: 6, bottomRight: 6, shadowColor: .white.opacity(0.4), shadowRadius: 1.5, shadowX: 0, shadowY: 0)
+                                        .padding(.bottom, 2)
+                                        .hoverEffect(opacity: 0.5)
+                                        .clickEffect(opacity: 0.1)
                                     }
-                                    .frame(height: 12)
-                                    .padding(.vertical, 4)
-                                    
-                                    Spacer()
+                                    .padding(.top, geometry.size.height * 0.01)
                                 }
-                                .frame(width: geometry.size.width * 0.5, height: geometry.size.height * 0.6)
-                                .containerHelper(backgroundColor: Color(hex: 0x171717).opacity(0.9), borderColor: Color.clear, borderWidth: 0, topLeft: 10, topRight: 10, bottomLeft: 10, bottomRight: 10, shadowColor: .black.opacity(0.6), shadowRadius: 15, shadowX: 0, shadowY: 0)
+                                
+                                VStack {
+                                    if let error = errorMessage, !error.isEmpty {
+                                        Spacer()
+                                        Text(error)
+                                            .foregroundColor(Color(hex: 0xE54B4B))
+                                            .font(.system(size: 12, weight: .bold))
+                                        Spacer()
+                                    }
+                                }
+                                .frame(height: 12)
+                                .padding(.vertical, 4)
+                                
                                 Spacer()
                             }
+                            .frame(width: geometry.size.width * 0.5, height: geometry.size.height * 0.6)
+                            .containerHelper(backgroundColor: Color(hex: 0x171717).opacity(0.9), borderColor: Color.clear, borderWidth: 0, topLeft: 10, topRight: 10, bottomLeft: 10, bottomRight: 10, shadowColor: .black.opacity(0.6), shadowRadius: 15, shadowX: 0, shadowY: 0)
                             Spacer()
                         }
-                        .frame(width: geometry.size.width, height: geometry.size.height)
-                        .onChange(of: resetCode) { newValue in
-                            let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
-                            if trimmed == checkedResetCode && !trimmed.isEmpty {
-                                isCode = false
-                                isReset = true
-                            }
+                        Spacer()
+                    }
+                    .frame(width: geometry.size.width, height: geometry.size.height - 50, alignment: .center)
+                    .onChange(of: resetCode) { newValue in
+                        let trimmed = newValue.trimmingCharacters(in: .whitespacesAndNewlines)
+                        if trimmed == checkedResetCode && !trimmed.isEmpty {
+                            isCode = false
+                            isReset = true
                         }
                     }
+                    
                 }
                 
                 NavigationBar(geometry: geometry, currentView: $currentView)
@@ -275,7 +273,7 @@ struct ResetAuth: View {
     
     private func handleEmail() {
         resetCode = "xxx"
-        guard let url = URL(string: "https://www.dinolaboratories.com/dinolabs/dinolabs-web-api/reset-password") else {
+        guard let url = URL(string: "http://localhost:3001/reset-password") else {
             return
         }
         var request = URLRequest(url: url)
@@ -341,7 +339,7 @@ struct ResetAuth: View {
             errorMessage = "Passwords do not match."
             return
         } else {
-            guard let url = URL(string: "https://www.dinolaboratories.com/dinolabs/dinolabs-web-api/change-password") else {
+            guard let url = URL(string: "http://localhost:3001/change-password") else {
                 return
             }
             var request = URLRequest(url: url)

@@ -34,6 +34,8 @@ struct IDEView: View {
     @State private var consoleState: String = "terminal"
     @State private var showFullRoot: Bool = true
     @State private var editorScrollOffset: CGFloat = 0
+    @State private var editorViewportHeight: CGFloat = 0
+    @State private var editorContentHeight: CGFloat = 1
 
     var body: some View {
         Group {
@@ -420,21 +422,29 @@ struct IDEView: View {
                         )
                         .frame(width: geometry.size.width * (1 - leftPanelWidthRatio) - 100)
                         
+                        
                         MinimapEditorView(
                             text: $fileContent,
                             programmingLanguage: programmingLanguage,
                             theme: {
                                 switch colorTheme.lowercased() {
-                                case "light":
-                                    return .lightTheme
-                                case "dark":
-                                    return .darkTheme
-                                default:
-                                    return .defaultTheme
+                                case "light": .lightTheme
+                                case "dark": .darkTheme
+                                default: .defaultTheme
                                 }
                             }(),
                             zoomLevel: zoomLevel,
-                            scrollOffset: editorScrollOffset
+                            scrollOffset: editorScrollOffset,
+                            viewportHeight: editorViewportHeight,
+                            contentHeight: editorContentHeight,
+                            indicatorColor: NSColor(hex: 0xD2B2E9).withAlphaComponent(0.1),
+                            indicatorFixedHeight: 40
+                        )
+                        .overlay(
+                            Rectangle()
+                                .frame(width: 0.5)
+                                .foregroundColor(Color(hex: 0xc1c1c1).opacity(0.4)),
+                            alignment: .leading
                         )
                     }
                     
@@ -533,6 +543,12 @@ struct IDEView: View {
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("EditorScrollOffsetChanged"))) { notification in
             if let offset = notification.userInfo?["offset"] as? CGFloat {
                 editorScrollOffset = offset
+            }
+            if let height = notification.userInfo?["height"] as? CGFloat {
+                editorViewportHeight = height
+            }
+            if let content = notification.userInfo?["contentHeight"] as? CGFloat {
+                editorContentHeight = max(content, 1)
             }
         }
         .onAppear {
@@ -676,6 +692,7 @@ struct IDEEditorView: NSViewRepresentable {
         textView.textColor = ThemeColorProvider.defaultTextColor(for: theme)
         textView.font = .monospacedSystemFont(ofSize: 11 * CGFloat(zoomLevel), weight: .semibold)
         textView.isAutomaticTextReplacementEnabled = false
+
         let paragraphStyle = NSMutableParagraphStyle()
         paragraphStyle.minimumLineHeight = 20.0
         paragraphStyle.maximumLineHeight = 20.0
@@ -688,47 +705,67 @@ struct IDEEditorView: NSViewRepresentable {
             .foregroundColor: ThemeColorProvider.defaultTextColor(for: theme),
             .paragraphStyle: paragraphStyle
         ]
-        
+
         if let textContainer = textView.textContainer {
             textContainer.widthTracksTextView = false
-            textContainer.containerSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: .greatestFiniteMagnitude)
+            textContainer.containerSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
             textContainer.lineFragmentPadding = 8.0
             textContainer.lineBreakMode = .byClipping
         }
-        
+
         textView.isHorizontallyResizable = true
         textView.isVerticallyResizable = true
         textView.autoresizingMask = [.width, .height]
-        textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: .greatestFiniteMagnitude)
+        textView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
         textView.textContainerInset = NSSize(width: 0, height: 8)
         textView.customKeyBinds = keyBinds
-        
+
         let scrollView = IDEScrollView()
         scrollView.documentView = textView
-        scrollView.hasVerticalScroller = true
-        scrollView.hasHorizontalScroller = true
-        scrollView.drawsBackground = false
+        scrollView.scrollerStyle = .overlay
+        scrollView.hasVerticalScroller   = false
+        scrollView.hasHorizontalScroller = false
+
         scrollView.hasVerticalRuler = true
-        scrollView.rulersVisible = true
-        scrollView.verticalScroller = InvisibleScroller(frame: .zero)
-        scrollView.horizontalScroller = InvisibleScroller(frame: .zero)
-        
-        let ruler = IDECenteredLineNumberRuler(textView: textView, theme: theme, zoomLevel: zoomLevel)
-        scrollView.verticalRulerView = ruler
-        scrollView.contentView.postsBoundsChangedNotifications = true
-        
+        scrollView.rulersVisible    = true
+        scrollView.verticalRulerView = IDECenteredLineNumberRuler(
+            textView: textView,
+            theme:    theme,
+            zoomLevel: zoomLevel
+        )
+
         NotificationCenter.default.addObserver(
             forName: NSView.boundsDidChangeNotification,
             object: scrollView.contentView,
             queue: .main
         ) { _ in
-            if let textView = scrollView.documentView as? IDETextView {
-                context.coordinator.applySyntaxHighlighting(to: textView)
+            if let tv = scrollView.documentView as? IDETextView {
+                context.coordinator.applySyntaxHighlighting(to: tv)
             }
             scrollView.verticalRulerView?.needsDisplay = true
-            NotificationCenter.default.post(name: Notification.Name("EditorScrollOffsetChanged"), object: nil, userInfo: ["offset": scrollView.contentView.bounds.origin.y])
+            NotificationCenter.default.post(
+                name: Notification.Name("EditorScrollOffsetChanged"),
+                object: nil,
+                userInfo: [
+                    "offset": scrollView.contentView.bounds.origin.y,
+                    "height": scrollView.contentView.bounds.height,
+                    "contentHeight": textView.bounds.height
+                ]
+            )
         }
-        
+
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(
+                name: Notification.Name("EditorScrollOffsetChanged"),
+                object: nil,
+                userInfo: [
+                    "offset": 0,
+                    "height": scrollView.contentView.bounds.height,
+                    "contentHeight": textView.bounds.height
+                ]
+            )
+        }
+
         context.coordinator.textView = textView
         return scrollView
     }
@@ -755,37 +792,72 @@ struct IDEEditorView: NSViewRepresentable {
         private var pendingHighlightWorkItem: DispatchWorkItem?
         var lineHighlightRange: NSRange?
         var lastSearchQuery: String = ""
-        
+
         init(_ parent: IDEEditorView) {
             self.parent = parent
             super.init()
-            
-            NotificationCenter.default.addObserver(forName: Notification.Name("NavigateToLine"), object: nil, queue: .main) { [weak self] notification in
+
+            NotificationCenter.default.addObserver(
+                forName: Notification.Name("NavigateToLine"),
+                object: nil,
+                queue: .main
+            ) { [weak self] notification in
                 if let lineNumber = notification.userInfo?["lineNumber"] as? Int {
-                    self?.navigateToLine(lineNumber)
+                    let shouldHighlight = notification.userInfo?["highlight"] as? Bool ?? true
+                    self?.navigateToLine(lineNumber, highlight: shouldHighlight)
                 }
             }
-            NotificationCenter.default.addObserver(forName: Notification.Name("JumpToNextSearchMatch"), object: nil, queue: .main) { [weak self] _ in
+
+            NotificationCenter.default.addObserver(
+                forName: Notification.Name("JumpToNextSearchMatch"),
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
                 self?.jumpToNextSearchMatch()
             }
-            NotificationCenter.default.addObserver(forName: Notification.Name("JumpToPreviousSearchMatch"), object: nil, queue: .main) { [weak self] _ in
+
+            NotificationCenter.default.addObserver(
+                forName: Notification.Name("JumpToPreviousSearchMatch"),
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
                 self?.jumpToPreviousSearchMatch()
             }
-            NotificationCenter.default.addObserver(forName: Notification.Name("SearchQueryChanged"), object: nil, queue: .main) { [weak self] _ in
+
+            NotificationCenter.default.addObserver(
+                forName: Notification.Name("SearchQueryChanged"),
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
                 self?.updateSearchIndicator()
             }
-            NotificationCenter.default.addObserver(forName: Notification.Name("PerformUndo"), object: nil, queue: .main) { [weak self] _ in
+
+            NotificationCenter.default.addObserver(
+                forName: Notification.Name("PerformUndo"),
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
                 self?.textView?.undoManager?.undo()
             }
-            NotificationCenter.default.addObserver(forName: Notification.Name("PerformRedo"), object: nil, queue: .main) { [weak self] _ in
+
+            NotificationCenter.default.addObserver(
+                forName: Notification.Name("PerformRedo"),
+                object: nil,
+                queue: .main
+            ) { [weak self] _ in
                 self?.textView?.undoManager?.redo()
             }
-            
-            NotificationCenter.default.addObserver(forName: Notification.Name("PerformSingleReplacement"), object: nil, queue: .main) { [weak self] notification in
-                guard let self = self, let textView = self.textView else { return }
+
+            NotificationCenter.default.addObserver(
+                forName: Notification.Name("PerformSingleReplacement"),
+                object: nil,
+                queue: .main
+            ) { [weak self] notification in
                 guard
-                    let userInfo    = notification.userInfo,
-                    let search      = userInfo["search"] as? String,
+                    let self = self,
+                    let textView = self.textView,
+                    let userInfo = notification.userInfo,
+                    let search = userInfo["search"] as? String,
                     let replacement = userInfo["replacement"] as? String,
                     let caseSensitive = userInfo["caseSensitive"] as? Bool
                 else { return }
@@ -794,7 +866,6 @@ struct IDEEditorView: NSViewRepresentable {
                 if selectedRange.length > 0 {
                     let selectedText = (textView.string as NSString).substring(with: selectedRange)
                     let compareOpts: NSString.CompareOptions = caseSensitive ? [] : [.caseInsensitive]
-                    
                     if selectedText.compare(search, options: compareOpts) == .orderedSame {
                         let wasEditable = textView.isEditable
                         textView.isEditable = true
@@ -806,49 +877,67 @@ struct IDEEditorView: NSViewRepresentable {
                     }
                 }
             }
-            
-            NotificationCenter.default.addObserver(forName: Notification.Name("PerformReplacementAll"), object: nil, queue: .main) { [weak self] notification in
-                guard let self = self, let textView = self.textView else { return }
-                guard let userInfo = notification.userInfo,
-                      let search = userInfo["search"] as? String,
-                      let replacement = userInfo["replacement"] as? String,
-                      let caseSensitive = userInfo["caseSensitive"] as? Bool else { return }
+
+            NotificationCenter.default.addObserver(
+                forName: Notification.Name("PerformReplacementAll"),
+                object: nil,
+                queue: .main
+            ) { [weak self] notification in
+                guard
+                    let self = self,
+                    let textView = self.textView,
+                    let userInfo = notification.userInfo,
+                    let search = userInfo["search"] as? String,
+                    let replacement = userInfo["replacement"] as? String,
+                    let caseSensitive = userInfo["caseSensitive"] as? Bool
+                else { return }
+
                 let options: NSString.CompareOptions = caseSensitive ? [] : [.caseInsensitive]
                 let nsText = textView.string as NSString
                 var searchRange = NSRange(location: 0, length: nsText.length)
+
                 while true {
                     let foundRange = nsText.range(of: search, options: options, range: searchRange)
-                    if foundRange.location != NSNotFound {
-                        let wasEditable = textView.isEditable
-                        textView.isEditable = true
-                        if textView.shouldChangeText(in: foundRange, replacementString: replacement) {
-                            textView.replaceCharacters(in: foundRange, with: replacement)
-                            textView.didChangeText()
-                        }
-                        textView.isEditable = wasEditable
-                        let newLocation = foundRange.location + (replacement as NSString).length
-                        if newLocation < nsText.length {
-                            searchRange = NSRange(location: newLocation, length: nsText.length - newLocation)
-                        } else {
-                            break
-                        }
+                    if foundRange.location == NSNotFound { break }
+
+                    let wasEditable = textView.isEditable
+                    textView.isEditable = true
+                    if textView.shouldChangeText(in: foundRange, replacementString: replacement) {
+                        textView.replaceCharacters(in: foundRange, with: replacement)
+                        textView.didChangeText()
+                    }
+                    textView.isEditable = wasEditable
+
+                    let newLocation = foundRange.location + (replacement as NSString).length
+                    if newLocation < nsText.length {
+                        searchRange = NSRange(location: newLocation, length: nsText.length - newLocation)
                     } else {
                         break
                     }
                 }
             }
-            
-            NotificationCenter.default.addObserver(self, selector: #selector(handleSelectionDidChange(_:)), name: NSTextView.didChangeSelectionNotification, object: nil)
+
+            NotificationCenter.default.addObserver(
+                self,
+                selector: #selector(handleSelectionDidChange(_:)),
+                name: NSTextView.didChangeSelectionNotification,
+                object: nil
+            )
         }
-        
+
         @objc private func handleSelectionDidChange(_ note: Notification) {
-            guard let tv = textView, let obj = note.object as? NSTextView, obj == tv else { return }
+            guard
+                let tv = textView,
+                let obj = note.object as? NSTextView,
+                obj == tv
+            else { return }
+
             if lineHighlightRange != nil {
                 lineHighlightRange = nil
                 applySyntaxHighlighting(to: tv)
             }
         }
-        
+
         func textDidChange(_ notification: Notification) {
             guard let textView = notification.object as? NSTextView else { return }
             parent.text = textView.string
@@ -857,56 +946,65 @@ struct IDEEditorView: NSViewRepresentable {
             applySyntaxHighlighting(to: textView)
             updateSearchIndicator()
         }
-        
+
         func applySyntaxHighlighting(to textView: NSTextView) {
             pendingHighlightWorkItem?.cancel()
             let currentText = textView.string
+
             let workItem = DispatchWorkItem { [weak self, weak textView] in
-                guard let self = self, let textView = textView else { return }
-                if textView.string == currentText {
-                    self.applySyntaxHighlightingInternal(on: textView, withReferenceText: currentText)
-                }
+                guard
+                    let self = self,
+                    let textView = textView,
+                    textView.string == currentText
+                else { return }
+                self.applySyntaxHighlightingInternal(on: textView, withReferenceText: currentText)
             }
             pendingHighlightWorkItem = workItem
-            
+
             if textView.window?.firstResponder == textView {
                 workItem.perform()
             } else {
                 DispatchQueue.main.async(execute: workItem)
             }
         }
-        
-        func applySyntaxHighlightingInternal(on textView: NSTextView, withReferenceText currentText: String) {
-            guard textView.string == currentText,
-                  let layoutManager = textView.layoutManager,
-                  let textContainer = textView.textContainer else { return }
+
+        private func applySyntaxHighlightingInternal(on textView: NSTextView, withReferenceText currentText: String) {
+            guard
+                textView.string == currentText,
+                let layoutManager = textView.layoutManager,
+                let textContainer = textView.textContainer
+            else { return }
+
             layoutManager.ensureLayout(for: textContainer)
-            
+
             let visibleRect = textView.visibleRect
             let glyphRange = layoutManager.glyphRange(forBoundingRect: visibleRect, in: textContainer)
-            let visibleCharRange = layoutManager.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
+            let visibleChar = layoutManager.characterRange(forGlyphRange: glyphRange, actualGlyphRange: nil)
             let fullText = textView.string as NSString
-            let visibleLineRange = fullText.lineRange(for: visibleCharRange)
-            let expandedRange = expandRangeToIncludeFullContext(visibleLineRange, in: fullText)
+            let visibleLines = fullText.lineRange(for: visibleChar)
+            let expandedRange = expandRangeToIncludeFullContext(visibleLines, in: fullText)
             let expandedText = fullText.substring(with: expandedRange)
-            
+
             let paragraphStyle = textView.defaultParagraphStyle ?? NSParagraphStyle()
             let font = NSFont.monospacedSystemFont(ofSize: 11 * CGFloat(parent.zoomLevel), weight: .semibold)
             let lineHeight: CGFloat = 20.0
             let actualLineHeight = layoutManager.defaultLineHeight(for: font)
             let baselineOffset = (lineHeight - actualLineHeight) / 2.0
             let selRange = textView.selectedRange()
-            
+
             let tokens = SwiftParser.tokenize(expandedText, language: parent.programmingLanguage)
-            let newVisibleAttributed = NSMutableAttributedString()
-            
+            let newVisible = NSMutableAttributedString()
+
             var currentLine = 1
             for token in tokens {
                 if token.lineNumber > currentLine {
                     let needed = token.lineNumber - currentLine
                     for _ in 0..<needed {
-                        let newlineAttr = NSAttributedString(string: "\n", attributes: [.paragraphStyle: paragraphStyle])
-                        newVisibleAttributed.append(newlineAttr)
+                        let newlineAttr = NSAttributedString(
+                            string: "\n",
+                            attributes: [.paragraphStyle: paragraphStyle]
+                        )
+                        newVisible.append(newlineAttr)
                     }
                     currentLine = token.lineNumber
                 }
@@ -917,282 +1015,289 @@ struct IDEEditorView: NSViewRepresentable {
                     .paragraphStyle: paragraphStyle,
                     .baselineOffset: baselineOffset
                 ]
-                newVisibleAttributed.append(NSAttributedString(string: token.value, attributes: attrs))
+                newVisible.append(NSAttributedString(string: token.value, attributes: attrs))
             }
+
             let visibleLinesCount = expandedText.components(separatedBy: "\n").count
             if visibleLinesCount > currentLine {
                 let diff = visibleLinesCount - currentLine
                 for _ in 0..<diff {
-                    let newlineAttr = NSAttributedString(string: "\n", attributes: [.paragraphStyle: paragraphStyle])
-                    newVisibleAttributed.append(newlineAttr)
+                    let newlineAttr = NSAttributedString(
+                        string: "\n",
+                        attributes: [.paragraphStyle: paragraphStyle]
+                    )
+                    newVisible.append(newlineAttr)
                 }
             }
-            
+
             if !parent.isReplacing && !parent.searchQuery.isEmpty {
                 let searchText = parent.searchQuery
                 let options: NSString.CompareOptions = parent.searchCaseSensitive ? [] : [.caseInsensitive]
-                let nsNewVisibleText = newVisibleAttributed.string as NSString
-                var searchRange = NSRange(location: 0, length: nsNewVisibleText.length)
-                
-                let baseFontSize = 11 * CGFloat(parent.zoomLevel)
-                let highlightFont = NSFont.monospacedSystemFont(ofSize: baseFontSize * 1.05, weight: .semibold)
+                let nsNew = newVisible.string as NSString
+                var searchRange = NSRange(location: 0, length: nsNew.length)
+
+                let highlightFont = NSFont.monospacedSystemFont(
+                    ofSize: 11 * CGFloat(parent.zoomLevel) * 1.05,
+                    weight: .semibold
+                )
                 let highlightColor = NSColor(hex: 0xAD6ADD)
                 let shadow = NSShadow()
                 shadow.shadowOffset = NSSize(width: 1, height: -1)
                 shadow.shadowBlurRadius = 2
                 shadow.shadowColor = NSColor.black.withAlphaComponent(0.7)
-                
+
                 var foundMatch = false
                 while true {
-                    let foundRange = nsNewVisibleText.range(of: searchText, options: options, range: searchRange)
-                    if foundRange.location != NSNotFound {
-                        foundMatch = true
-                        newVisibleAttributed.addAttribute(.font, value: highlightFont, range: foundRange)
-                        newVisibleAttributed.addAttribute(.foregroundColor, value: highlightColor, range: foundRange)
-                        newVisibleAttributed.addAttribute(.shadow, value: shadow, range: foundRange)
-                        newVisibleAttributed.removeAttribute(.backgroundColor, range: foundRange)
-                        let newLocation = foundRange.location + foundRange.length
-                        if newLocation < nsNewVisibleText.length {
-                            searchRange = NSRange(location: newLocation, length: nsNewVisibleText.length - newLocation)
-                        } else {
-                            break
-                        }
+                    let found = nsNew.range(of: searchText, options: options, range: searchRange)
+                    if found.location == NSNotFound { break }
+                    foundMatch = true
+                    newVisible.addAttribute(.font, value: highlightFont, range: found)
+                    newVisible.addAttribute(.foregroundColor, value: highlightColor, range: found)
+                    newVisible.addAttribute(.shadow, value: shadow, range: found)
+                    newVisible.removeAttribute(.backgroundColor, range: found)
+
+                    let newLoc = found.location + found.length
+                    if newLoc < nsNew.length {
+                        searchRange = NSRange(location: newLoc, length: nsNew.length - newLoc)
                     } else {
                         break
                     }
                 }
-                
-                foundMatch = foundMatch || parent.totalSearchMatches > 0
-                
+
                 if foundMatch {
-                    newVisibleAttributed.enumerateAttribute(.foregroundColor, in: NSRange(location: 0, length: newVisibleAttributed.length), options: []) { value, range, _ in
-                        if let color = value as? NSColor {
-                            if color != highlightColor {
-                                let mutedColor = color.withAlphaComponent(0.3)
-                                newVisibleAttributed.addAttribute(.foregroundColor, value: mutedColor, range: range)
-                            }
-                        }
-                    }
-                } else {
-                    newVisibleAttributed.enumerateAttribute(.foregroundColor, in: NSRange(location: 0, length: newVisibleAttributed.length), options: []) { value, range, _ in
-                        if let color = value as? NSColor {
-                            let restoredColor = color.withAlphaComponent(1.0)
-                            newVisibleAttributed.addAttribute(.foregroundColor, value: restoredColor, range: range)
+                    newVisible.enumerateAttribute(.foregroundColor, in: NSRange(location: 0, length: newVisible.length)) { value, range, _ in
+                        if let color = value as? NSColor, color != highlightColor {
+                            let muted = color.withAlphaComponent(0.3)
+                            newVisible.addAttribute(.foregroundColor, value: muted, range: range)
                         }
                     }
                 }
             }
-            
+
             if let lineRange = lineHighlightRange {
-                let baseFontSize = 11 * CGFloat(parent.zoomLevel)
-                let highlightFont = NSFont.monospacedSystemFont(ofSize: baseFontSize * 1.05, weight: .semibold)
+                let highlightFont = NSFont.monospacedSystemFont(
+                    ofSize: 11 * CGFloat(parent.zoomLevel) * 1.05,
+                    weight: .semibold
+                )
                 let highlightColor = NSColor(hex: 0xAD6ADD)
                 let shadow = NSShadow()
                 shadow.shadowOffset = NSSize(width: 1, height: -1)
                 shadow.shadowBlurRadius = 2
                 shadow.shadowColor = NSColor.black.withAlphaComponent(0.7)
-                
-                let intersection = NSIntersectionRange(NSRange(location: expandedRange.location, length: newVisibleAttributed.length), lineRange)
+
+                let intersection = NSIntersectionRange(
+                    NSRange(location: expandedRange.location, length: newVisible.length),
+                    lineRange
+                )
                 if intersection.length > 0 {
-                    let localRange = NSRange(location: intersection.location - expandedRange.location, length: intersection.length)
-                    newVisibleAttributed.addAttribute(.font, value: highlightFont, range: localRange)
-                    newVisibleAttributed.addAttribute(.foregroundColor, value: highlightColor, range: localRange)
-                    newVisibleAttributed.addAttribute(.shadow, value: shadow, range: localRange)
-                    newVisibleAttributed.removeAttribute(.backgroundColor, range: localRange)
+                    let local = NSRange(
+                        location: intersection.location - expandedRange.location,
+                        length: intersection.length
+                    )
+                    newVisible.addAttribute(.font, value: highlightFont, range: local)
+                    newVisible.addAttribute(.foregroundColor, value: highlightColor, range: local)
+                    newVisible.addAttribute(.shadow, value: shadow, range: local)
+                    newVisible.removeAttribute(.backgroundColor, range: local)
                 }
             }
-            
-            if let currentAttributed = textView.textStorage?.attributedSubstring(from: expandedRange),
-               currentAttributed.isEqual(to: newVisibleAttributed) {
+
+            if let currentAttr = textView.textStorage?.attributedSubstring(from: expandedRange),
+               currentAttr.isEqual(to: newVisible) {
                 return
             }
-            
+
             CATransaction.begin()
             CATransaction.setDisableActions(true)
             textView.textStorage?.beginEditing()
-            textView.textStorage?.replaceCharacters(in: expandedRange, with: newVisibleAttributed)
+            textView.textStorage?.replaceCharacters(in: expandedRange, with: newVisible)
             textView.textStorage?.endEditing()
             textView.setSelectedRange(selRange)
             CATransaction.commit()
-            
             textView.layer?.removeAllAnimations()
         }
-        
+
         private func expandRangeToIncludeFullContext(_ visibleRange: NSRange, in fullText: NSString) -> NSRange {
-            var expandedRange = visibleRange
+            var expanded = visibleRange
+
             let delimiterPairs: [(String, String)] = [
-                ("/*", "*/"),
-                ("{/*", "*/}"),
-                ("\"\"\"", "\"\"\""),
-                ("'''", "'''"),
-                ("<!--", "-->"),
-                ("/**", "*/"),
-                ("///", "///"),
-                ("%{", "}"),
-                ("#{", "}"),
-                ("<<EOF", "EOF"),
-                ("=begin", "=end"),
-                ("{-", "-}"),
-                ("(*", "*)"),
-                ("{*", "*}"),
-                ("/** @", "*/"),
-                ("//!", "//!"),
-                (">>> ", "..."),
-                ("\\begin{", "\\end{"),
-                ("--[[", "]]"),
+                ("/*", "*/"), ("{/*", "*/}"), ("\"\"\"", "\"\"\""), ("'''", "'''"),
+                ("<!--", "-->"), ("/**", "*/"), ("///", "///"), ("%{", "}"),
+                ("#{", "}"), ("<<EOF", "EOF"), ("=begin", "=end"), ("{-", "-}"),
+                ("(*", "*)"), ("{*", "*}"), ("/** @", "*/"), ("//!", "//!"),
+                (">>> ", "..."), ("\\begin{", "\\end{"), ("--[[", "]]"),
                 ("[[", "]]")
             ]
+
             for (startDelimiter, endDelimiter) in delimiterPairs {
                 if startDelimiter == endDelimiter {
                     var occurrences: [NSRange] = []
                     var searchRange = NSRange(location: 0, length: fullText.length)
                     while true {
-                        let foundRange = fullText.range(of: startDelimiter, options: [], range: searchRange)
-                        if foundRange.location == NSNotFound { break }
-                        occurrences.append(foundRange)
-                        let newLocation = foundRange.location + foundRange.length
+                        let found = fullText.range(of: startDelimiter, options: [], range: searchRange)
+                        if found.location == NSNotFound { break }
+                        occurrences.append(found)
+                        let newLocation = found.location + found.length
                         if newLocation >= fullText.length { break }
                         searchRange = NSRange(location: newLocation, length: fullText.length - newLocation)
                     }
                     if occurrences.count >= 2 {
-                        for i in 0..<occurrences.count - 1 where i % 2 == 0 {
+                        for i in stride(from: 0, to: occurrences.count - 1, by: 2) {
                             let start = occurrences[i]
                             let end = occurrences[i + 1]
-                            if (start.location < visibleRange.location && end.location + end.length > visibleRange.location)
-                                || (visibleRange.contains(start.location) && end.location + end.length > NSMaxRange(visibleRange))
-                                || (visibleRange.contains(start.location) && visibleRange.contains(end.location + end.length - 1)) {
+                            if   (start.location < visibleRange.location && end.location + end.length > visibleRange.location)
+                              || (visibleRange.contains(start.location) && end.location + end.length > NSMaxRange(visibleRange))
+                              || (visibleRange.contains(start.location) && visibleRange.contains(end.location + end.length - 1)) {
                                 let blockStart = start.location
                                 let blockEnd = end.location + end.length
-                                expandedRange = NSUnionRange(expandedRange, NSRange(location: blockStart, length: blockEnd - blockStart))
+                                expanded = NSUnionRange(expanded, NSRange(location: blockStart, length: blockEnd - blockStart))
                             }
                         }
                     }
                 } else {
-                    let startSearchRange1 = NSRange(location: 0, length: visibleRange.location)
-                    let startRange1 = fullText.range(of: startDelimiter, options: .backwards, range: startSearchRange1)
-                    if startRange1.location != NSNotFound {
-                        let endSearchStart = startRange1.location + startRange1.length
+                    let searchRange1 = NSRange(location: 0, length: visibleRange.location)
+                    let start1 = fullText.range(of: startDelimiter, options: .backwards, range: searchRange1)
+                    if start1.location != NSNotFound {
+                        let endSearchStart = start1.location + start1.length
                         let endSearchRange1 = NSRange(location: endSearchStart, length: fullText.length - endSearchStart)
-                        let endRange1 = fullText.range(of: endDelimiter, options: [], range: endSearchRange1)
-                        if endRange1.location != NSNotFound && endRange1.location >= visibleRange.location {
-                            let blockStart = startRange1.location
-                            let blockEnd = endRange1.location + endRange1.length
-                            expandedRange = NSUnionRange(expandedRange, NSRange(location: blockStart, length: blockEnd - blockStart))
+                        let end1 = fullText.range(of: endDelimiter, options: [], range: endSearchRange1)
+                        if end1.location != NSNotFound && end1.location >= visibleRange.location {
+                            let blockStart = start1.location
+                            let blockEnd = end1.location + end1.length
+                            expanded = NSUnionRange(expanded, NSRange(location: blockStart, length: blockEnd - blockStart))
                         }
                     }
-                    let startSearchRange2 = visibleRange
-                    let startRange2 = fullText.range(of: startDelimiter, options: [], range: startSearchRange2)
+
+                    let startRange2 = fullText.range(of: startDelimiter, options: [], range: visibleRange)
                     if startRange2.location != NSNotFound {
                         let endSearchStart = startRange2.location + startRange2.length
                         let endSearchRange2 = NSRange(location: endSearchStart, length: fullText.length - endSearchStart)
-                        let endRange2 = fullText.range(of: endDelimiter, options: [], range: endSearchRange2)
-                        if endRange2.location != NSNotFound {
+                        let end2 = fullText.range(of: endDelimiter, options: [], range: endSearchRange2)
+                        if end2.location != NSNotFound {
                             let blockStart = startRange2.location
-                            let blockEnd = endRange2.location + endRange2.length
-                            expandedRange = NSUnionRange(expandedRange, NSRange(location: blockStart, length: blockEnd - blockStart))
+                            let blockEnd = end2.location + end2.length
+                            expanded = NSUnionRange(expanded, NSRange(location: blockStart, length: blockEnd - blockStart))
                         }
                     }
                 }
             }
-            
-            expandedRange = NSIntersectionRange(expandedRange, NSRange(location: 0, length: fullText.length))
-            
-            return expandedRange
+
+            expanded = NSIntersectionRange(expanded, NSRange(location: 0, length: fullText.length))
+            return expanded
         }
-        
-        func navigateToLine(_ lineNumber: Int) {
-            guard let textView = textView else { return }
+
+        func navigateToLine(_ lineNumber: Int, highlight: Bool = true) {
+            guard
+                let textView = textView,
+                lineNumber > 0
+            else { return }
+
             let lines = textView.string.components(separatedBy: "\n")
-            guard lineNumber > 0, lineNumber <= lines.count else { return }
-            
+            guard lineNumber <= lines.count else { return }
+
             var location = 0
             for i in 0..<lineNumber - 1 {
                 location += lines[i].count + 1
             }
-            
+
             let lineText = lines[lineNumber - 1]
             let range = NSRange(location: location, length: lineText.count)
-            
+
             textView.scrollRangeToVisible(range)
-            textView.setSelectedRange(range)
+            if highlight {
+                textView.setSelectedRange(range)
+            }
         }
-        
+
         func jumpToNextSearchMatch() {
-            guard let textView = textView, !parent.searchQuery.isEmpty else { return }
-            DispatchQueue.main.async {
-                let options: NSString.CompareOptions = self.parent.searchCaseSensitive ? [] : [.caseInsensitive]
-                let nsText = textView.string as NSString
-                let currentRange = textView.selectedRange()
-                let startLocation = currentRange.location + currentRange.length
-                let searchRange = NSRange(location: startLocation, length: nsText.length - startLocation)
-                var foundRange = nsText.range(of: self.parent.searchQuery, options: options, range: searchRange)
-                if foundRange.location == NSNotFound {
-                    foundRange = nsText.range(of: self.parent.searchQuery, options: options)
-                }
-                if foundRange.location != NSNotFound {
-                    textView.scrollRangeToVisible(foundRange)
-                    textView.setSelectedRange(foundRange)
-                    self.updateSearchIndicator()
-                }
-            }
-        }
-        
-        func jumpToPreviousSearchMatch() {
-            guard let textView = textView, !parent.searchQuery.isEmpty else { return }
-            let options: NSString.CompareOptions = parent.searchCaseSensitive ? [.backwards] : [.backwards, .caseInsensitive]
+            guard
+                let textView = textView,
+                !parent.searchQuery.isEmpty
+            else { return }
+
             let nsText = textView.string as NSString
-            let currentRange = textView.selectedRange()
-            let searchRange = NSRange(location: 0, length: currentRange.location)
-            var foundRange = nsText.range(of: parent.searchQuery, options: options, range: searchRange)
-            if foundRange.location == NSNotFound {
-                foundRange = nsText.range(of: parent.searchQuery, options: options)
+            let options: NSString.CompareOptions = parent.searchCaseSensitive ? [] : [.caseInsensitive]
+
+            let current = textView.selectedRange()
+            let start = current.location + current.length
+            let searchRange = NSRange(location: start, length: nsText.length - start)
+
+            var found = nsText.range(of: parent.searchQuery, options: options, range: searchRange)
+            if found.location == NSNotFound {
+                found = nsText.range(of: parent.searchQuery, options: options)
             }
-            if foundRange.location != NSNotFound {
-                textView.scrollRangeToVisible(foundRange)
-                textView.setSelectedRange(foundRange)
+            if found.location != NSNotFound {
+                textView.scrollRangeToVisible(found)
+                textView.setSelectedRange(found)
                 updateSearchIndicator()
             }
         }
-        
+
+        func jumpToPreviousSearchMatch() {
+            guard
+                let textView = textView,
+                !parent.searchQuery.isEmpty
+            else { return }
+
+            let nsText = textView.string as NSString
+            let options: NSString.CompareOptions = parent.searchCaseSensitive ? [.backwards] : [.backwards, .caseInsensitive]
+
+            let current = textView.selectedRange()
+            let searchRange = NSRange(location: 0, length: current.location)
+
+            var found = nsText.range(of: parent.searchQuery, options: options, range: searchRange)
+            if found.location == NSNotFound {
+                found = nsText.range(of: parent.searchQuery, options: options)
+            }
+            if found.location != NSNotFound {
+                textView.scrollRangeToVisible(found)
+                textView.setSelectedRange(found)
+                updateSearchIndicator()
+            }
+        }
+
         func updateSearchIndicator() {
-            guard let textView = textView, !parent.searchQuery.isEmpty else {
+            guard
+                let textView = textView,
+                !parent.searchQuery.isEmpty
+            else {
                 parent.totalSearchMatches = 0
                 parent.currentSearchMatch = 0
                 lastSearchQuery = parent.searchQuery
                 return
             }
-            let nsText = textView.string as NSString
+
+            let nsText  = textView.string as NSString
             let options: NSString.CompareOptions = parent.searchCaseSensitive ? [] : [.caseInsensitive]
+
             var searchRange = NSRange(location: 0, length: nsText.length)
             var matches: [NSRange] = []
+
             while true {
-                let foundRange = nsText.range(of: parent.searchQuery, options: options, range: searchRange)
-                if foundRange.location != NSNotFound {
-                    matches.append(foundRange)
-                    let newLocation = foundRange.location + foundRange.length
-                    if newLocation < nsText.length {
-                        searchRange = NSRange(location: newLocation, length: nsText.length - newLocation)
-                    } else {
-                        break
-                    }
+                let found = nsText.range(of: parent.searchQuery, options: options, range: searchRange)
+                if found.location == NSNotFound { break }
+                matches.append(found)
+
+                let newLoc = found.location + found.length
+                if newLoc < nsText.length {
+                    searchRange = NSRange(location: newLoc, length: nsText.length - newLoc)
                 } else {
                     break
                 }
             }
-            parent.totalSearchMatches = matches.count
 
+            parent.totalSearchMatches = matches.count
             if parent.searchQuery != lastSearchQuery {
                 lastSearchQuery = parent.searchQuery
-                if let firstMatch = matches.first {
-                    textView.scrollRangeToVisible(firstMatch)
-                    textView.setSelectedRange(firstMatch)
+                if let first = matches.first {
+                    textView.scrollRangeToVisible(first)
+                    textView.setSelectedRange(first)
                     parent.currentSearchMatch = 1
                 } else {
                     parent.currentSearchMatch = 0
                 }
                 return
             }
-            
+
             let currentLoc = textView.selectedRange().location
             var currentIndex = 0
             for (i, range) in matches.enumerated() {
@@ -1208,7 +1313,7 @@ struct IDEEditorView: NSViewRepresentable {
             }
             parent.currentSearchMatch = currentIndex
         }
-        
+
         func textView(_ textView: NSTextView, shouldChangeTextIn affectedCharRange: NSRange, replacementString: String?) -> Bool {
             if let replacement = replacementString, replacement == ". " {
                 textView.replaceCharacters(in: affectedCharRange, with: "  ")
@@ -1217,6 +1322,7 @@ struct IDEEditorView: NSViewRepresentable {
             return true
         }
     }
+
 }
 
 class IDETextView: NSTextView {
@@ -1691,6 +1797,38 @@ class InvisibleScroller: NSScroller {
 
 class MinimapScrollView: NSScrollView {
     override func scrollWheel(with event: NSEvent) {}
+    
+    override func resetCursorRects() {
+        super.resetCursorRects()
+        addCursorRect(bounds, cursor: NSCursor.arrow)
+    }
+    
+    override func cursorUpdate(with event: NSEvent) {
+        NSCursor.arrow.set()
+    }
+    
+    override func updateTrackingAreas() {
+        super.updateTrackingAreas()
+        if let trackingArea = trackingAreas.first {
+            removeTrackingArea(trackingArea)
+        }
+        let trackingArea = NSTrackingArea(
+            rect: bounds,
+            options: [.activeAlways, .mouseEnteredAndExited, .mouseMoved, .cursorUpdate, .inVisibleRect],
+            owner: self,
+            userInfo: nil
+        )
+        addTrackingArea(trackingArea)
+        window?.invalidateCursorRects(for: self)
+    }
+    
+    override func mouseEntered(with event: NSEvent) {
+        NSCursor.arrow.set()
+    }
+    
+    override func mouseMoved(with event: NSEvent) {
+        NSCursor.arrow.set()
+    }
 }
 
 struct MinimapEditorView: NSViewRepresentable {
@@ -1699,79 +1837,173 @@ struct MinimapEditorView: NSViewRepresentable {
     var theme: CodeEditorTheme = .defaultTheme
     var zoomLevel: Double = 0.2
     var scrollOffset: CGFloat
+    var viewportHeight: CGFloat
+    var contentHeight: CGFloat
+    var indicatorColor: NSColor = NSColor(hex: 0xD2B2E9).withAlphaComponent(0.3)
+    var indicatorFixedHeight: CGFloat = 40
+
+    class DraggableOverlayView: NSView {
+        var dragRatioChanged: ((CGFloat) -> Void)?
+        var dragStateChanged: ((Bool) -> Void)?
+        private var dragAnchorY: CGFloat = 0
+        private var lastSentRatio: CGFloat = -1
+        private let baseColor: NSColor
+        private let hoverAlpha: CGFloat = 0.55
+        private var trackingArea: NSTrackingArea?
+        private var isDragging = false
+
+        init(frame: NSRect, baseColor: NSColor) {
+            self.baseColor = baseColor
+            super.init(frame: frame)
+            wantsLayer = true
+            layer?.backgroundColor = baseColor.cgColor
+            layer?.cornerRadius = 1
+            updateTrackingAreas()
+        }
+        required init?(coder: NSCoder) { fatalError() }
+
+        override func resetCursorRects() {
+            super.resetCursorRects()
+            addCursorRect(bounds, cursor: NSCursor.arrow)
+        }
+
+        override func updateTrackingAreas() {
+            super.updateTrackingAreas()
+            if let t = trackingArea { removeTrackingArea(t) }
+            trackingArea = NSTrackingArea(
+                rect: bounds,
+                options: [.activeAlways, .mouseEnteredAndExited, .mouseMoved, .cursorUpdate, .inVisibleRect],
+                owner: self,
+                userInfo: nil
+            )
+            addTrackingArea(trackingArea!)
+            window?.invalidateCursorRects(for: self)
+        }
+
+        override func cursorUpdate(with event: NSEvent) {
+            NSCursor.arrow.set()
+        }
+
+        override func mouseEntered(with event: NSEvent) {
+            if !isDragging {
+                layer?.backgroundColor = baseColor.withAlphaComponent(hoverAlpha).cgColor
+            }
+            NSCursor.arrow.set()
+            window?.invalidateCursorRects(for: self)
+        }
+
+        override func mouseExited(with event: NSEvent) {
+            if !isDragging {
+                layer?.backgroundColor = baseColor.cgColor
+            }
+            NSCursor.arrow.set()
+        }
+
+        override func mouseMoved(with event: NSEvent) {
+            NSCursor.arrow.set()
+        }
+
+        override func mouseDown(with event: NSEvent) {
+            dragAnchorY = convert(event.locationInWindow, from: nil).y
+            isDragging = true
+            dragStateChanged?(true)
+            layer?.backgroundColor = baseColor.withAlphaComponent(hoverAlpha).cgColor
+            NSCursor.arrow.set()
+        }
+
+        override func mouseDragged(with event: NSEvent) {
+            guard let superview = superview else { return }
+
+            let p = superview.convert(event.locationInWindow, from: nil)
+            var newY = p.y - dragAnchorY
+            newY = max(0, min(newY, superview.bounds.height - frame.height))
+            frame.origin.y = newY
+
+            let ratio = frame.origin.y / max(superview.bounds.height - frame.height, 1)
+            if abs(ratio - lastSentRatio) >= 0.003 {
+                lastSentRatio = ratio
+                dragRatioChanged?(ratio)
+            }
+            NSCursor.arrow.set()
+        }
+
+        override func mouseUp(with event: NSEvent) {
+            isDragging = false
+            dragStateChanged?(false)
+            layer?.backgroundColor = baseColor.withAlphaComponent(hoverAlpha).cgColor
+            NSCursor.arrow.set()
+            window?.invalidateCursorRects(for: self)
+        }
+
+        override var acceptsFirstResponder: Bool { true }
+    }
 
     class Coordinator: NSObject {
         var cachedText: String = ""
         var cachedAttributedString: NSAttributedString = NSAttributedString(string: "")
         var updateWorkItem: DispatchWorkItem?
+        weak var overlayView: DraggableOverlayView?
+        var isDragging = false
     }
-    
-    func makeCoordinator() -> Coordinator {
-        return Coordinator()
-    }
-    
+    func makeCoordinator() -> Coordinator { Coordinator() }
+
     private func highlightedAttributedString() -> NSAttributedString {
-        let paragraphStyle = NSMutableParagraphStyle()
-        paragraphStyle.lineSpacing = 0
-        paragraphStyle.minimumLineHeight = 2
-        paragraphStyle.maximumLineHeight = 2
-        paragraphStyle.lineBreakMode = .byClipping
+        let pStyle = NSMutableParagraphStyle()
+        pStyle.lineSpacing = 0
+        pStyle.minimumLineHeight = 2
+        pStyle.maximumLineHeight = 2
+        pStyle.lineBreakMode = .byClipping
+
         let miniFont = NSFont.monospacedSystemFont(ofSize: 2 * CGFloat(zoomLevel), weight: .semibold)
         let tokens = SwiftParser.tokenize(text, language: programmingLanguage)
-        let highlighted = NSMutableAttributedString()
+
+        let output = NSMutableAttributedString()
         var currentLine = 1
         for token in tokens {
             if token.lineNumber > currentLine {
-                let newlines = String(repeating: "\n", count: token.lineNumber - currentLine)
-                highlighted.append(NSAttributedString(string: newlines, attributes: [.paragraphStyle: paragraphStyle, .font: miniFont]))
+                let nl = String(repeating: "\n", count: token.lineNumber - currentLine)
+                output.append(NSAttributedString(string: nl, attributes: [.paragraphStyle: pStyle, .font: miniFont]))
                 currentLine = token.lineNumber
             }
             let color = ThemeColorProvider.tokenColor(for: token.type, theme: theme)
             let attrs: [NSAttributedString.Key: Any] = [
                 .foregroundColor: color,
                 .font: miniFont,
-                .paragraphStyle: paragraphStyle
+                .paragraphStyle: pStyle
             ]
-            highlighted.append(NSAttributedString(string: token.value, attributes: attrs))
+            output.append(NSAttributedString(string: token.value, attributes: attrs))
         }
-        return highlighted
+        return output
     }
-    
+
     func makeNSView(context: Context) -> NSScrollView {
-        let fixedWidth: CGFloat = 100
-        let leadingPadding: CGFloat = 6
-        let trailingPadding: CGFloat = 14
-        
+        let fixedWidth: CGFloat  = 100
+        let leadingPad: CGFloat  = 6
+        let trailingPad: CGFloat = 14
+
         let textView = NSTextView()
         textView.isEditable = false
         textView.backgroundColor = NSColor(hex: 0x242424)
         textView.textColor = ThemeColorProvider.defaultTextColor(for: theme)
-        let miniFont = NSFont.monospacedSystemFont(ofSize: 2 * CGFloat(zoomLevel), weight: .semibold)
-        textView.font = miniFont
+        textView.font = NSFont.monospacedSystemFont(ofSize: 2 * CGFloat(zoomLevel), weight: .semibold)
         textView.isHorizontallyResizable = false
         textView.isVerticallyResizable = true
         textView.autoresizingMask = []
         textView.minSize = NSSize(width: fixedWidth, height: 0)
-        textView.maxSize = NSSize(width: fixedWidth, height: CGFloat.greatestFiniteMagnitude)
-        
-        let textWidth = fixedWidth - (leadingPadding + trailingPadding)
-        
-        textView.textContainer?.containerSize = NSSize(width: textWidth, height: CGFloat.greatestFiniteMagnitude)
+        textView.maxSize = NSSize(width: fixedWidth, height: .greatestFiniteMagnitude)
+
+        let textWidth = fixedWidth - (leadingPad + trailingPad)
+        textView.textContainer?.containerSize = NSSize(width: textWidth, height: .greatestFiniteMagnitude)
         textView.textContainer?.widthTracksTextView = false
         textView.textContainer?.lineBreakMode = .byClipping
-        textView.textContainerInset = NSSize(
-            width: leadingPadding,
-            height: 10
-        )
+        textView.textContainerInset = NSSize(width: leadingPad, height: 10)
         textView.textContainer?.lineFragmentPadding = 0
         textView.alignment = .left
         textView.layoutManager?.usesFontLeading = false
-        textView.layoutManager?.hyphenationFactor = 0
-        textView.layoutManager?.allowsNonContiguousLayout = false
         textView.frame = NSRect(x: 0, y: 0, width: fixedWidth, height: textView.intrinsicContentSize.height)
         textView.wantsLayer = true
         textView.layer?.masksToBounds = true
-        
+
         let scrollView = MinimapScrollView()
         scrollView.documentView = textView
         scrollView.hasVerticalScroller = false
@@ -1781,46 +2013,89 @@ struct MinimapEditorView: NSViewRepresentable {
         scrollView.contentView.layer?.masksToBounds = true
         scrollView.wantsLayer = true
         scrollView.layer?.masksToBounds = true
-        
-        if let blurFilter = CIFilter(name: "CIGaussianBlur") {
-            blurFilter.setValue(0.2, forKey: kCIInputRadiusKey)
-            scrollView.layer?.filters = [blurFilter]
+
+        if let blur = CIFilter(name: "CIGaussianBlur") {
+            blur.setValue(0.2, forKey: kCIInputRadiusKey)
+            scrollView.layer?.filters = [blur]
         }
-        
-        scrollView.wantsLayer = true
+
         if let layer = scrollView.layer {
-            let borderWidth: CGFloat = 1.0
-            let borderLayer = CALayer()
-            borderLayer.backgroundColor = NSColor(hex: 0x616161).cgColor
-            borderLayer.frame = CGRect(x: 0, y: 0, width: borderWidth, height: scrollView.frame.height)
-            borderLayer.autoresizingMask = [.layerHeightSizable]
-            layer.addSublayer(borderLayer)
+            let border = CALayer()
+            border.backgroundColor = NSColor(hex: 0x616161).cgColor
+            border.frame = CGRect(x: 0, y: 0, width: 1, height: scrollView.frame.height)
+            border.autoresizingMask = [.layerHeightSizable]
+            layer.addSublayer(border)
         }
-        
+
+        let overlay = DraggableOverlayView(
+            frame: CGRect(x: 0, y: 0, width: textView.bounds.width, height: indicatorFixedHeight),
+            baseColor: indicatorColor
+        )
+        overlay.dragRatioChanged = { ratio in
+            let lineCount = max(1, self.text.components(separatedBy: "\n").count)
+            let line      = Int(round(ratio * CGFloat(lineCount - 1))) + 1
+            NotificationCenter.default.post(
+                name: Notification.Name("NavigateToLine"),
+                object: nil,
+                userInfo: ["lineNumber": line, "highlight": false]
+            )
+        }
+        overlay.dragStateChanged = { dragging in
+            context.coordinator.isDragging = dragging
+        }
+        textView.addSubview(overlay)
+        context.coordinator.overlayView = overlay
+
         return scrollView
     }
-    
+
     func updateNSView(_ nsView: NSScrollView, context: Context) {
-        if let textView = nsView.documentView as? NSTextView {
-            if context.coordinator.cachedText != text {
-                context.coordinator.updateWorkItem?.cancel()
-                let currentText = text
-                let workItem = DispatchWorkItem { [weak nsView] in
-                    guard let nsView = nsView,
-                          let textView = nsView.documentView as? NSTextView else { return }
-                    let highlighted = self.highlightedAttributedString()
-                    DispatchQueue.main.async {
-                        context.coordinator.cachedAttributedString = highlighted
-                        context.coordinator.cachedText = currentText
-                        textView.textStorage?.setAttributedString(highlighted)
-                    }
+        if let textView = nsView.documentView as? NSTextView,
+            context.coordinator.cachedText != text {
+            context.coordinator.updateWorkItem?.cancel()
+            let currentText = text
+            let workItem = DispatchWorkItem { [weak nsView] in
+                guard let nsView = nsView,
+                      let tv = nsView.documentView as? NSTextView else { return }
+                let highlighted = self.highlightedAttributedString()
+                DispatchQueue.main.async {
+                    context.coordinator.cachedText = currentText
+                    context.coordinator.cachedAttributedString = highlighted
+                    tv.textStorage?.setAttributedString(highlighted)
                 }
-                context.coordinator.updateWorkItem = workItem
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: workItem)
             }
+            context.coordinator.updateWorkItem = workItem
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3, execute: workItem)
         }
-        let scaleFactor: CGFloat = 0.2
-        nsView.contentView.setBoundsOrigin(NSPoint(x: 0, y: scrollOffset * scaleFactor))
+
+        guard let docView = nsView.documentView,
+              let overlay = context.coordinator.overlayView else { return }
+
+        let totalH = contentHeight  > 0 ? contentHeight: docView.bounds.height
+        let viewH = viewportHeight > 0 ? viewportHeight: nsView.bounds.height
+        let docH = docView.bounds.height
+        let visibleH = nsView.bounds.height
+
+        overlay.frame.size.width = docView.bounds.width
+        let overlayH = min(indicatorFixedHeight, nsView.bounds.height - 2)
+        overlay.frame.size.height = overlayH
+
+        let maxEditorScroll = max(totalH - viewH, 1)
+        let ratio = max(0, min(scrollOffset / maxEditorScroll, 1))
+        let overlayYDoc = ratio * (docH - overlayH)
+
+        if !context.coordinator.isDragging {
+            overlay.frame.origin.y = overlayYDoc
+        }
+
+        var offsetY = nsView.contentView.bounds.origin.y
+        if overlayYDoc < offsetY {
+            offsetY = overlayYDoc
+        } else if overlayYDoc + overlayH > offsetY + visibleH {
+            offsetY = overlayYDoc + overlayH - visibleH
+        }
+        offsetY = min(max(offsetY, 0), max(docH - visibleH, 0))
+        nsView.contentView.setBoundsOrigin(NSPoint(x: 0, y: offsetY))
         nsView.reflectScrolledClipView(nsView.contentView)
     }
 }

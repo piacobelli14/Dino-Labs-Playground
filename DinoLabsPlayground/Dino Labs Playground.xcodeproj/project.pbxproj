@@ -122,7 +122,7 @@
 		CB9A90C22D7F935D00AA034A /* DinoLabsAudio.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinoLabsAudio.swift; sourceTree = "<group>"; };
 		CB9A90C42D7F937A00AA034A /* AudioTextField.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioTextField.swift; sourceTree = "<group>"; };
 		CB9A90C62D7F939600AA034A /* AudioButtonMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AudioButtonMain.swift; sourceTree = "<group>"; };
-		CBB19EF82D6EB12C002E7805 /* DinoLabsTabular.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinoLabsTabular.swift; sourceTree = "<group>"; wrapsLines = 0; };
+		CBB19EF82D6EB12C002E7805 /* DinoLabsTabular.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinoLabsTabular.swift; sourceTree = "<group>"; wrapsLines = 1; };
 		CBBB64A82D60374C008A9AEC /* BackgroundVideoHelper.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = BackgroundVideoHelper.swift; sourceTree = "<group>"; };
 		CBD30ED72D9376A600FC1A4F /* DinoLabs3DModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DinoLabs3DModel.swift; sourceTree = "<group>"; };
 		CBD30ED92D9376B200FC1A4F /* 3DModelButtonMain.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = 3DModelButtonMain.swift; sourceTree = "<group>"; };
