@@ -1,0 +1,541 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+button {
+  padding: 0.6rem 0.8rem;
+}
+
+:root {
+  --qa-font-base: 0.9375rem;
+  --qa-font-sm: 0.875rem;
+  --qa-font-xs: 0.8125rem;
+}
+
+.dinolabsQAInspectorApp {
+  width: 100vw;
+  height: 100vh;
+  background: var(--ua-bg);
+  color: var(--ua-text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+  font-size: var(--qa-font-base);
+  display: flex;
+  flex-direction: column;
+}
+
+.dinolabsQAInspectorShell {
+  flex: 1;
+  min-height: 0;
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  gap: 12px;
+  padding: 12px;
+}
+
+.dinolabsQAInspectorSidebar {
+  background: var(--ua-panel);
+  border: 1px solid var(--ua-border);
+  border-radius: 8px;
+  padding: 20px !important;
+  overflow: auto;
+  box-sizing: border-box;
+}
+
+.dinolabsQAInspectorPanel {
+  background: var(--ua-panel-2);
+  border: 1px solid var(--ua-border-2);
+  border-radius: 8px;
+  padding: 10px;
+  box-shadow: var(--ua-shadow);
+}
+
+.dinolabsQAInspectorPanel+.dinolabsQAInspectorPanel {
+  margin-top: 10px;
+}
+
+.dinolabsQAInspectorPanelTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  color: #eaf2fb;
+  font-size: var(--qa-font-sm);
+  margin-bottom: 20px;
+
+}
+
+.dinolabsQAInspectorPanelTitle span {
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dinolabsQAInspectorLabel {
+  font-size: var(--qa-font-xs);
+  color: var(--ua-muted);
+  font-weight: 700;
+  margin-bottom: 20px !important;
+}
+
+.dinolabsQAInspectorInput {
+  width: 100%;
+  height: 36px;
+  border-radius: 8px;
+  border: 1px solid var(--ua-border-2);
+  background: #203142;
+  color: var(--ua-text);
+  padding: 6px 10px;
+  outline: none;
+  font-size: var(--qa-font-sm);
+  font-weight: 600;
+  padding: 0.6rem 0.8rem;
+}
+
+.dinolabsQAInspectorInput:focus {
+  border-color: var(--ua-accent);
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.25);
+  margin: 10px 0;
+}
+
+.dinolabsQAInspectorBtnRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+.dinolabsQAInspectorBtnGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+}
+
+.dinolabsQAInspectorBtn {
+  background: #2a3a4a;
+  border: 1px solid #1f2a36;
+  color: #eef6ff;
+  border-radius: 8px;
+  font-weight: 800;
+  font-size: var(--qa-font-sm);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  transition: transform .08s ease, filter .08s ease;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0.6rem 0.8rem;
+  box-sizing: border-box;
+}
+
+.dinolabsQAInspectorBtnLabel {
+  padding: 0 0.4rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+
+.dinolabsQAInspectorBtn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+.dinolabsQAInspectorBtn:active {
+  transform: translateY(0);
+  filter: brightness(.98);
+}
+
+.dinolabsQAInspectorBtn.subtle {
+  background: #1c2936;
+  color: #d2e5f2;
+  border-color: #1c2936;
+}
+
+.dinolabsQAInspectorBtn svg {
+  font-size: .9em;
+}
+
+.dinolabsQAInspectorMain {
+  background: var(--ua-panel);
+  border: 1px solid var(--ua-border);
+  border-radius: 8px;
+  overflow: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 30px !important;
+  box-sizing: border-box;
+}
+
+.dinolabsQAInspectorStack::after {
+  content: "";
+  display: block;
+  flex: 0 0 auto;
+  height: calc(72px + env(safe-area-inset-bottom));
+}
+
+.dinolabsQAInspectorTopBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--ua-panel-2);
+  border: 1px solid var(--ua-border-2);
+  border-radius: 8px;
+  padding: 8px 16px;
+}
+
+.dinolabsQAInspectorTopTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 900;
+}
+
+.dinolabsQAInspectorStack {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-height: 0;
+  box-sizing: border-box;
+  padding-bottom: 40px;
+  ;
+}
+
+.dinolabsQAInspectorCard {
+  background: var(--ua-panel-2);
+  border: 1px solid var(--ua-border-2);
+  border-radius: 8px;
+  padding: 10px;
+  box-sizing: border-box;
+  margin-bottom: 12px;
+}
+
+.dinolabsQAInspectorSectionHeader {
+  width: 100%;
+  background: transparent;
+  border: 0;
+  border-bottom: 1px solid var(--ua-border-2);
+  border-radius: 8px 8px 0 0;
+  color: #e9f3ff;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 10px;
+  padding: 0.6rem 0.8rem;
+  font-weight: 800;
+  text-align: left;
+}
+
+.dinolabsQAInspectorChevron {
+  opacity: .9;
+}
+
+.dinolabsQAInspectorSectionBody {
+  padding: 10px 12px 12px 12px;
+}
+
+.dinolabsQAInspectorEmpty {
+  background: #14212e;
+  border: 1px dashed #1a2b3b;
+  border-radius: 8px;
+  padding: 10px;
+  color: #cdddea;
+  font-style: italic;
+  font-size: var(--qa-font-sm);
+  font-weight: 600;
+}
+
+.dinolabsQAInspectorSummaryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  grid-auto-rows: minmax(64px, auto);
+  gap: 8px;
+}
+
+.dinolabsQAInspectorChip {
+  background: #14212e;
+  border: 1px solid #192a3b;
+  border-radius: 8px;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 4px;
+  min-height: 64px;
+  min-width: 0;
+}
+
+.dinolabsQAInspectorChip.warn {
+  background: #2b2530;
+  border-color: #47344f;
+}
+
+.dinolabsQAInspectorChip.bad {
+  background: #2d2323;
+  border-color: #4f3535;
+}
+
+.dinolabsQAInspectorChipValue {
+  font-weight: 900;
+  font-size: 0.95rem;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+.dinolabsQAInspectorChipLabel {
+  font-size: var(--qa-font-xs);
+  color: #d2e1f0;
+  line-height: 1.2;
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+
+.dinolabsQAInspectorList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dinolabsQAInspectorRow {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 6px;
+  background: #162334;
+  border: 1px solid #14202d;
+  border-radius: 8px;
+  padding: 8px 10px;
+  min-height: 44px;
+}
+
+.dinolabsQAInspectorRow.warn {
+  background: #2b2530;
+  border-color: #47344f;
+}
+
+.dinolabsQAInspectorRow.bad {
+  background: #2d2323;
+  border-color: #4f3535;
+}
+
+.dinolabsQAInspectorRowMsg {
+  font-weight: 800;
+  color: #f2f2f2;
+  line-height: 1.2;
+}
+
+.dinolabsQAInspectorPath {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--qa-font-xs);
+  color: #b9cce0;
+  opacity: .85;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
+}
+
+.dinolabsQAInspectorHeadingList {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dinolabsQAInspectorHeadingItem {
+  background: #14212e;
+  border: 1px solid #192a3b;
+  border-radius: 8px;
+  padding: 6px 8px;
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 10px;
+  min-height: 40px;
+}
+
+.dinolabsQAInspectorHBadge {
+  background: #213141;
+  border: 1px solid #1a2836;
+  border-radius: 999px;
+  color: #d8e6f5;
+  padding: 2px 8px;
+  font-weight: 900;
+  font-size: var(--qa-font-xs);
+  line-height: 1.2;
+}
+
+.dinolabsQAInspectorHBadge.h1 {
+  background: #223044;
+}
+
+.dinolabsQAInspectorHeadingText {
+  font-weight: 800;
+  color: #eaf2ff;
+  overflow-wrap: anywhere;
+  line-height: 1.2;
+}
+
+.dinolabsQAInspectorTable {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #192a3b;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.dinolabsQAInspectorTableHead,
+.dinolabsQAInspectorTableRow {
+  display: grid;
+  grid-template-columns: 2fr 2fr 80px 80px 40px 40px;
+  grid-auto-rows: minmax(42px, auto);
+}
+
+.dinolabsQAInspectorTableHead {
+  background: #0e1a27;
+  color: #eaf2ff;
+  font-weight: 800;
+  border-bottom: 1px solid #192a3b;
+}
+
+.dinolabsQAInspectorTableHead>div,
+.dinolabsQAInspectorTableRow>div {
+  padding: 8px;
+  border-right: 1px solid #192a3b;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  min-height: 42px;
+}
+
+.dinolabsQAInspectorTableRow:nth-child(odd) {
+  background: #14212e;
+}
+
+.dinolabsQAInspectorTableRow:nth-child(even) {
+  background: #172536;
+}
+
+.dinolabsQAInspectorSample {
+  color: #e7effa;
+  overflow-wrap: anywhere;
+}
+
+.dinolabsQAInspectorMono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.dinolabsQAInspectorSw {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  border: 1px solid #0c1622;
+  margin: 6px;
+}
+
+.dinolabsQAInspectorSw.bg {
+  box-shadow: inset 0 0 0 2px #0c1622;
+}
+
+.dinolabsQAInspectorMetaGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  overflow-wrap: anywhere;
+  font-weight: 600;
+}
+
+.dinolabsQAInspectorFixCounts {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: var(--qa-font-xs);
+  color: #cfe2f6;
+  margin-top: 8px;
+}
+
+.dinolabsQAInspectorFixCountItem {
+  background: #14212e;
+  border: 1px solid #192a3b;
+  border-radius: 8px;
+  padding: 6px 8px;
+}
+
+.dinolabsQAInspectorOutlineBad {
+  outline: 2px solid #ff6b6b !important;
+  outline-offset: 2px !important;
+}
+
+.dinolabsQAInspectorOutlineWarn {
+  outline: 2px solid #f0b95d !important;
+  outline-offset: 2px !important;
+}
+
+.dinolabsQAInspectorSidebar::-webkit-scrollbar,
+.dinolabsQAInspectorMain::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dinolabsQAInspectorSidebar::-webkit-scrollbar-thumb,
+.dinolabsQAInspectorMain::-webkit-scrollbar-thumb {
+  background: #4a6175;
+  border-radius: 4px;
+}
+
+.dinolabsQAInspectorSidebar::-webkit-scrollbar-track,
+.dinolabsQAInspectorMain::-webkit-scrollbar-track {
+  background: #243444;
+}
+
+@media (max-width: 1200px) {
+  .dinolabsQAInspectorShell {
+    grid-template-columns: 280px 1fr;
+  }
+
+  .dinolabsQAInspectorBtnGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 980px) {
+  .dinolabsQAInspectorShell {
+    grid-template-columns: 1fr;
+  }
+
+  .dinolabsQAInspectorSidebar {
+    order: 2;
+  }
+
+  .dinolabsQAInspectorMain {
+    order: 1;
+  }
+}
+
+@media (max-width: 640px) {
+  .dinolabsQAInspectorShell {
+    padding: 8px;
+    gap: 8px;
+  }
+
+  .dinolabsQAInspectorPanel,
+  .dinolabsQAInspectorMain,
+  .dinolabsQAInspectorSidebar {
+    padding: 8px;
+  }
+
+  .dinolabsQAInspectorSummaryGrid {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .dinolabsQAInspectorTableHead,
+  .dinolabsQAInspectorTableRow {
+    grid-template-columns: 1.6fr 1.6fr 70px 70px 34px 34px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dinolabsQAInspectorBtn {
+    transition: none;
+  }
+}

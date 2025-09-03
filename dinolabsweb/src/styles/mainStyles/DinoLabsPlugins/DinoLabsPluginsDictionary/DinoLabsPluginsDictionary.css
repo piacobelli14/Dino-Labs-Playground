@@ -1,0 +1,417 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+.dinolabsPluginsDictionaryApp {
+  width: 100vw;
+  height: 100vh;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+  color: #f1f5f9;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dinolabsPluginsDictionaryApp button {
+  padding: 0.6rem 0.8rem;
+}
+
+.dinolabsPluginsDictionaryHeader {
+  flex-shrink: 0;
+  padding: 16px;
+  border-bottom: 1px solid #334155;
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.9) 0%, rgba(30, 41, 59, 0.7) 100%);
+  backdrop-filter: blur(10px);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.2);
+  display: flex; 
+  align-items: center;
+  justify-content: center;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.dinolabsPluginsDictionaryBanner {
+  background: #a16207;
+  color: #fde047;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  text-align: center;
+  margin-bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  max-width: 900px;
+}
+
+.dinolabsPluginsDictionaryBanner code {
+  background: rgba(0,0,0,0.3);
+  padding: 2px 4px;
+  border-radius: 3px;
+  font-family: monospace;
+}
+
+.dinolabsPluginsDictionarySearch {
+  background: linear-gradient(145deg, #334155 0%, #475569 100%);
+  border: 1px solid #475569;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  max-width: 900px;
+  gap: 8px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+  margin: 0;
+  padding: 6px;
+}
+
+.dinolabsPluginsDictionarySearch:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2), 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.dinolabsPluginsDictionarySearchIcon {
+  color: #94a3b8;
+  padding: 0 6px 0 4px;
+  font-size: 16px;
+  flex-shrink: 0;
+}
+
+.dinolabsPluginsDictionarySearchInput {
+  flex: 1;
+  background: none;
+  border: none;
+  outline: none;
+  color: #f1f5f9;
+  font-size: 14px;
+  font-weight: 600;
+  padding: 10px 4px;
+  min-width: 0;
+  margin: 0;
+}
+
+.dinolabsPluginsDictionarySearchInput::placeholder {
+  color: #94a3b8;
+}
+
+.dinolabsPluginsDictionarySearchBtn {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border: none;
+  color: white;
+  border-radius: 4px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  line-height: 1;
+  box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+  padding: 0.6rem 0.8rem; 
+  flex-shrink: 0;
+}
+
+.dinolabsPluginsDictionarySearchBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.3);
+  transform: translateY(-1px);
+}
+
+.dinolabsPluginsDictionarySearchBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.dinolabsPluginsDictionarySuggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  width: 100%;
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.dinolabsPluginsDictionaryChip {
+  background: linear-gradient(145deg, #334155 0%, #475569 100%);
+  color: #f1f5f9;
+  border: 1px solid #475569;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+  padding: 0.6rem 0.8rem; 
+}
+
+.dinolabsPluginsDictionaryChip:hover {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border-color: #3b82f6;
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+  transform: translateY(-1px);
+}
+
+.dinolabsPluginsDictionaryContent {
+  flex: 1;
+  padding: 20px 20px 28px;
+  overflow-y: auto;
+  box-sizing: border-box;
+}
+
+.dinolabsPluginsDictionaryEmpty {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 14px;
+  padding: 40px 20px;
+  background: linear-gradient(145deg, #334155 0%, #475569 100%);
+  border-radius: 6px;
+  max-width: 500px;
+  margin: 20px auto;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.dinolabsPluginsDictionaryEmpty.dinolabsPluginsDictionaryError {
+  background: #991b1b;
+  color: #fca5a5;
+}
+
+.dinolabsPluginsDictionaryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+  align-items: stretch;
+}
+
+.dinolabsPluginsDictionaryCard {
+  background: linear-gradient(145deg, #334155 0%, #475569 100%);
+  border: 1px solid #475569;
+  border-radius: 6px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  box-shadow: 0 0 20px black;
+  transition: all 0.3s ease;
+  height: 100%;
+}
+
+.dinolabsPluginsDictionaryCard:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05), 0 0 0 1px rgba(59, 130, 246, 0.1);
+  transform: translateY(-2px);
+}
+
+.dinolabsPluginsDictionaryCardHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  flex-shrink: 0;
+  min-width: 0;
+}
+
+.dinolabsPluginsDictionaryWord {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
+  flex: 1;
+  word-break: break-word;
+  min-width: 0;
+}
+
+.dinolabsPluginsDictionaryPos {
+  background: linear-gradient(135deg, #4338ca 0%, #3730a3 100%);
+  color: #a5b4fc;
+  border-radius: 4px;
+  padding: 2px 6px;
+  font-size: 9px;
+  font-weight: 700;
+  text-transform: uppercase;
+  white-space: nowrap;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  flex-shrink: 0;
+}
+
+.dinolabsPluginsDictionaryDefs {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.dinolabsPluginsDictionaryDef {
+  background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
+  border: 1px solid #475569;
+  border-radius: 4px;
+  padding: 10px;
+  font-size: 12px;
+  line-height: 1.4;
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  word-break: break-word;
+  box-shadow: inset 0 1px 2px 0 rgba(0, 0, 0, 0.1);
+  min-width: 0;
+}
+
+.dinolabsPluginsDictionaryNum {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  border-radius: 3px;
+  min-width: 18px;
+  height: 18px;
+  font-size: 9px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  margin-top: 1px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.2);
+}
+
+.dinolabsPluginsDictionaryText {
+  flex: 1;
+  min-width: 0;
+}
+
+.dinolabsPluginsDictionaryCardFooter {
+  flex-shrink: 0;
+  margin-top: auto;
+}
+
+.dinolabsPluginsDictionaryLink {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #3b82f6;
+  text-decoration: none;
+  font-size: 11px;
+  font-weight: 600;
+  border: 1px solid #3b82f6;
+  border-radius: 6px;
+  background: linear-gradient(145deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%);
+  box-shadow: 0 2px 4px -1px rgba(59, 130, 246, 0.1), 0 1px 3px 0 rgba(59, 130, 246, 0.1);
+  transition: all 0.3s ease;
+  position: relative;
+  overflow: hidden;
+  padding: 0.6rem 0.8rem; 
+}
+
+.dinolabsPluginsDictionaryLink::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.1), transparent);
+  transition: left 0.5s;
+}
+
+.dinolabsPluginsDictionaryLink:hover::before {
+  left: 100%;
+}
+
+.dinolabsPluginsDictionaryLink:hover {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  color: white;
+  box-shadow: 0 6px 12px -2px rgba(59, 130, 246, 0.4), 0 4px 8px -2px rgba(59, 130, 246, 0.2);
+  transform: translateY(-2px);
+  border-color: #2563eb;
+}
+
+@media (max-width: 480px) {
+  .dinolabsPluginsDictionaryHeader { 
+    padding: 12px; 
+    gap: 10px;
+  }
+
+  .dinolabsPluginsDictionarySearch {
+    padding: 6px;
+    gap: 6px;
+  }
+
+  .dinolabsPluginsDictionarySearchIcon {
+    font-size: 16px;
+    padding: 0 4px 0 2px;
+  }
+  
+  .dinolabsPluginsDictionaryContent { 
+    padding: 12px; 
+  }
+  
+  .dinolabsPluginsDictionaryGrid { 
+    grid-template-columns: 1fr; 
+    gap: 14px; 
+  }
+  
+  .dinolabsPluginsDictionaryCard { 
+    padding: 12px;
+    min-height: 260px;
+  }
+  
+  .dinolabsPluginsDictionaryWord { 
+    font-size: 14px; 
+  }
+  
+  .dinolabsPluginsDictionaryDef { 
+    font-size: 11px; 
+    padding: 8px; 
+  }
+  
+  .dinolabsPluginsDictionaryNum {
+    min-width: 16px;
+    height: 16px;
+    font-size: 8px;
+  }
+  
+  .dinolabsPluginsDictionarySearchInput {
+    font-size: 16px;
+    padding: 8px 4px;
+  }
+
+  .dinolabsPluginsDictionarySuggestions {
+    max-height: 120px;
+    overflow-y: auto;
+    padding-right: 4px;
+  }
+
+  .dinolabsPluginsDictionaryLink {
+    font-size: 10px;
+  }
+}
+
+@media (min-width: 481px) and (max-width: 768px) {
+  .dinolabsPluginsDictionaryGrid {
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .dinolabsPluginsDictionaryGrid {
+    grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+    gap: 18px;
+  }
+}
+
+@media (min-width: 1025px) {
+  .dinolabsPluginsDictionaryGrid {
+    grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+    gap: 22px;
+  }
+}

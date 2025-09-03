@@ -1,0 +1,888 @@
+.dinolabsPageWrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  flex-grow: 1;
+  min-height: 100vh;
+  background-color: #191919;
+}
+
+.dinolabsHeaderContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  width: 100vw;
+  min-height: calc(100vh - 60px);
+  max-height: calc(100vh - 60px);
+  height: calc(100vh - 60px);
+  overflow: hidden;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.dinolabsControlFlex {
+  min-width: 100%;
+  max-width: 100%;
+  min-height: 100%;
+  max-height: 100%;
+  display: flex;
+  align-items: flex-start;
+  justify-content: flex-start;
+  box-sizing: border-box;
+}
+
+.leadingIDEDirectoryStack {
+  min-width: 25%;
+  max-width: 25%;
+  min-height: 100%;
+  max-height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: flex-start;
+  box-sizing: border-box;
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(to bottom, #1B1526, #29282D);
+}
+
+.leadingDirectoryTopBar,
+.leadingDirectoryBottomBar {
+  min-height: 2.5rem;
+  max-height: 2.5rem;
+  width: 100%;
+  box-sizing: border-box;
+  background: linear-gradient(to right, #1B1526, #29282D);
+}
+
+.leadingDirectoryZoomButtonFlex,
+.leadingDirectorySettingsButtonFlex {
+  width: 100%;
+  min-height: 2.5rem;
+  max-height: 2.5rem;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  box-sizing: border-box;
+  padding: 0 1rem;
+  gap: 1rem;
+}
+
+.leadingDirectoryZoomButton {
+  background-color: rgba(255, 255, 255, 0.0);
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  font-size: 0.7rem;
+  color: #c1c1c1;
+  cursor: pointer;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.leadingDirectoryZoomButton:hover {
+  opacity: 0.6;
+  transform: scale(1.1);
+  border: none;
+  outline: none;
+}
+
+.leadingDirectoryZoomButton:focus {
+  opacity: 1.0; 
+  border: none;
+  outline: none;
+}
+
+.leadingDirectoryZoomButton:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.leadingDirectoryStack {
+  min-height: calc(100% - 5rem);
+  max-height: calc(100% - 5rem);
+  height: calc(100% - 5rem);
+  width: 100%;
+  flex-grow: 1;
+  box-sizing: border-box;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.leadingDirectoryTabsWrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  min-height: 2.5rem;
+  max-height: 2.5rem;
+  box-sizing: border-box;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.leadingDirectoryTabButton {
+  width: 100%;
+  border: none;
+  border-radius: 0;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #c1c1c1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 1rem;
+  box-sizing: border-box;
+  min-height: 2.5rem;
+  max-height: 2.5rem;
+  background-color: rgba(255, 255, 255, 0.01);
+}
+
+.leadingDirectoryTabButton:hover {
+  border: none;
+  outline: none;
+  opacity: 0.6;
+}
+
+.leadingDirectoryTabButton:focus {
+  border: none;
+  outline: none;
+  opacity: 1.0;
+}
+
+.leadingDirectorySearchWrapper,
+.leadingDirectoryGlobalSearchWrapper {
+  display: flex;
+  align-items: center;
+  box-sizing: border-box;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+}
+
+.leadingDirectorySearchWrapper {
+  justify-content: center;
+  min-height: 5rem;
+  max-height: 5rem;
+}
+
+.leadingDirectoryGlobalSearchWrapper {
+  flex-direction: column;
+  justify-content: space-evenly;
+  height: 10rem;
+  min-height: 10rem;
+  max-height: 10rem;
+}
+
+.directorySearchInput {
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid #c1c1c1;
+  border-radius: 6px;
+  padding: 0.6rem 1rem;
+  width: 90%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #c1c1c1;
+  outline: none;
+}
+
+.directorySearchInput:hover {
+  outline: none;
+  border: 1px solid #c1c1c1;
+  opacity: 0.8;
+}
+
+.directorySearchInput:focus {
+  outline: none;
+  border: 1px solid #c1c1c1;
+  opacity: 1.0;
+}
+
+.leadingDirectoryGlobalSearchFlex {
+  background-color: rgba(255, 255, 255, 0.02);
+  border: 1px solid #c1c1c1;
+  border-radius: 6px;
+  width: 90%;
+  box-sizing: border-box;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  outline: none;
+}
+
+.leadingDirectoryGlobalSearchInput {
+  width: 70%;
+  box-sizing: border-box;
+  height: 100%;
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #c1c1c1;
+  padding: 0.6rem 1rem;
+  border-top-left-radius: 6px;
+  border-bottom-left-radius: 6px;
+  border: none;
+  background-color: rgba(255, 255, 255, 0.02)
+}
+
+.leadingDirectoryGlobalSearchInput:hover {
+  border: none;
+  outline: none;
+  opacity: 0.8;
+}
+
+.leadingDirectoryGlobalSearchInput:focus {
+  border: none;
+  outline: none;
+  opacity: 1.0;
+}
+
+.leadingDirectoryGlobalSearchTrailingButtons {
+  width: 30%;
+  display: flex;
+  justify-content: space-evenly;
+  align-items: center;
+  box-sizing: border-box;
+  background-color: rgba(0, 0, 0, 0.5);
+  border-top-right-radius: 6px;
+  border-bottom-right-radius: 6px;
+  border-left: 1px solid #c1c1c1;
+  height: 100%;
+  padding: 0 0.6rem;
+}
+
+.leadingDirectoryGlobalSearchButton {
+  background-color: rgba(255, 255, 255, 0.0);
+  border: none;
+  border-radius: 0;
+  padding: 0;
+  font-size: 0.8rem;
+  color: #c1c1c1;
+  outline: none;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.leadingDirectoryGlobalSearchButton:hover {
+  opacity: 0.6;
+  border: none;
+  outline: none;
+  transform: scale(1.1);
+}
+
+.leadingDirectoryGlobalSearchButton:focus {
+  opacity: 1.0;
+  border: none;
+  outline: none;
+}
+
+.directoryListItemRoot,
+.directoryListItem {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+  display: flex;
+  width: 100%;
+  justify-content: flex-start;
+  align-items: center;
+  white-space: nowrap;
+  cursor: pointer;
+  position: relative;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0.5rem 1rem;
+  line-height: 1.2;
+  box-sizing: border-box;
+  z-index: 1;
+}
+
+.directoryListItemRoot {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: black;
+  padding: 1rem;
+  background-color: rgba(0,0,0,0.2) !important; 
+  padding-left: 0.6rem;
+  box-sizing: border-box;
+}
+
+.directoryListItemRoot:hover,
+.directoryListItem:hover {
+  background-color: black;
+}
+
+.directoryListItem svg,
+.directoryListItemRoot svg {
+  font-size: 0.7rem;
+  margin-right: 0.4rem;
+  vertical-align: middle;
+}
+
+.directoryListItemFileIcon {
+  height: 1rem;
+  margin-right: 0.6rem;
+}
+
+.leadingDirectoryFiles,
+.leadingDirectoryFilesSupplement {
+  min-height: 0;
+  max-height: 100%;
+  height: auto;
+  overflow: auto;
+  flex-grow: 1;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+}
+
+.leadingDirectoryFilesSupplement {
+  height: 100%;
+  width: 100%;
+  min-height: 0;
+  max-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.leadingDirectoryFilesSupplement p {
+  font-size: 0.8rem; 
+  font-weight: 600; 
+  color: #c1c1c1; 
+  width: 80%; 
+  margin-top: 2rem;
+}
+
+.nestedDirectoryFileStack {
+  flex-grow: 1;
+  width: 100%;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.leadingDirectoryFileStack,
+.leadingDirectoryFileStackContent {
+  flex-grow: 1;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.leadingDirectoryStack {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.leadingDirectoryFileStackContent>.directoryListItem::before {
+  display: none;
+}
+
+.leadingDirectoryFileStackContent>.directoryListItemRoot::before {
+  display: none;
+}
+
+.directoryListItemRoot:hover {
+  opacity: 0.6;
+}
+
+.directoryListNestedFiles {
+  font-size: 0.7rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.7);
+  white-space: nowrap;
+  cursor: pointer;
+  margin-bottom: 0;
+  position: relative;
+  padding-left: 1rem;
+  padding-top: 0.2rem;
+  padding-bottom: 0.2rem;
+  padding-right: 1rem;
+}
+
+.directoryListCaret {
+  font-size: 0.7rem;
+  margin-right: 0.4rem;
+  vertical-align: middle;
+}
+
+.driectoryListNestedFiles {
+  list-style-type: none;
+  margin: 0;
+  padding-left: 1rem;
+  position: relative;
+}
+
+.driectoryListNestedFiles::before {
+  content: '';
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0.6rem;
+  bottom: 0;
+  width: 0.06rem;
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.dinolabsFileUnsavedDot {
+  display: inline-block;
+  width: 0.5rem;
+  height: 0.5rem;
+  background-color: #D7BA7D;
+  border-radius: 50%;
+  margin-right: 0.8rem;
+}
+
+.dinolabsControlStack {
+  min-width: 75%;
+  max-width: 75%;
+  height: 100%;
+}
+
+.resizablePaneDivider {
+  width: 1px;
+  cursor: col-resize;
+  background-color: rgba(255, 255, 255, 0.6);
+  box-sizing: border-box;
+}
+
+.topIDEControlBarWrapper,
+.bottomIDEControlBar {
+  min-height: 2.5rem;
+  max-height: 2.5rem;
+  width: 100%;
+  box-sizing: border-box;
+  background: linear-gradient(to left, #1B1526, #29282D);
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  overflow: scroll;
+}
+
+.topIDEControlBar,
+.bottomIDEControlBar {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-end;
+  background: linear-gradient(to left, #1B1526, #29282D);
+  overflow: scroll;
+}
+
+.topIDEControlBar {
+  height: 100%;
+}
+
+.dinolabsTabItem {
+  height: 2.5rem;
+  padding: 0 1rem;
+  box-sizing: border-box;
+  font-size: 0.7rem;
+  font-weight: 700;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #c0c0c0;
+  background-color: rgba(255, 255, 255, 0.05);
+  white-space: nowrap;
+}
+
+.dinolabsTabItem svg {
+  font-size: 0.7rem;
+  margin-right: 0.4rem;
+}
+
+.dinolabsFileIcon {
+  height: 0.9rem;
+  margin-right: 0.4rem;
+}
+
+.dinolabsCloseTab {
+  font-size: 1rem;
+  color: #c0c0c0;
+  margin-left: 2rem;
+}
+
+.dinolabsTabItem:hover {
+  opacity: 0.6;
+}
+
+.dinolabsTabItem.activeTab {
+  background-color: rgba(173, 106, 221, 0.2);
+  color: #f5f5f5;
+}
+
+.dinolabsTabItem.unsavedTab {
+  background-color: rgba(215, 186, 125, 0.1);
+}
+
+.dinolabsTabItem.activeUnsavedTab {
+  background-color: rgba(215, 186, 125, 0.1);
+  background-color: rgba(184, 154, 91, 0.2);
+  color: #D7BA7D !important;
+}
+
+.dinolabsFileUnsaved {
+  color: #D7BA7D !important;
+  font-weight: bolder !important;
+}
+
+.dinolabsFileUnsavedDot {
+  display: inline-block;
+  width: 0.5vw;
+  height: 0.5vw;
+  background-color: #D7BA7D;
+  border-radius: 50%;
+  margin-right: 0.8vw;
+}
+
+.dinolabsControlStack {
+  min-width: 75%;
+  max-width: 75%;
+  min-height: 100%;
+  height: 100%;
+}
+
+.dinolabsMarkdownWrapper {
+  min-height: calc(100% - 5rem);
+  max-height: calc(100% - 5rem);
+  height: calc(100% - 5rem);
+  width: 100%;
+  flex-grow: 1;
+  box-sizing: border-box;
+  border-top: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  overflow: auto;
+  box-sizing: border-box;
+  display: flex;
+  position: relative;
+  background: linear-gradient(135deg, #0f172a 0%, #463366 100%);
+  position: relative;
+}
+
+.dinolabsMarkdownPaneWrapper {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border: none;
+  overflow: hidden;
+  box-sizing: border-box;
+}
+
+.dinolabsMarkdownPaneFlex {
+  flex: 1;
+  height: 100%;
+  width: 100%;
+  position: relative;
+}
+
+.dinolabsMarkdownPane {
+  width: 100%;
+  min-height: 100%;
+  max-height: 100%;
+  height: 100%;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+}
+
+.dinolabsNoFileSelectedWrapper {
+  min-height: 100%;
+  max-height: 100%;
+  height: 100%;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow-y: hidden;
+  box-sizing: border-box;
+  flex-grow: 1;
+  padding: 2rem 0;
+}
+
+
+.dinolabsGetStartedStack {
+  width: 100%;
+  min-height: 100%;
+  max-height: 100%;
+  height: 100%;
+  margin-left: 5%;
+  margin-right: 5%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-sizing: border-box;
+  overflow: hidden;
+}
+
+.dinolabsGetStartedFlex {
+  width: 59%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.dinolabsGetStartedWrapperInfo {
+  width: 96%;
+  height: 48%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  box-sizing: border-box;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid #c1c1c1;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 1.5rem;
+}
+
+.accountUsagePlot {
+  height: 100%;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
+  position: relative;  
+  background-color: rgba(255, 255, 255, 0.00);
+  box-sizing: border-box;
+  padding: 0.5rem;
+}
+
+.getStartedLinePlot {
+  height: 48%;
+  width: 96%;
+  background-color: rgba(255, 255, 255, 0.05);
+  border: 1px solid #c1c1c1;
+  box-sizing: border-box;
+  padding: 1.5rem;
+  border-radius: 6px;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.05);
+}
+
+.getStartedStack {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  width: 100%;
+  text-align: left;
+}
+
+.getStartedDoughutPlot {
+  width: 100%;
+  height: 100%;
+}
+
+.dinolabsLanguageDisplayFlex {
+  width: 39%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.dinolabsGetStartedWrapperLanguages {
+  width: 100%;
+  height: 48%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  box-sizing: border-box;
+  background-color: rgba(255, 255, 255, 0.1);
+  border: 1px solid #c1c1c1;
+  box-shadow: 0 0 8px rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+  padding: 1.5rem;
+}
+
+.dinolabsUsageLanguagesContainer {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+}
+
+.dinolabsTopLanguagesLabel {
+  font-size: 1rem;
+  font-weight: 900;
+  color: #f5f5f5;
+  width: 100%;
+  text-align: center;
+  margin-top: 1rem;
+  text-shadow: 0 0 1.5px grey;
+}
+
+.dinolabsUsageLanguageList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  width: 100%;
+  height: 100%;
+  overflow: scroll;
+}
+
+.dinolabsLanguageItem {
+  padding: 0;
+  margin: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.dinolabsLanguageLabel {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  font-weight: 700;
+  font-style: italic;
+  color: rgba(255, 255, 255, 0.7);
+  margin-bottom: 0.4rem;
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 1rem;
+  width: 100%;
+}
+
+.dinolabsLanguageLabel span {
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 0;
+  margin: 0;
+}
+
+.dinolabsLanguageBar {
+  height: 0.5vw;
+  border-radius: 6px;
+  transition: width 0.3s ease;
+  width: 100%;
+}
+
+.dinolabsLanguageUsageUnavailable {
+  font-size: 1.2vw;
+  font-weight: 700;
+  color: rgba(255, 255, 255, 0.7);
+  width: 100%;
+  text-align: center;
+}
+
+.dinolabsTitle {
+  font-size: 2vw;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.dinolabsStartButtonWrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: flex-start;
+  margin-top: 2rem;
+  margin-left: 0.4rem;
+}
+
+.dinolabsStartButton {
+  padding: 0;
+  background-color: rgba(255, 255, 255, 0.0);
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #AD6ADD;
+  border: none;
+  outline: none;
+  cursor: pointer;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+  margin-bottom: 1.6rem;
+}
+
+.dinolabsStartButton svg {
+  font-size: 0.8rem;
+  margin-right: 0.8rem;
+}
+
+.dinolabsStartButton:hover {
+  transform: scale(1.1);
+  opacity: 0.6;
+  border: none;
+  outline: none;
+}
+
+.dinolabsStartButton:focus {
+  border: none;
+  outline: none;
+}
+
+.searchHighlight {
+  background-color: yellow;
+  color: black;
+}
+
+.dinolabsContextMenu {
+  position: fixed;
+  z-index: 4;
+  background-color: #29282D;
+  background: linear-gradient(to left, #1B1526, #29282D);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 6px;
+  box-shadow: 0 0 20px black;
+  list-style: none;
+  padding: 1rem;
+  margin: 0;
+  min-width: 150px;
+}
+
+.dinolabsContextMenuItem {
+  padding: 0.4rem 1rem;
+  cursor: pointer;
+  white-space: nowrap;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #c0c0c0;
+  box-sizing: border-box;
+  margin-bottom: 4px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+  display: flex;
+  align-items: center;
+  min-height: 30px; 
+  max-height: 30px; 
+  gap: 1rem; 
+}
+
+.dinolabsContextMenuItem:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+}
+
+.dinolabsContextMenuItem:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+}

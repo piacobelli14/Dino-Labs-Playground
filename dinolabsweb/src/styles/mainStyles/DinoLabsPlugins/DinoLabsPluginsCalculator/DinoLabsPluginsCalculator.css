@@ -1,0 +1,202 @@
+.dinolabsPluginsCalculatorApp {
+  width: 100%;
+  min-height: calc(100vh - 60px);
+  display: flex;
+  flex-direction: column;
+  background-color: #1e293b;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+}
+
+.dinolabsPluginsCalculatorContainer {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #1e293b;
+}
+
+.dinolabsPluginsCalculatorHistory {
+  height: 160px;
+  overflow-y: auto;
+  background-color: #0f172a;
+  display: flex;
+  flex-direction: column-reverse;
+  border-bottom: 1px solid #334155;
+}
+
+.dinolabsPluginsCalculatorHistoryItem {
+  padding: 10px 12px;
+  background-color: #0f172a;
+  border-bottom: 1px solid #162036;
+  font-size: 15px;
+  font-weight: 600;
+  color: #e2e8f0;
+  text-align: right;
+  font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+  transition: background-color 0.12s ease;
+}
+
+.dinolabsPluginsCalculatorHistoryItem:hover { background-color: #172036; }
+
+.dinolabsPluginsCalculatorInputContainer {
+  background-color: #334155;
+  border-bottom: 1px solid #475569;
+}
+
+.dinolabsPluginsCalculatorInput {
+  width: 100%;
+  padding: 12px;
+  font-size: 18px;
+  font-weight: 600;
+  color: #f8fafc;
+  background-color: #334155;
+  border: none;
+  outline: none;
+  text-align: right;
+  font-family: "SF Mono", Monaco, "Cascadia Code", monospace;
+}
+
+.dinolabsPluginsCalculatorInput::placeholder { color: #94a3b8; font-style: italic; }
+
+.dinolabsPluginsCalculatorTabs {
+  display: flex;
+  background-color: #475569;
+  padding: 8px 12px;
+  gap: 10px;
+  align-items: center;
+}
+
+.dinolabsPluginsCalculatorTabButton {
+  background: none;
+  border: 1px solid transparent;
+  font-size: 12px;
+  font-weight: 700;
+  color: rgba(248, 250, 252, 0.85);
+  cursor: pointer;
+  padding: 4px 10px;
+  border-radius: 8px;
+  transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+}
+.dinolabsPluginsCalculatorTabButton.dinolabsPluginsCalculatorTabActive {
+  color: #f8fafc; background-color: rgba(248, 250, 252, 0.18);
+  box-shadow: inset 0 0 0 1px rgba(248, 250, 252, 0.25);
+}
+.dinolabsPluginsCalculatorTabButton:hover { color: #f8fafc; background-color: rgba(248, 250, 252, 0.12); }
+
+.dinolabsPluginsCalculatorKeyboard {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 12px;
+  background-color: #475569;
+  padding: 12px;
+  flex: 1;
+  min-height: 0;
+  overflow: auto;
+}
+
+@media (min-width: 1280px) {
+  .dinolabsPluginsCalculatorKeyboardMain { grid-column: span 2; }
+}
+
+.dinolabsPluginsCalculatorKeyboardMain,
+.dinolabsPluginsCalculatorKeyboardSide,
+.dinolabsPluginsCalculatorKeyboardControls {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  max-height: 100%;
+  overflow: auto;
+}
+
+.dinolabsPluginsCalculatorFunctionsPanel {
+  max-height: 200px; 
+  overflow: scroll; 
+}
+
+.dinolabsPluginsCalculatorKeyboardRow {
+  display: grid;
+  grid-auto-rows: 40px;
+  grid-template-columns: repeat(auto-fit, minmax(10%, 1fr));
+  gap: 6px;
+}
+
+.dinolabsPluginsCalculatorFunctionRow {
+  display: grid;
+  grid-auto-rows: 40px;
+  grid-template-columns: repeat(auto-fit, minmax(10%, 1fr));
+  gap: 20px;
+}
+
+.dinolabsPluginsCalculatorButton {
+  min-width: 0;
+  height: 40px;
+  border: 1px solid #334155;
+  cursor: pointer;
+  font-weight: 700;
+  font-size: 12px;
+  transition: transform 0.08s ease, box-shadow 0.12s ease, background-color 0.12s ease, border-color 0.12s ease;
+  outline: none;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.28);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+}
+.dinolabsPluginsCalculatorButton:hover { transform: translateY(-1px); box-shadow: 0 2px 5px rgba(0,0,0,.35); }
+.dinolabsPluginsCalculatorButton:active { transform: translateY(0); box-shadow: 0 1px 2px rgba(0,0,0,.28); }
+
+.dinolabsPluginsCalculatorNumber { background-color: #f1f5f9; color: #1e293b; border-color: #cbd5e1; }
+.dinolabsPluginsCalculatorNumber:hover { background-color: #e6ebf2; }
+
+.dinolabsPluginsCalculatorOperator { background-color: #64748b; color: #f8fafc; border-color: #475569; }
+.dinolabsPluginsCalculatorOperator:hover { background-color: #55657a; }
+
+.dinolabsPluginsCalculatorFunction { background-color: #3b82f6; color: #ffffff; border-color: #2563eb; font-size: 11px; font-weight: 700; width: 50px; }
+.dinolabsPluginsCalculatorFunction:hover { background-color: #2d6eea; }
+
+.dinolabsPluginsCalculatorVariable { background-color: #8b5cf6; color: #ffffff; border-color: #7c3aed; font-style: italic; font-weight: 700; }
+.dinolabsPluginsCalculatorVariable:hover { background-color: #7447e8; }
+
+.dinolabsPluginsCalculatorControl { background-color: #374151; color: #f9fafb; border-color: #1f2937; font-size: 11px; font-weight: 800; }
+.dinolabsPluginsCalculatorControl:hover { background-color: #2b3340; }
+.dinolabsPluginsCalculatorEnter { background-color: #10b981; color: #ffffff; border-color: #059669; }
+.dinolabsPluginsCalculatorEnter:hover { background-color: #0da572; box-shadow: 0 2px 7px rgba(16,185,129,.36); }
+.dinolabsPluginsCalculatorWide { min-width: 56px; }
+
+.dinolabsPluginsCalculatorHistory::-webkit-scrollbar { width: 6px; }
+.dinolabsPluginsCalculatorHistory::-webkit-scrollbar-track { background: #0f172a; }
+.dinolabsPluginsCalculatorHistory::-webkit-scrollbar-thumb { background: #334155; border-radius: 3px; }
+.dinolabsPluginsCalculatorHistory::-webkit-scrollbar-thumb:hover { background: #475569; }
+
+@media (max-width: 920px) {
+  .dinolabsPluginsCalculatorHistory { height: 140px; }
+  .dinolabsPluginsCalculatorKeyboardRow { grid-auto-rows: 36px; grid-template-columns: repeat(auto-fit, minmax(44px, 1fr)); }
+  .dinolabsPluginsCalculatorButton { height: 36px; font-size: 11px; }
+  .dinolabsPluginsCalculatorWide { min-width: 52px; }
+}
+
+.dinolabsPluginsCalculatorApp{
+  height: 100vh !important;
+  min-height: auto !important;
+}
+
+.dinolabsPluginsCalculatorContainer{
+  display: flex !important;
+  flex-direction: column !important;
+  min-height: 0 !important;
+}
+
+.dinolabsPluginsCalculatorHistory{
+  flex: 1 1 auto !important;
+  height: auto !important;
+  min-height: 0 !important;
+  overflow-y: auto !important;
+}
+
+.dinolabsPluginsCalculatorKeyboard{
+  flex: 0 0 auto !important;
+}

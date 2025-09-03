@@ -1,0 +1,230 @@
+.light-token {
+    font-weight: 700;
+    font-family: monospace;
+}
+.light-token.keyword {
+    color: #7B68EE;
+    font-weight: bold;
+}
+.light-token.decorator,
+.light-token.annotation {
+    color: #7B68EE;
+}
+.light-token.string {
+    color: #FFA07A;
+}
+.light-token.number {
+    color: #98FB98;
+}
+.light-token.operator,
+.light-token.operator.logical,
+.light-token.operator.arithmetic,
+.light-token.operator.assignment,
+.light-token.operator.comparison {
+    color: #808080;
+}
+.light-token.datatype {
+    color: #40E0D0;
+}
+.light-token.hex-color {
+    color: #FFA07A;
+}
+.light-token.punctuation {
+    color: #808080;
+}
+.light-token.template {
+    color: #808080;
+}
+.light-token.function,
+.light-token.method,
+.light-token.magic-method {
+    color: #FFFFE0;
+}
+.light-token.variable {
+    color: #ADD8E6;
+}
+.light-token.type,
+.light-token.type-hint {
+    color: #1E90FF;
+}
+.light-token.template-placeholder {
+    color: #7B68EE;
+}
+.light-token.regex {
+    color: #FF6347;
+}
+.light-token.boolean {
+    color: #808080;
+}
+.light-token.class-name {
+    color: #FFA07A;
+}
+.light-token.parameter {
+    color: #ADD8E6;
+}
+.light-token.command {
+    color: #7B68EE;
+}
+.light-token.superglobal {
+    color: #ADD8E6;
+}
+.light-token.namespace-use {
+    color: #7B68EE;
+}
+.light-token.class-inheritance {
+    color: #808080;
+}
+.light-token.identifier {
+    color: #FFFFE0;
+}
+.light-token.protocol {
+    color: #7B68EE;
+}
+.light-token.interface {
+    color: #87CEFA;
+}
+.light-token.type-annotation {
+    color: #98FB98;
+}
+.light-token.schema {
+    color: #7B68EE;
+}
+.light-token.pseudo-class {
+    color: #808080;
+}
+.light-token.pseudo-element {
+    color: #808080;
+}
+.light-token.aggregate-function {
+    color: #7B68EE;
+}
+.light-token.date-function {
+    color: #98FB98;
+}
+.light-token.join-type {
+    color: #808080;
+}
+.light-token.lifetime {
+    color: #7B68EE;
+}
+.light-token.enum,
+.light-token.struct,
+.light-token.trait,
+.light-token.namespace {
+    color: #87CEFA;
+}
+.light-token.token.magic-method {
+    color: #FF69B4;
+}
+.light-token.preprocessor {
+    color: #FF69B4;
+    font-weight: bold;
+}
+.light-token.arrow,
+.light-token.spread,
+.light-token.generator {
+    color: #808080;
+}
+.light-token.nullish,
+.light-token.optional {
+    color: #1E90FF;
+}
+.light-token.jsx-tag {
+    color: #1E90FF;
+}
+.light-token.jsx-attribute,
+.light-token.key {
+    color: #ADD8E6;
+}
+.light-token.jsx-string {
+    color: #FFA07A;
+}
+.light-token.event-handler {
+    color: #808080;
+}
+.light-token.filepath,
+.light-token.memory-address {
+    color: #98FB98;
+}
+.light-token.variable-interpolation {
+    color: #ADD8E6;
+}
+.light-token.label {
+    color: #1E90FF;
+}
+.light-token.register,
+.light-token.instruction {
+    color: #808080;
+}
+.light-token.directive,
+.light-token.macro {
+    color: #7B68EE;
+}
+.light-token.constant {
+    color: #98FB98;
+}
+.light-token.builtin {
+    color: #40E0D0;
+}
+.light-token.standard-library {
+    color: #40E0D0;
+}
+.light-token.property {
+    color: #ADD8E6;
+}
+.light-token.value {
+    color: #FFA07A;
+}
+.light-token.selector {
+    color: #1E90FF;
+}
+.light-token.at-rule {
+    color: #FF69B4;
+}
+.light-token.unit {
+    color: #98FB98;
+}
+.light-token.vendor-prefix {
+    color: #7B68EE;
+}
+.light-token.important {
+    color: #808080;
+}
+.light-token.class {
+    color: #1E90FF;
+}
+.light-token.id {
+    color: #ADD8E6;
+}
+.light-token.property-name {
+    color: #ADD8E6;
+}
+.light-token.property-value {
+    color: #FFA07A;
+}
+.light-token.semicolon {
+    color: #808080;
+}
+.light-token.tag {
+    color: #1E90FF;
+    font-weight: bold;
+}
+.light-token.attribute {
+    color: #ADD8E6;
+}
+.light-token.entity {
+    color: #98FB98;
+}
+.light-token.text {
+    color: #808080;
+}
+.light-token.doctype,
+.light-token.doctype-declaration {
+    color: #1E90FF;
+}
+.light-token.processing-instruction {
+    color: #7B68EE;
+}
+.light-token.operator {
+    color: #808080;
+}

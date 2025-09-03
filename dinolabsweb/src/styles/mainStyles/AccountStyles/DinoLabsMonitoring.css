@@ -1,0 +1,452 @@
+.dinolabsMonitoringApp {
+  width: 100%;
+  min-height: calc(100vh - 60px);
+  background: linear-gradient(135deg, #0a0e17 0%, #111827 100%);
+  color: #f8fafc;
+  display: flex;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, "Helvetica Neue", sans-serif;
+  position: relative;
+  box-sizing: border-box;
+}
+
+.dinolabsMonitoringApp::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  background:
+    radial-gradient(circle at 20% 50%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 80% 20%, rgba(139, 92, 246, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 40% 80%, rgba(16, 185, 129, 0.1) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+  box-sizing: border-box;
+}
+
+.dinolabsMonitoringContainer {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  padding: 20px;
+  min-height: 0;
+  position: relative;
+  z-index: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  -webkit-overflow-scrolling: touch;
+  overscroll-behavior: contain;
+  box-sizing: border-box;
+}
+
+.dinolabsMonitoringHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  padding: 16px 18px;
+  box-shadow: 0 6px 12px -6px rgba(0, 0, 0, 0.35);
+}
+
+.dinolabsMonitoringHeaderTitle {
+  font-size: 24px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.dinolabsMonitoringHeaderActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dinolabsMonitoringBtn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 14px;
+  font-size: 13px;
+  font-weight: 600;
+  border-radius: 10px;
+  border: 1px solid transparent;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease, border-color 0.12s ease;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.dinolabsMonitoringBtnPrimary {
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: #ffffff;
+  box-shadow: 0 6px 14px -8px rgba(59, 130, 246, 0.55);
+}
+
+.dinolabsMonitoringBtnPrimary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px -10px rgba(59, 130, 246, 0.65);
+}
+
+.dinolabsMonitoringBtnSubtle {
+  background: rgba(31, 41, 55, 0.9);
+  border-color: rgba(75, 85, 99, 0.35);
+  color: #e2e8f0;
+  backdrop-filter: blur(8px);
+}
+
+.dinolabsMonitoringBtnSubtle:hover {
+  background: rgba(55, 65, 81, 0.95);
+  border-color: rgba(59, 130, 246, 0.5);
+  transform: translateY(-1px);
+}
+
+.dinolabsMonitoringBtn::before { display: none; }
+
+.dinolabsMonitoringCard {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  box-shadow: 0 10px 16px -10px rgba(0, 0, 0, 0.5);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  padding: 20px; 
+}
+
+.dinolabsMonitoringCard:hover {
+  box-shadow: 0 18px 28px -18px rgba(0, 0, 0, 0.55);
+  border-color: rgba(59, 130, 246, 0.35);
+}
+
+.dinolabsMonitoringCardHead {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px 0;
+  margin-bottom: 10px;
+}
+
+.dinolabsMonitoringCardTitle {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 16px;
+  font-weight: 700;
+  color: #f8fafc;
+  margin-bottom: 20px; 
+}
+
+
+.dinolabsMonitoringCardTitle svg {
+  width: 18px;
+  height: 18px;
+  color: #3b82f6;
+}
+
+.dinolabsMonitoringCardActions {
+  display: flex;
+  gap: 8px;
+}
+
+.dinolabsMonitoringGrid {
+  display: grid;
+  gap: 14px;
+  padding: 0 20px 20px;
+}
+
+.dinolabsMonitoringGrid.autoFit {
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+}
+
+.dinolabsMonitoringGrid.smallFit {
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+}
+
+.dinolabsMonitoringStatBlock {
+  background: rgba(31, 41, 55, 0.92);
+  border: 1px solid rgba(75, 85, 99, 0.35);
+  border-radius: 12px;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  min-width: 0;
+  position: relative;
+}
+
+.dinolabsMonitoringStatBlock::before { display: none; }
+
+.dinolabsMonitoringStatBlockMetric {
+  background: linear-gradient(135deg, rgba(31, 41, 55, 0.92) 0%, rgba(55, 65, 81, 1) 100%);
+}
+
+.dinolabsMonitoringLabel {
+  font-size: 13px;
+  font-weight: 800;
+  color: #f8fafc;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dinolabsMonitoringLabel svg {
+  width: 16px;
+  height: 16px;
+  color: #3b82f6;
+}
+
+.dinolabsMonitoringBig {
+  font-size: 28px;
+  font-weight: 900;
+  color: #f8fafc;
+  line-height: 1;
+}
+
+.dinolabsMonitoringMetric {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.dinolabsMonitoringConnectionStatus[data-online="true"] { color: #10b981; }
+.dinolabsMonitoringConnectionStatus[data-online="false"] { color: #ef4444; }
+.dinolabsMonitoringBatteryLevel[data-charging="true"] { color: #10b981; }
+.dinolabsMonitoringBatteryLevel[data-charging="false"] { color: #f59e0b; }
+
+.dinolabsMonitoringBatteryStatus {
+  margin-left: 10px;
+  font-size: 22px;
+  color: #10b981;
+  animation: pulse 2s infinite;
+}
+
+.dinolabsMonitoringRowWrap {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 6px 20px;
+  border-radius: 10px;
+  background: rgba(17, 24, 39, 0.28);
+  box-sizing: border-box;
+
+}
+
+.dinolabsMonitoringRow {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 20px 0;
+  border-bottom: 1px solid rgba(75, 85, 99, 0.13);
+}
+
+.dinolabsMonitoringRow:last-child {
+  border-bottom: none;
+}
+
+.dinolabsMonitoringKey {
+  color: #94a3b8;
+  font-size: 13px;
+  font-weight: 600;
+  min-width: 140px;
+  flex-shrink: 0;
+  text-transform: capitalize;
+  padding-top: 1px;
+}
+
+.dinolabsMonitoringVal {
+  font-weight: 600;
+  color: #e2e8f0;
+  word-break: break-word;
+  flex: 1;
+  font-size: 13px;
+}
+
+.dinolabsMonitoringHighlight {
+  color: #3b82f6 !important;
+  font-weight: 800 !important;
+}
+
+.dinolabsMonitoringStatus {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800 !important;
+  padding: 4px 12px;
+  border-radius: 8px;
+  font-size: 11.5px !important;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  line-height: 1;
+  border: 1px solid transparent;
+  min-width: 56px;
+}
+
+.dinolabsMonitoringStatus[data-state="yes"] {
+  background: rgba(16, 185, 129, 0.22);
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.dinolabsMonitoringStatus[data-state="no"] {
+  background: rgba(239, 68, 68, 0.22);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.dinolabsMonitoringPermission[data-permission="granted"],
+.dinolabsMonitoringPermission[data-permission="denied"],
+.dinolabsMonitoringPermission[data-permission="prompt"] {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 10px;
+  border-radius: 8px;
+  line-height: 1;
+  border: 1px solid transparent;
+  font-weight: 800;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.dinolabsMonitoringPermission[data-permission="granted"] {
+  background: rgba(16, 185, 129, 0.22);
+  color: #10b981;
+  border-color: rgba(16, 185, 129, 0.35);
+}
+
+.dinolabsMonitoringPermission[data-permission="denied"] {
+  background: rgba(239, 68, 68, 0.22);
+  color: #ef4444;
+  border-color: rgba(239, 68, 68, 0.35);
+}
+
+.dinolabsMonitoringPermission[data-permission="prompt"] {
+  background: rgba(245, 158, 11, 0.22);
+  color: #f59e0b;
+  border-color: rgba(245, 158, 11, 0.35);
+}
+
+.dinolabsMonitoringMono .dinolabsMonitoringVal,
+.dinolabsMonitoringMono .dinolabsMonitoringKey {
+  font-family: "SF Mono", "Monaco", "Inconsolata", "Roboto Mono", monospace;
+  font-size: 12px;
+}
+
+.dinolabsMonitoringUsageWrap {
+  position: relative;
+  width: 100%;
+  height: 8px;
+  border-radius: 8px;
+  overflow: hidden;
+  background: #374151;
+  border: 1px solid rgba(75, 85, 99, 0.35);
+}
+
+.dinolabsMonitoringUsageTrack {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, rgba(75, 85, 99, 0.3) 0%, rgba(107, 114, 128, 0.3) 100%);
+}
+
+.dinolabsMonitoringUsageFill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  border-radius: 8px;
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+  box-shadow: 0 0 8px rgba(59, 130, 246, 0.4);
+}
+
+.dinolabsMonitoringFoot {
+  color: #94a3b8;
+  font-size: 12.5px;
+  line-height: 1.55;
+  text-align: center;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  backdrop-filter: blur(8px);
+  margin-top: 6px;
+}
+
+.dinolabsMonitoringContainer::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dinolabsMonitoringContainer::-webkit-scrollbar-track {
+  background: #111827;
+  border-radius: 4px;
+}
+
+.dinolabsMonitoringContainer::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+  border-radius: 4px;
+  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.3);
+}
+
+.dinolabsMonitoringContainer::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #2563eb, #8b5cf6);
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+@media (max-width: 1200px) {
+  .dinolabsMonitoringHeaderTitle { font-size: 22px; }
+}
+
+@media (max-width: 1024px) {
+  .dinolabsMonitoringContainer { padding: 18px; gap: 16px; }
+  .dinolabsMonitoringHeader { padding: 14px 16px; }
+  .dinolabsMonitoringBtn { padding: 9px 12px; font-size: 12.5px; }
+  .dinolabsMonitoringKey { min-width: 128px; }
+  .dinolabsMonitoringBig { font-size: 26px; }
+  .dinolabsMonitoringGrid.autoFit { grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); }
+}
+
+@media (max-width: 768px) {
+  .dinolabsMonitoringContainer { padding: 14px; gap: 14px; }
+  .dinolabsMonitoringHeader { flex-direction: column; gap: 10px; text-align: center; }
+  .dinolabsMonitoringCardHead { padding: 16px 16px 0; margin-bottom: 8px; }
+  .dinolabsMonitoringGrid { padding: 0 16px 16px; gap: 12px; }
+  .dinolabsMonitoringStatBlock { padding: 18px; }
+  .dinolabsMonitoringKey { min-width: 120px; }
+}
+
+@media (max-width: 480px) {
+  .dinolabsMonitoringContainer { padding: 12px; }
+  .dinolabsMonitoringRowWrap { padding: 6px; }
+  .dinolabsMonitoringRow { flex-direction: column; gap: 6px; padding: 8px 0; }
+  .dinolabsMonitoringKey { min-width: unset; font-size: 12.5px; }
+  .dinolabsMonitoringVal { font-size: 12.5px; }
+}
+
+html, body, #root { height: 100%; }
+body { overflow: auto !important; }
+.dinolabsMonitoringApp[data-scrollfix="force"]::before { pointer-events: none; }
+.dinolabsMonitoringHeader, .dinolabsMonitoringCard { overflow: visible; }
+
+
+.dinolabsMonitoringStatus { padding-block: 8px; }
+
+.dinolabsMonitoringPermission[data-permission] { padding-block: 8px; }
+
+.dinolabsMonitoringRow .dinolabsMonitoringStatus,
+.dinolabsMonitoringRow .dinolabsMonitoringPermission[data-permission] { margin-block: 2px; }

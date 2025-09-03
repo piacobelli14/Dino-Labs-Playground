@@ -1,0 +1,272 @@
+*,
+*::before,
+*::after { box-sizing: border-box; }
+
+html, body { width: 100%; max-width: 100%; overflow-x: hidden; }
+
+:root {
+  --ua-bg: #0e1621;
+  --ua-text: #dfeaf6;
+  --ua-muted: #9bb3c9;
+  --ua-panel: #111c29;
+  --ua-panel-2: #122132;
+  --ua-border: #213043;
+  --ua-border-2: #1a2a3b;
+  --ua-accent: #3498db;
+  --ua-shadow: 0 1px 0 rgba(0, 0, 0, .25);
+  --btn-h: 40px;
+  --tiny-h: 32px;
+  --gap: 8px;
+}
+
+.dinolabsUnitLabApp {
+  width: 100%;
+  height: 100dvh;
+  background: var(--ua-bg);
+  color: var(--ua-text);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+  font-weight: 600;
+}
+
+.dinolabsUnitLabContainer {
+  height: calc(100vh - 60px);
+  display: grid;
+  grid-template-columns: 320px 1fr;
+  border-top: 1px solid var(--ua-border);
+  overflow: hidden;
+  min-width: 100%; 
+  max-width: 100%;
+}
+
+.dinolabsUnitLabSidebar {
+  background: var(--ua-panel);
+  border-right: 1px solid var(--ua-border);
+  padding: 12px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  min-height: 0;
+  min-width: 0;
+  max-width: 100%;
+}
+
+.dinolabsUnitLabMain {
+  background: var(--ua-panel);
+  overflow: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 100%;
+  max-width: 100%;
+  min-height: 100%; 
+  max-height: 100%; 
+  width: 100%; 
+  padding-bottom: 20px;
+  overflow: scroll !important;
+}
+
+.dinolabsUnitLabSection,
+.dinolabsUnitLabResultPanel,
+.dinolabsUnitLabResultCard,
+.dinolabsUnitLabHistory { 
+  min-width: 100%;
+  max-width: 100%;
+  width: 100%; 
+}
+
+.dinolabsUnitLabResultPanel {
+  overflow: scroll !important;
+}
+
+.dinolabsUnitLabSection {
+  background: var(--ua-panel-2);
+  border: 1px solid var(--ua-border-2);
+  border-radius: 6px;
+  padding: 10px;
+  margin-bottom: 10px;
+  box-shadow: var(--ua-shadow);
+}
+
+.dinolabsUnitLabSectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  color: #fff;
+  margin-bottom: 20px;
+  letter-spacing: .2px;
+  min-width: 0;
+}
+
+.dinolabsUnitLabExpressionStack { display: grid; grid-auto-rows: min-content; gap: 10px; min-width: 0; }
+
+.dinolabsUnitLabInput {
+  width: 100%;
+  background: #203142;
+  border: 1px solid var(--ua-border-2);
+  color: var(--ua-text);
+  border-radius: 6px;
+  padding: 12px 14px;
+  outline: none;
+  font-size: 14px;
+  line-height: 1.2;
+  font-weight: 600;
+}
+
+.dinolabsUnitLabInput:focus { border-color: var(--ua-accent); box-shadow: 0 0 0 2px rgba(52,152,219,.22); }
+
+.dinolabsUnitLabInputWrap { position: relative; min-width: 0; }
+
+.dinolabsUnitLabSuggest {
+  position: absolute; left: 0; right: 0; top: calc(100% + 6px);
+  background: #172433; border: 1px solid #14202d; border-radius: 6px; box-shadow: var(--ua-shadow);
+  padding: 6px; z-index: 2; display: flex; flex-direction: column; gap: 4px;
+  max-height: 220px; overflow: auto; max-width: 100%;
+}
+
+button,
+.dinolabsUnitLabBtn,
+.dinolabsUnitLabChip,
+.dinolabsUnitLabSuggestItem,
+.dinolabsUnitLabSegmentBtn { padding: 0.6rem 0.8rem; }
+
+.dinolabsUnitLabSuggestItem {
+  background: #1b2a3b; border: 1px solid #14202d; color: #d9e7f6; border-radius: 6px; text-align: center;
+  cursor: pointer; font-weight: 700; font-size: 12px; min-height: var(--tiny-h);
+  display: flex; align-items: center; justify-content: center;
+}
+
+.dinolabsUnitLabSuggestItem:hover { filter: brightness(1.05); }
+
+.dinolabsUnitLabBtn {
+  background: #2a3a4a; border: 1px solid #1f2a36; color: #f2f7fb; border-radius: 6px;
+  font-weight: 800; font-size: 12px; cursor: pointer; box-shadow: var(--ua-shadow);
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+  transition: transform .12s ease, filter .12s ease; min-height: var(--btn-h);
+  width: 100%;  
+}
+
+.dinolabsUnitLabBtn:hover { transform: translateY(-1px); filter: brightness(1.06); }
+.dinolabsUnitLabBtn:active { transform: translateY(0); filter: brightness(.98); }
+.dinolabsUnitLabBtn.subtle { background: #263646; border-color: #1e2a36; color: #d7e5ef; box-shadow: none; }
+.dinolabsUnitLabBtn.tiny { min-height: var(--tiny-h); border-radius: 6px; font-size: 11px; }
+.dinolabsUnitLabBtn.primary { background: #2f4a60; }
+
+.dinolabsUnitLabRowTwo .dinolabsUnitLabBtn,
+.dinolabsUnitLabRowThree .dinolabsUnitLabBtn,
+.dinolabsUnitLabResultActions .dinolabsUnitLabBtn,
+.dinolabsUnitLabHistoryActions .dinolabsUnitLabBtn { width: auto; }
+
+.dinolabsUnitLabRowTwo,
+.dinolabsUnitLabRowThree { display: flex; gap: 12px; min-width: 0; flex-wrap: wrap; }
+.dinolabsUnitLabRowTwo .dinolabsUnitLabBtn,
+.dinolabsUnitLabRowThree .dinolabsUnitLabBtn { flex: 1 1 0; min-width: 0; }
+
+.dinolabsUnitLabSegment { display: flex; align-items: center; border: 1px solid #1a2b3b; border-radius: 6px; overflow: hidden; gap: 12px; min-width: 0; }
+.dinolabsUnitLabSegmentBtn { background: #233243; color: #d6e6f6; border: 0; font-size: 12px; font-weight: 800; display: flex; align-items: center; justify-content: center; }
+.dinolabsUnitLabSegmentBtn+.dinolabsUnitLabSegmentBtn { border-left: 1px solid #1a2b3b; }
+.dinolabsUnitLabSegmentBtn.active { background: #2b3d51; color: #fff; }
+
+.dinolabsUnitLabChipsGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: var(--gap); min-width: 0; }
+.dinolabsUnitLabChipsWrap { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: var(--gap); min-width: 0; }
+
+.dinolabsUnitLabChip {
+  background: #213141; border: 1px solid #1a2836; color: #d8e6f5; border-radius: 6px; font-weight: 700; font-size: 12px;
+  cursor: pointer; line-height: 1; text-align: center; min-height: var(--tiny-h); display: flex; align-items: center; justify-content: center;
+}
+.dinolabsUnitLabChip.small { min-height: 28px; border-radius: 6px; }
+.dinolabsUnitLabChip.tile { border-radius: 6px; font-weight: 700; }
+.dinolabsUnitLabChip:hover { filter: brightness(1.05); }
+
+.dinolabsUnitLabChipGroup { display: flex; flex-direction: column; gap: 8px; margin-top: 2px; min-width: 0; }
+.dinolabsUnitLabChipLabel { font-size: 12px; color: var(--ua-muted); margin-top: 2px; letter-spacing: .2px; font-weight: 700; }
+
+.dinolabsUnitLabResultPanel {
+  padding: 14px 24px 20px 24px; display: flex; flex-direction: column; gap: 12px;
+  min-height: 0; min-width: 0; max-width: 100%;
+}
+
+.dinolabsUnitLabResultHeader { display: flex; align-items: center; justify-content: space-between; width: 100%; }
+.dinolabsUnitLabResultTitle { display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 16px; letter-spacing: .2px; min-width: 0; }
+
+.dinolabsUnitLabResultCard {
+  background: var(--ua-panel-2); border: 1px solid var(--ua-border-2); border-radius: 6px; box-shadow: var(--ua-shadow);
+  padding: 16px; display: flex; flex-direction: column; gap: 10px; min-height: 0; min-width: 0; overflow-x: hidden;
+}
+
+.dinolabsUnitLabResultValue {
+  font-size: 22px; font-weight: 900; letter-spacing: .2px; color: #fff; background: #1d2a37; border: 1px solid #162231; border-radius: 6px;
+  padding: 20px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+
+.dinolabsUnitLabStrip {
+  display: flex; align-items: center; justify-content: center; gap: 10px; flex-wrap: wrap;
+  background: #1f2c39; border: 1px solid #182433; border-radius: 6px; padding: 20px; font-weight: 800; min-height: 40px; min-width: 0;
+}
+.dinolabsUnitLabStripSide { flex: 1 1 0; min-width: 0; text-align: center; word-break: break-word; overflow-wrap: anywhere; }
+.dinolabsUnitLabStripDivider { flex: 0 0 auto; opacity: .75; font-size: 16px; }
+.dinolabsUnitLabStripInline { font-weight: 900; color: #eaf2ff; overflow: auto; white-space: nowrap; max-width: 100%; }
+
+.dinolabsUnitLabSteps {
+  background: #192736; border: 1px solid #14202d; border-radius: 6px; padding: 20px; min-height: 0; min-width: 0;
+  max-width: 100%; overflow-x: hidden;
+}
+.dinolabsUnitLabStepsTitle { font-weight: 800; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+.dinolabsUnitLabStep {
+  background: #223244; border: 1px solid #1a2b3b; border-radius: 6px; margin: 4px 0;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px;
+  white-space: normal; word-break: break-word; overflow-wrap: anywhere; max-width: 100%;
+}
+
+.dinolabsUnitLabHistory {
+  background: var(--ua-panel-2); border: 1px solid var(--ua-border-2); border-radius: 6px; box-shadow: var(--ua-shadow);
+  padding: 20px; max-height: 340px; overflow: auto; min-height: 0; min-width: 0; overflow-x: hidden;
+}
+.dinolabsUnitLabHistoryTitle { font-weight: 800; margin-bottom: 8px; }
+.dinolabsUnitLabHistoryList { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
+.dinolabsUnitLabHistoryItem {
+  background: #1e2c3a; border: 1px solid #162334; border-radius: 6px; padding: 8px;
+  display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center; min-width: 0;
+}
+.dinolabsUnitLabHistoryExpr,
+.dinolabsUnitLabHistoryOut { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; min-width: 0; }
+.dinolabsUnitLabHistoryOut { font-weight: 800; text-align: right; }
+.dinolabsUnitLabHistoryActions { grid-column: 1 / -1; display: flex; gap: 8px; justify-content: flex-end; min-width: 0; flex-wrap: wrap; }
+.dinolabsUnitLabHistoryEmpty { color: var(--ua-muted); font-style: italic; padding: 6px; text-align: center; margin-bottom: 20px;  }
+.dinolabsUnitLabHistoryExport { display: flex; gap: 8px; flex-wrap: wrap; justify-content: flex-end; margin-top: 8px; }
+
+.dinolabsUnitLabSidebar::-webkit-scrollbar,
+.dinolabsUnitLabHistory::-webkit-scrollbar,
+.dinolabsUnitLabMain::-webkit-scrollbar { width: 8px; height: 8px; }
+.dinolabsUnitLabSidebar::-webkit-scrollbar-thumb,
+.dinolabsUnitLabHistory::-webkit-scrollbar-thumb,
+.dinolabsUnitLabMain::-webkit-scrollbar-thumb { background: #4a6175; border-radius: 6px; }
+.dinolabsUnitLabSidebar::-webkit-scrollbar-track,
+.dinolabsUnitLabHistory::-webkit-scrollbar-track,
+.dinolabsUnitLabMain::-webkit-scrollbar-track { background: #243444; }
+
+@media (max-width:720px) {
+  .dinolabsUnitLabResultPanel { padding: 12px 12px 16px 12px; }
+  .dinolabsUnitLabResultValue { font-size: 18px; padding: 14px; white-space: normal; word-break: break-word; }
+  .dinolabsUnitLabStrip { padding: 14px; }
+  .dinolabsUnitLabChipsGrid { grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); }
+  .dinolabsUnitLabChipsWrap { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
+}
+@media (max-width:480px) {
+  .dinolabsUnitLabChipsGrid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); }
+  .dinolabsUnitLabChipsWrap { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+}
+@media (max-width:360px) {
+  .dinolabsUnitLabChipsGrid { grid-template-columns: repeat(auto-fill, minmax(100px, 1fr)); }
+  .dinolabsUnitLabChipsWrap { grid-template-columns: repeat(auto-fill, minmax(88px, 1fr)); }
+  .dinolabsUnitLabResultPanel { padding: 10px; }
+}
+
+.dinolabsUnitLabStepsEmpty {
+  font-size: 12px; 
+  font-weight: 600; 
+  color: #c1c1c1; 
+}

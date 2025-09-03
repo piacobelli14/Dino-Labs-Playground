@@ -1,0 +1,612 @@
+.dinolabsRegexLabApp {
+  width: 100%;
+  min-height: 100dvh;
+  height: 100dvh;
+  background: var(--ua-bg);
+  color: var(--ua-text);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+  --r: 6px;
+  --fz-base: 13px;
+  --fz-sm: 12px;
+  --fz-lg: 14px;
+}
+
+.dinolabsRegexLabApp,
+.dinolabsRegexLabApp * {
+  box-sizing: border-box;
+}
+
+.dinolabsRegexLabApp button {
+  padding: 0.6rem 0.8rem;
+}
+
+.dinolabsRegexLabContainer {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  min-height: 0;
+  border-top: 1px solid var(--ua-border);
+}
+
+.dinolabsRegexLabSidebar {
+  background: var(--ua-panel);
+  border-right: 1px solid var(--ua-border);
+  padding: 10px;
+  overflow: auto;
+  min-height: 0;
+  font-size: var(--fz-base);
+  padding: 20px; 
+}
+
+.dinolabsRegexLabMain {
+  background: var(--ua-panel);
+  overflow: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  font-size: var(--fz-base);
+}
+
+.dinolabsRegexLabSection {
+  background: var(--ua-panel-2);
+  border: 1px solid var(--ua-border-2);
+  border-radius: var(--r);
+  padding: 10px;
+  margin-bottom: 10px;
+  box-shadow: var(--ua-shadow);
+  overflow: scroll;
+}
+
+.dinolabsRegexLabSectionInner {
+  background: #112033;
+}
+
+.dinolabsRegexLabSectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 800;
+  color: #eaf2fb;
+  margin-bottom: 8px;
+  font-size: var(--fz-lg);
+  margin-bottom: 20px; 
+}
+
+.dinolabsRegexLabMini {
+  font-weight: 800;
+  color: #cfe0f4;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fz-sm);
+  padding: 10px; 
+}
+
+.dinolabsRegexLabRow {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+  margin: 20px 0;
+}
+
+.dinolabsRegexLabRowWrap {
+  flex-wrap: wrap;
+}
+
+.dinolabsRegexLabSpacer {
+  flex: 1;
+}
+
+.dinolabsRegexLabField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 12px; ;
+}
+
+.dinolabsRegexLabField label {
+  display: flex; 
+  gap: 8px; 
+  align-items: center;
+  margin-bottom: 8px; 
+  font-weight: 600; 
+}
+
+.dinolabsRegexLabInput {
+  width: 100%;
+  background: #203142;
+  border: 1px solid var(--ua-border-2);
+  color: #eaf2ff;
+  border-radius: var(--r);
+  padding: 8px 10px;
+  outline: none;
+  font-size: var(--fz-base);
+  height: 36px;
+  font-weight: 600; 
+}
+
+.dinolabsRegexLabInputSmall {
+  height: 32px;
+}
+
+.dinolabsRegexLabTextarea {
+  width: 100%;
+  background: #203142;
+  border: 1px solid var(--ua-border-2);
+  color: #eaf2ff;
+  border-radius: var(--r);
+  padding: 8px 10px;
+  outline: none;
+  font-size: var(--fz-base);
+  min-height: 120px;
+  max-height: 120px;
+  font-weight: 600; 
+  line-height: 2;
+  overflow: scroll;
+}
+
+.dinolabsRegexLabMono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.dinolabsRegexLabChips {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 20px 0;
+}
+
+.dinolabsRegexLabChip {
+  background: #14212e;
+  border: 1px solid #192a3b;
+  color: #d3e4f6;
+  border-radius: 6px;
+  font-weight: 800;
+  cursor: pointer;
+  font-size: var(--fz-sm);
+}
+
+.dinolabsRegexLabChip.on {
+  background: #1b2a3b;
+  border-color: #26425d;
+}
+
+.dinolabsRegexLabChip.subtle {
+  background: #1a2734;
+}
+
+.dinolabsRegexLabBtn {
+  background: #2a3a4a;
+  border: 1px solid #1f2a36;
+  color: #eef6ff;
+  border-radius: var(--r);
+  font-weight: 800;
+  font-size: var(--fz-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: transform .08s ease, filter .08s ease;
+  box-shadow: var(--ua-shadow);
+  overflow: hidden; 
+}
+
+.dinolabsRegexLabBtn small {
+  white-space: nowrap; 
+  text-overflow: ellipsis;
+  font-size: 0.8rem; 
+  font-weight: 600; 
+  padding: 0 0.4rem; 
+  overflow: hidden;
+}
+
+.dinolabsRegexLabBtn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+.dinolabsRegexLabBtn:active {
+  transform: translateY(0);
+  filter: brightness(.98);
+}
+
+.dinolabsRegexLabBtn.ok {
+  background: #1e3b2b;
+  border-color: #254a33;
+}
+
+.dinolabsRegexLabCard {
+  background: var(--ua-panel-2);
+  border: 1px solid var(--ua-border-2);
+  border-radius: var(--r);
+  box-shadow: var(--ua-shadow);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dinolabsRegexLabCardTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  color: #e9f3ff;
+  font-size: var(--fz-lg);
+}
+
+.dinolabsRegexLabGrid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.dinolabsRegexLabPreview {
+  background: #0f1b28;
+  border: 1px solid #182a3d;
+  border-radius: var(--r);
+  padding: 10px;
+  min-height: 120px;
+  line-height: 1.5;
+  padding: 20px; 
+}
+
+.dinolabsRegexLabPreview mark.match {
+  background: transparent;
+  color: #fff;
+  border-radius: 6px;
+  padding: 4px;
+  box-sizing: border-box;
+  margin: 6px; 
+  font-size: 0.6rem;
+  font-weight: 600;
+}
+
+.dinolabsRegexLabReplace {
+  background: #102335;
+  border: 1px solid #1a2e44;
+  border-radius: var(--r);
+  padding: 10px;
+  white-space: pre-wrap;
+  min-height: 60px;
+  font-weight: 600; 
+  line-height: 2;
+}
+
+.dinolabsRegexLabTests {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-weight: 600; 
+}
+
+.dinolabsRegexLabTest {
+  display: grid;
+  grid-template-columns: 1fr 160px auto;
+  gap: 6px;
+  align-items: center;
+}
+
+.dinolabsRegexLabTest.ok {
+  outline: 1px solid #2a4d37;
+  background: #12281b;
+  border-radius: var(--r);
+  padding: 6px;
+}
+
+.dinolabsRegexLabTest.bad {
+  outline: 1px solid #5a2b2b;
+  background: #2a1616;
+  border-radius: var(--r);
+  padding: 6px;
+}
+
+.dinolabsRegexLabHints {
+  background: #102034;
+  border: 1px solid #182a3d;
+  border-radius: var(--r);
+  padding: 10px;
+  font-weight: 600;
+  margin-bottom: 20px;
+}
+
+.dinolabsRegexLabHintTitle {
+  font-weight: 800;
+  margin: 6px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--fz-sm);
+}
+
+.dinolabsRegexLabHint {
+  color: #cfe2f6;
+  font-size: var(--fz-sm);
+}
+
+.dinolabsRegexLabExplain {
+  padding-left: 18px;
+  margin: 6px 0;
+}
+
+.dinolabsRegexLabSchema {
+  border: 1px solid #192a3b;
+  border-radius: var(--r);
+  overflow: hidden;
+}
+
+.dinolabsRegexLabSchemaHeader,
+.dinolabsRegexLabSchemaRow {
+  display: grid;
+  grid-template-columns: 200px 170px 1fr 44px;
+  gap: 8px;
+  align-items: center;
+}
+
+.dinolabsRegexLabSchemaHeader {
+  background: #0f1a26;
+  padding: 8px;
+  font-weight: 800;
+}
+
+.dinolabsRegexLabSchemaRow {
+  padding: 8px;
+  border-top: 1px solid #192a3b;
+}
+
+.dinolabsRegexLabSchemaOpts {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.dinolabsRegexLabSchemaOpts label {
+  font-size: var(--fz-sm);
+  color: #b9cfe5;
+}
+
+.dinolabsRegexLabTableWrap {
+  overflow: auto;
+  border: 1px solid #192a3b;
+  border-radius: var(--r);
+}
+
+.dinolabsRegexLabTable {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.dinolabsRegexLabTable th,
+.dinolabsRegexLabTable td {
+  border-right: 1px solid #192a3b;
+  border-bottom: 1px solid #192a3b;
+  padding: 8px;
+}
+
+.dinolabsRegexLabTable th {
+  position: sticky;
+  top: 0;
+  background: #0f1a26;
+  z-index: 1;
+}
+
+.dinolabsRegexLabTable td {
+  font-size: var(--fz-sm);
+}
+
+.dinolabsRegexLabSnippet {
+  background: #102034;
+  border: 1px solid #182a3d;
+  border-radius: var(--r);
+  padding: 10px;
+}
+
+.dinolabsRegexLabSnippetTitle {
+  font-weight: 800;
+  margin-bottom: 6px;
+  font-size: var(--fz-sm);
+}
+
+.dinolabsRegexLabPre {
+  margin: 0;
+  white-space: pre-wrap;
+  background: #0f1d2b;
+  border: 1px solid #203246;
+  border-radius: 6px;
+  padding: 8px;
+  font-size: var(--fz-sm);
+}
+
+.dinolabsRegexLabChipStat {
+  background: #14212e;
+  border: 1px solid #192a3b;
+  border-radius: var(--r);
+  padding: 10px;
+}
+
+.dinolabsRegexLabChipValue {
+  font-weight: 800;
+  font-size: 15px;
+  color: #fff;
+}
+
+.dinolabsRegexLabChipLabel {
+  font-size: var(--fz-sm);
+  color: #d2e1f0;
+}
+
+.dinolabsRegexLabTableWrap::-webkit-scrollbar,
+.dinolabsRegexLabSidebar::-webkit-scrollbar,
+.dinolabsRegexLabMain::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dinolabsRegexLabTableWrap::-webkit-scrollbar-thumb,
+.dinolabsRegexLabSidebar::-webkit-scrollbar-thumb,
+.dinolabsRegexLabMain::-webkit-scrollbar-thumb {
+  background: #4a6175;
+  border-radius: 4px;
+}
+
+.dinolabsRegexLabTableWrap::-webkit-scrollbar-track,
+.dinolabsRegexLabSidebar::-webkit-scrollbar-track,
+.dinolabsRegexLabMain::-webkit-scrollbar-track {
+  background: #243444;
+}
+
+@media (max-width:1200px) {
+  .dinolabsRegexLabContainer {
+    grid-template-columns: 1fr;
+  }
+
+  .dinolabsRegexLabSidebar {
+    order: 2;
+  }
+
+  .dinolabsRegexLabMain {
+    order: 1;
+  }
+
+  .dinolabsRegexLabGrid2 {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-reduced-motion:reduce) {
+  .dinolabsRegexLabBtn {
+    transition: none;
+  }
+}
+
+
+
+.dinolabsRegexLabSchema,
+.dinolabsRegexLabSchema * { box-sizing: border-box; }
+
+.dinolabsRegexLabSchema{
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  border:1px solid #192a3b;
+  border-radius:6px;
+  overflow:hidden;
+  background:transparent;
+}
+
+.dinolabsRegexLabSchemaHeader{
+  display:grid;
+  grid-template-columns:220px 180px 1fr 72px;
+  gap:8px;
+  align-items:center;
+  background:#0f1a26;
+  padding:8px 10px;
+  font-weight:700;
+  border-bottom:1px solid #192a3b;
+}
+
+.dinolabsRegexLabSchemaCard{
+  display:grid;
+  grid-template-columns:220px 1fr 72px;
+  gap:12px;
+  align-items:start;
+  background:#122032;
+  padding:10px;
+  border-bottom:1px solid #192a3b;
+}
+.dinolabsRegexLabSchemaCard:last-child{ border-bottom:none; }
+
+.dinolabsRegexLabSchemaMain{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:10px;
+}
+
+.dinolabsRegexLabSchemaOptions{
+  display:grid;
+  grid-template-columns:repeat(auto-fill, minmax(220px, 1fr));
+  gap:10px;
+  align-items:start;
+}
+
+.dinolabsRegexLabField{
+  display:flex;
+  flex-direction:column;
+  gap:6px;
+  min-width:0;
+}
+
+.dinolabsRegexLabSchemaLabel{
+  font-size:11px;
+  color:#b9cfe5;
+}
+
+.dinolabsRegexLabInput{
+  width:100%;
+  height:36px;
+  border-radius:6px;
+  outline:none;
+  padding:0.6rem 0.8rem;
+  background:#203142;
+  color:#eaf2ff;
+  border:1px solid var(--ua-border-2);
+  font-size:13px;
+  font-weight: 600; 
+  line-height: 2; 
+}
+
+select.dinolabsRegexLabInput{
+  -webkit-appearance:none;
+  -moz-appearance:none;
+  appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath fill='%23b9cfe5' d='M1.41.59 6 5.17 10.59.59 12 2 6 8 0 2z'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;
+  background-position:right 0.6rem center;
+  background-size:12px 8px;
+  padding-right:2rem;
+}
+select.dinolabsRegexLabInput::-ms-expand{ display:none; }
+
+.dinolabsRegexLabInput.mono{ font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace; }
+
+.dinolabsRegexLabSchemaActions{
+  display:flex;
+  align-items:flex-start;
+  justify-content:flex-end;
+}
+
+.dinolabsRegexLabSchemaFooter{
+  display:flex;
+  gap:8px;
+  padding:10px;
+  background:#0f1a26;
+  border-top:1px solid #192a3b;
+}
+
+.dinolabsRegexLabBtn{
+  padding:0.6rem 0.8rem;
+  border-radius:6px;
+  border:1px solid #1f2a36;
+  background:#2a3a4a;
+  color:#eef6ff;
+  font-weight:700;
+  cursor:pointer;
+}
+.dinolabsRegexLabBtn.tiny{ font-size:12px; }
+.dinolabsRegexLabBtn.danger{ background:#3a2020; border-color:#512828; color:#ffd7d7; }
+
+@media (max-width:1200px){
+  .dinolabsRegexLabSchemaHeader{ grid-template-columns:160px 140px 1fr 64px; }
+  .dinolabsRegexLabSchemaCard{ grid-template-columns:1fr; }
+}
+
+@media (max-width:700px){
+  .dinolabsRegexLabSchemaOptions{ grid-template-columns:1fr; }
+}

@@ -1,0 +1,373 @@
+:root {
+  --mx-bg: #2c3e50;
+  --mx-panel: #34495e;
+  --mx-panel-2: #2f4155;
+  --mx-accent: #3498db;
+  --mx-accent-2: #27ae60;
+  --mx-text: #ecf0f1;
+  --mx-muted: #9aa7b1;
+  --mx-border: #2b3a49;
+  --mx-border-2: #3a4b5c;
+  --mx-cell-bg: #3a4b5c;
+  --mx-cell-fg: #f8fbff;
+  --mx-shadow: 0 6px 18px rgba(0,0,0,0.2);
+}
+
+.dinolabsMatrixApp,
+.dinolabsMatrixApp * ,
+.dinolabsMatrixApp *::before,
+.dinolabsMatrixApp *::after {
+  box-sizing: border-box;
+}
+
+.dinolabsMatrixApp button {
+  padding: 0.6rem 0.8rem;
+}
+
+.dinolabsMatrixApp {
+  width: 100%;
+  height: 100vh;
+  height: 100dvh;
+  background: var(--mx-bg);
+  color: var(--mx-text);
+  display: flex;
+  flex-direction: column;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+  overflow: hidden;
+}
+
+.dinolabsMatrixContainer {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 290px 1fr;
+  border-top: 1px solid var(--mx-border);
+  min-height: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+.dinolabsMatrixSidebar {
+  background: var(--mx-panel);
+  border-right: 1px solid var(--mx-border);
+  padding: 12px;
+  min-height: 0;
+  max-height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.dinolabsMatrixMain {
+  background: var(--mx-panel);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 100%;
+  overflow: scroll; 
+  margin-bottom: 100px; 
+}
+
+.dinolabsMatrixSection {
+  background: var(--mx-panel-2);
+  border: 1px solid var(--mx-border-2);
+  border-radius: 6px;
+  padding: 20px;
+  margin-bottom: 10px;
+  box-shadow: var(--mx-shadow);
+}
+
+.dinolabsMatrixSectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  margin-bottom: 16px;
+  color: #ffffff;
+}
+
+.dinolabsMatrixRow {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 8px;
+}
+
+.dinolabsMatrixBtnRow {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 10px;
+}
+
+.dinolabsMatrixDimCol {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  flex: 1;
+  min-width: 120px;
+}
+
+.dinolabsMatrixDimLabel {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--mx-muted);
+  margin-left: 4px;
+}
+
+.dinolabsMatrixNum {
+  width: 100%;
+  background: #223140;
+  border: 1px solid var(--mx-border-2);
+  color: var(--mx-text);
+  border-radius: 6px;
+  padding: 8px 10px;
+  outline: none;
+}
+.dinolabsMatrixNum:focus {
+  border-color: var(--mx-accent);
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, .25);
+}
+
+.dinolabsMatrixBtn {
+  background: linear-gradient(180deg, #4b89b1, #2f6282);
+  border: 1px solid #274f67;
+  color: #f2f7fb;
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem; 
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  box-shadow: var(--mx-shadow);
+  transition: transform .12s ease, box-shadow .12s ease, filter .12s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 34px;
+  line-height: 1.2;
+  text-align: center;
+  word-break: break-word;
+}
+.dinolabsMatrixBtn:hover { transform: translateY(-1px); filter: brightness(1.05); }
+.dinolabsMatrixBtn:active { transform: translateY(0); filter: brightness(.98); }
+.dinolabsMatrixBtn.subtle { background: #2a3a4a; border-color: #1e2a36; color: #d7e5ef; box-shadow: none; }
+.dinolabsMatrixBtn.tiny { padding: 0.6rem 0.8rem; font-size: 11px; min-height: 0; }
+
+.dinolabsMatrixPillGroup {
+  display: inline-flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dinolabsMatrixTextArea {
+  width: 100%;
+  min-height: 88px;
+  resize: vertical;
+  background: #1f2c39;
+  border: 1px solid var(--mx-border-2);
+  color: var(--mx-text);
+  border-radius: 6px;
+  padding: 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  margin-bottom: 8px;
+}
+.dinolabsMatrixTextArea:focus {
+  border-color: var(--mx-accent);
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, .25);
+}
+
+.dinolabsMatrixGrids {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+  padding: 12px;
+  border-bottom: 1px solid var(--mx-border);
+}
+
+.dinolabsMatrixMatrixBox {
+  background: var(--mx-panel-2);
+  border: 1px solid var(--mx-border-2);
+  border-radius: 6px;
+  box-shadow: var(--mx-shadow);
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dinolabsMatrixMatrixHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  padding: 8px 10px;
+  border-bottom: 1px solid var(--mx-border);
+}
+.dinolabsMatrixMatrixTitle { font-weight: 800; font-size: 14px; color: #ffffff; }
+.dinolabsMatrixMatrixDims { color: var(--mx-muted); font-size: 12px; font-weight: 600; }
+
+.dinolabsMatrixMatrixGrid {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  overflow: auto;
+}
+.dinolabsMatrixResultGridWrap .dinolabsMatrixMatrixGrid { min-height: 72px; }
+
+.dinolabsMatrixCellInput {
+  width: 100%;
+  height: 40px;
+  text-align: center;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.08);
+  outline: none;
+  color: var(--mx-cell-fg);
+  font-weight: 700;
+  font-size: 14px;
+  box-shadow: inset 0 1px 0 rgba(255,255,255,0.05), 0 2px 4px rgba(0,0,0,0.2);
+  background: var(--mx-cell-bg);
+  transition: box-shadow .12s ease, transform .06s ease;
+}
+.dinolabsMatrixCellInput:focus { box-shadow: 0 0 0 2px rgba(39, 174, 96, .35), 0 4px 10px rgba(0,0,0,0.28); border-color: rgba(39, 174, 96, .9); }
+.dinolabsMatrixCellInput:hover { transform: translateY(-1px); }
+
+.dinolabsMatrixResultPanel {
+  padding: 12px;
+  display: grid;
+  grid-template-columns: 1.1fr .9fr;
+  gap: 12px;
+  align-items: start;
+  min-height: 100%;
+  max-height: 100%; 
+  overflow: scroll;
+  display: flex; 
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  min-width: 100%; 
+  max-width: 100%; 
+}
+
+.dinolabsMatrixResultHeader {
+  grid-column: 1 / -1;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: -2px;
+  min-width: 100%;
+  max-width: 100%; 
+}
+.dinolabsMatrixResultTitle { display: flex; align-items: center; gap: 10px; font-weight: 900; font-size: 16px; }
+.dinolabsMatrixLastOp { color: var(--mx-muted); font-weight: 600; margin-left: 6px; }
+
+.dinolabsMatrixResultGridWrap {
+  background: var(--mx-panel-2);
+  border: 1px solid var(--mx-border-2);
+  border-radius: 6px;
+  box-shadow: var(--mx-shadow);
+  overflow: auto;
+    min-width: 100%;
+  max-width: 100%; 
+}
+
+.dinolabsMatrixOpsLog {
+  background: var(--mx-panel-2);
+  border: 1px solid var(--mx-border-2);
+  border-radius: 6px;
+  box-shadow: var(--mx-shadow);
+  padding: 10px;
+  max-height: 320px;
+  overflow: auto;
+  min-width: 100%;
+  max-width: 100%; 
+}
+
+.dinolabsMatrixOpsTitle { font-weight: 800; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+.dinolabsMatrixOpsList { display: flex; flex-direction: column; gap: 6px; }
+.dinolabsMatrixOpsItem {
+  background: #203041;
+  border: 1px solid #192734;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", monospace;
+  font-size: 12px;
+  word-break: break-word;
+}
+
+.dinolabsMatrixHistory {
+  grid-column: 1 / -1;
+  background: var(--mx-panel-2);
+  border: 1px solid var(--mx-border-2);
+  border-radius: 6px;
+  box-shadow: var(--mx-shadow);
+  padding: 10px;
+  margin-top: 8px;
+  max-height: 300px;
+  overflow: auto;
+    min-width: 100%;
+  max-width: 100%; 
+}
+.dinolabsMatrixHistoryTitle { font-weight: 800; margin-bottom: 6px; }
+.dinolabsMatrixHistoryList { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.dinolabsMatrixHistoryItem { border: 1px solid #223244; border-radius: 6px; padding: 8px; background: #1f2c39; }
+.dinolabsMatrixHistoryHead { display: flex; align-items: center; justify-content: space-between; margin-bottom: 6px; }
+.dinolabsMatrixHistoryLabel { font-weight: 700; color: #e8f2ff; }
+.dinolabsMatrixHistoryGrid { background: #172331; border: 1px solid #13202e; border-radius: 6px; padding: 6px; overflow: auto; }
+.dinolabsMatrixMatrixGrid.mini { gap: 4px; }
+.dinolabsMatrixCellMini {
+  min-height: 22px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #233246;
+  border: 1px solid #1b2a3b;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #cfe3f6;
+}
+
+.dinolabsMatrixHistoryEmpty { color: var(--mx-muted); font-style: italic; padding: 6px; font-weight: 600; }
+
+.dinolabsMatrixSidebar::-webkit-scrollbar,
+.dinolabsMatrixOpsLog::-webkit-scrollbar,
+.dinolabsMatrixHistory::-webkit-scrollbar,
+.dinolabsMatrixHistoryGrid::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+.dinolabsMatrixSidebar::-webkit-scrollbar-thumb,
+.dinolabsMatrixOpsLog::-webkit-scrollbar-thumb,
+.dinolabsMatrixHistory::-webkit-scrollbar-thumb,
+.dinolabsMatrixHistoryGrid::-webkit-scrollbar-thumb { background: #4a6175; border-radius: 6px; }
+.dinolabsMatrixSidebar::-webkit-scrollbar-track,
+.dinolabsMatrixOpsLog::-webkit-scrollbar-track,
+.dinolabsMatrixHistory::-webkit-scrollbar-track,
+.dinolabsMatrixHistoryGrid::-webkit-scrollbar-track { background: #243444; }
+
+@media (max-width: 1280px) {
+  .dinolabsMatrixContainer { grid-template-columns: 250px 1fr; }
+  .dinolabsMatrixResultPanel { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 1024px) {
+  .dinolabsMatrixGrids { grid-template-columns: 1fr; }
+  .dinolabsMatrixHistoryList { grid-template-columns: 1fr; }
+}
+
+@media (max-width: 640px) {
+  .dinolabsMatrixBtnRow { grid-template-columns: 1fr; gap: 8px; }
+  .dinolabsMatrixSection { padding: 12px; }
+  .dinolabsMatrixGrids { padding: 8px; gap: 8px; }
+  .dinolabsMatrixResultTitle { font-size: 15px; }
+}
+
+@media (prefers-contrast: high) {
+  .dinolabsMatrixCellInput { border-width: 2px; }
+  .dinolabsMatrixHistoryItem,
+  .dinolabsMatrixSection,
+  .dinolabsMatrixResultGridWrap,
+  .dinolabsMatrixOpsLog { border-width: 2px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dinolabsMatrixBtn,
+  .dinolabsMatrixCellInput { transition: none; }
+}

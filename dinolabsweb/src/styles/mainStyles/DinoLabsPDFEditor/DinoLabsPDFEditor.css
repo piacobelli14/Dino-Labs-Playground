@@ -1,0 +1,534 @@
+.dinolabsPDFContentWrapper {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.dinolabsPDFToolbarWrapper {
+    width: 100%;
+    z-index: 4;
+}
+
+.dinolabsPDFToolBar {
+    width: 100%;
+    padding: 1rem;
+    background-color: #242327;
+    border-bottom: 2px solid rgba(255,255,255,0.1);
+    display: flex;
+    align-items: center;
+    box-sizing: border-box;
+}
+
+.dinolabsPDFTitleWrapper {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 35%;
+    box-sizing: border-box;
+    overflow: scroll;
+    padding: 0 0.4rem;
+    margin-right: 2rem;
+}
+
+.dinolabsPDFFileNameStack {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: flex-start;
+    box-sizing: border-box;
+    width: 100%;
+}
+
+.dinolabsPDFFileNameInput {
+    padding: 0.2rem;
+    box-sizing: border-box;
+    background-color: transparent;
+    border: 1ox solid transparent;
+    border-radius: 6px;
+    color: #d8d8d8;
+    font-size: 1.2rem;
+    font-weight: 600;
+    width: 100%;
+    overflow: scroll;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+    overflow: hidden;
+    margin-bottom: 0.4rem;
+}
+
+.dinolabsPDFFileNameInput svg {
+    margin-right: 0.4rem;
+}
+
+.dinolabsPDFOperationsButtonsWrapper {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0 0.6rem 0 0.4rem;
+}
+
+.dinolabsPDFOperationsButton {
+    background-color: transparent;
+    border: none;
+    outline: none;
+    padding: 0;
+    font-size: 0.7rem;
+    font-weight: 450;
+    color: #c0c0c0;
+    cursor: pointer;
+}
+
+.dinolabsPDFOperationsButton:hover {
+    opacity: 0.6;
+    outline: none;
+}
+
+.dinolabsPDFOperationsButton:focus {
+    opacity: 1.0;
+    outline: none;
+}
+
+.dinolabsPDFContent {
+    position: relative;
+    width: 100%;
+    min-height: calc(100vh - 100px);
+    max-height: calc(100vh - 100px);
+    background-color: #29282D !important;
+}
+
+.dinolabsPDFEditor {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    white-space: pre-wrap;
+    word-wrap: break-word;
+    padding: 10px;
+    outline: none;
+    background-color: #29282D !important;
+    color: #f5f5f5;
+    font-weight: 600;
+    font-size: 16px;
+    line-height: 1.4;
+    z-index: 1;
+    overflow: auto;
+    min-height: calc(100vh - 100px);
+    max-height: calc(100vh - 100px);
+    box-sizing: border-box;
+}
+
+
+.dinolabsPDFEditingSearchBoxWrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    position: absolute;
+    border: 1px solid rgba(255, 255, 255, 0.6);
+    border-radius: 6px;
+    box-shadow: 0 0 20px black;
+    cursor: move;
+    z-index: 6;
+    width: 400px;
+    box-sizing: border-box;
+    padding: 1rem 0; 
+    background: linear-gradient(to left, #1B1526, #29282D);
+}
+
+.dinolabsPDFEditngSearchBarWrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    box-sizing: border-box;
+    width: 60%;
+    min-width: 100%;
+    max-width: 100%;
+    border-radius: 6px;
+    padding: 1rem 1rem; 
+    border-bottom: 1px solid rgba(255,255,255,0.2); 
+    border-radius: 0; 
+}
+
+.dinolabsPDFEditingSearchLabel {
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #f5f5f5;
+    width: 90%;
+    text-align: left;
+    margin-bottom: 0.8rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.dinolabsPDFEditingSearchLabel span {
+    font-size: 0.7rem;
+    font-weight: 600;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 0.4rem;
+}
+
+.dinolabsPDFEditingSearchInput {
+    background-color: rgba(255, 255, 255, 0.02);
+    border: 1px solid #c1c1c1;
+    border-radius: 6px;
+    padding: 0.6rem 1rem;
+    width: 90%;
+    box-sizing: border-box;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    outline: none;
+    font-size: 0.7rem;
+    font-weight: 700;
+    color: #c1c1c1;
+    outline: none;
+}
+
+.dinolabsPDFEditingSearchInput:hover {
+  outline: none;
+  border: 1px solid #c1c1c1;
+  opacity: 0.8;
+}
+
+.dinolabsPDFEditingSearchInput:focus {
+  outline: none;
+  border: 1px solid #c1c1c1;
+  opacity: 1.0;
+}
+
+.dinolabsPDFEditingSearchOperationsButtonWrapper {
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    width: 90%;
+    gap: 0.6rem;
+    margin-top: 1rem;
+}
+
+.dinolabsPDFEditingSearchOperationsButton {
+    color: #f5f5f5;
+    font-size: 0.7rem;
+    font-weight: 600;
+    border: none;
+    outline: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    box-shadow: 0 0 2px white;
+    left: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    cursor: pointer;
+    gap: 1rem;
+    padding: 0.6rem 1rem;
+}
+
+.dinolabsPDFEditingSearchOperationsButton:hover {
+    opacity: 0.6;
+}
+
+.dinolabsPDFEditingSearchOperationsButton:focus {
+    opacity: 1.0;
+}
+
+.dinolabsPDFEditingSearchCloseButton {
+    color: #f5f5f5;
+    font-size: 0.8rem;
+    font-weight: 600;
+    border: none;
+    outline: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.0);
+    color: #f5f5f5;
+}
+
+.dinolabsPDFDropdownMenu {
+    border: 1px solid #222222; 
+    border-radius: 6px; 
+    background-color: #2a2a2a;
+    position: fixed; 
+    min-width: 180px; 
+    overflow: hidden; 
+    user-select: none;
+    z-index: 10001; 
+    background-color: #201F25 !important; 
+    box-shadow: 0 0 10px black;
+}
+
+.dinolabsPDFDropdownMenuItem {
+    display: flex; 
+    padding: 8px 12px; 
+    cursor: pointer; 
+    font-size: 14px; 
+    color: #c1c1c1; 
+    align-items: center;
+    gap: 8px; 
+    font-size: 0.7rem; 
+    font-weight: 600; 
+}
+
+.math-expression {
+    display: inline;
+    margin: 0;
+    padding: 0;
+    border: 1px solid transparent;
+    border-radius: 2px;
+    vertical-align: baseline;
+    font-family: 'Times New Roman', serif;
+    cursor: pointer;
+    line-height: 1;
+}
+
+.math-expression:hover {
+    background-color: rgba(76, 175, 80, 0.03);
+}
+
+sup,
+sub {
+    font-size: 0.65em;
+    line-height: 0;
+    margin: 0;
+    padding: 0;
+}
+
+[contenteditable="true"]:focus {
+    outline: 1px solid #4CAF50;
+    background-color: rgba(76, 175, 80, 0.1);
+    border-radius: 2px;
+}
+
+.search-match {
+  background-color: rgba(255, 255, 0, 0.3);
+  border-radius: 2px;
+}
+
+.search-match-active {
+  background-color: rgba(255, 165, 0, 0.8);
+  border-radius: 2px;
+}
+
+.dinolabsPDFEquationPicker {
+    position: fixed; 
+    top: 50%; 
+    left: 50%; 
+    transform: translate(-50%, -50%); 
+    background: #2a2a2a; 
+    border: 1px solid #444; 
+    border-radius: 6px; 
+    z-index: 10; 
+    min-width: 400px; 
+    max-width: 400px; 
+    max-height: 60%; 
+    overflow: auto; 
+    color: #c1c1c1; 
+    display: flex; 
+    flex-direction: column; 
+    justify-content: flex-start;
+    align-items: center;
+    background-color: #201F25 !important; 
+    box-shadow: 0 0 10px black;
+}
+
+.dinolabsPDFEquationNavButtons {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 10px; 
+    flex-wrap: wrap;
+    position: sticky; 
+    top: 0; 
+    background-color: #212027 !important; 
+    padding: 20px; 
+    box-sizing: border-box;
+    border-bottom: 2px solid rgba(255,255,255,0.1); 
+    width: 100%; 
+}
+
+.dinolabsPDFEquationNavButtons button {
+    color: #f5f5f5;
+    font-size: 0.7rem;
+    font-weight: 600;
+    border: none;
+    outline: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    box-shadow: 0 0 2px white;
+    left: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    cursor: pointer;
+    gap: 1rem;
+    padding: 0.6rem 1rem;
+}
+
+.dinolabsPDFEquationNavButtons button:hover {
+    opacity: 0.6;
+}
+
+.dinolabsPDFEquationNavButtons button:focus {
+    opacity: 1.0;
+}
+
+.dinolabsPDFEquationSelectionButtons {
+    display: grid; 
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 15px; 
+    padding-bottom: 20px; 
+    width: 100%; 
+    padding: 20px; 
+    box-sizing: border-box;
+    overflow: auto;
+    z-index: 1; 
+}
+
+.dinolabsPDFEquationSelectionButtons button {
+    padding: 15px; 
+    background-color: rgba(255,255,255,0.1); 
+    border: 1px solid #c1c1c1; 
+    border-radius: 6px; 
+    cursor: pointer; 
+    display: flex; 
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px; 
+    outline: none; 
+    z-index: 1; 
+}
+
+.dinolabsPDFEquationSelectionButtons button:hover {
+    opacity: 0.6;
+}
+
+.dinolabsPDFEquationSelectionButtons button:focus {
+    opacity: 1.0;
+}
+
+.dinolabsPDFEquationSelectionButtons label {
+    font-size: 12px;
+    font-weight: 700; 
+    color: #c1c1c1;  
+}
+
+.dinolabsPDFEquationSelectionButtons div {
+    font-size: 20px; 
+    font-weight: 600; 
+    color: #4CAF50; 
+}
+
+.dinolabsPDFDrawSymbolWrapper {
+    display: flex; 
+    width: 100%; 
+    min-height: 500px;
+    max-height: 500px;  
+    height: 500px; 
+    padding-bottom: 20px; 
+    box-sizing: border-box;
+}
+
+.dinolabsPDFDrawSymbolSketchBoxStack {
+    flex: 1; 
+    width: 60%; 
+    overflow: hidden; 
+    padding: 20px 10px; 
+    box-sizing: border-box;
+
+}
+
+.dinolabsPDFDrawSymbolSketchBoxStack canvas {
+    width: 100%; 
+    height: 200px; 
+    box-sizing: border-box; 
+    overflow: hidden;
+    cursor: crosshair; 
+    display: block;
+    border: 1px solid #c1c1c1; 
+    border-radius: 6px; 
+
+}
+
+.dinolabsPDFDrawSymbolSketchBoxStackSuggestions {
+    width: 30%; 
+    height: 250px;
+    padding: 20px 10px; 
+    box-sizing: border-box;
+    overflow: auto;
+
+}
+
+.dinolabsPDFDrawSymbolSketchBoxStackSuggestionsButtons {
+    overflow: auto; 
+    display: grid; 
+    gap: 10px; 
+    height: 250px;
+}
+
+.dinolabsPDFDrawSymbolSketchBoxStackSuggestionsButtons button {
+    padding: 15px; 
+    background-color: rgba(255,255,255,0.1); 
+    border: 1px solid #c1c1c1; 
+    border-radius: 6px; 
+    cursor: pointer; 
+    display: flex; 
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 8px; 
+    outline: none; 
+    z-index: 1; 
+}
+
+.dinolabsPDFDrawSymbolSketchBoxStackSuggestionsButtons button:hover {
+    opacity: 0.6;
+}
+
+.dinolabsPDFDrawSymbolSketchBoxStackSuggestionsButtons button:focus {
+    opacity: 1.0;
+}
+
+.dinolabsPDFDrawSymbolSketchBoxStackBottom {
+    display: flex; 
+    gap: 10;
+    padding: 10px 0; 
+}
+
+.dinolabsPDFDrawSymbolSketchBoxStackBottomButton {
+    color: #f5f5f5;
+    font-size: 0.7rem;
+    font-weight: 600;
+    border: none;
+    outline: none;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: rgba(255, 255, 255, 0.1);
+    border-radius: 4px;
+    box-shadow: 0 0 2px white;
+    left: 0;
+    transition: transform 0.3s ease, opacity 0.3s ease;
+    cursor: pointer;
+    gap: 1rem;
+    padding: 0.6rem 1rem;
+    width: 100%; 
+}
+
+.dinolabsPDFDrawSymbolSketchBoxStackBottomButton:hover {
+    opacity: 0.6;
+}
+
+.dinolabsPDFDrawSymbolSketchBoxStackBottomButton:focus {
+    opacity: 1.0;
+}

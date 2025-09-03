@@ -1,0 +1,447 @@
+.dinolabsColorTypeLabApp {
+  width: 100%;
+  min-height: calc(100vh - 60px);
+  max-height: calc(100vh - 60px);
+  height: calc(100vh - 60px);
+  background: var(--ua-bg);
+  color: var(--ua-text);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
+  --dlCtlRadius: 6px;
+  --dlCtlGap: 14px;
+  --dlCtlGapSm: 8px;
+  --dlCtlTiny: 10px;
+  --dlCtlSm: 12px;
+  --dlCtlMd: 13px;
+  --dlCtlLg: 15px;
+}
+.dinolabsColorTypeLabApp *,
+.dinolabsColorTypeLabApp *::before,
+.dinolabsColorTypeLabApp *::after { box-sizing: border-box; }
+.dinolabsColorTypeLabApp button { padding: 0.6rem 0.8rem; }
+
+.dinolabsColorTypeLabShell {
+  flex: 1;
+  display: grid;
+  grid-template-columns: clamp(240px, 26vw, 340px) minmax(0, 1fr);
+  min-height: 100%;
+  min-height: 0;
+  border-top: 1px solid var(--ua-border);
+  overflow: hidden;
+
+}
+
+.dinolabsColorTypeLabSidebar {
+  background: var(--ua-panel);
+  border-right: 1px solid var(--ua-border);
+  padding: 12px;
+  overflow: auto;
+  min-width: 0;
+  min-height: 0;
+}
+
+.dinolabsColorTypeLabSection {
+  background: var(--ua-panel-2);
+  border: 1px solid var(--ua-border-2);
+  border-radius: var(--dlCtlRadius);
+  padding: 12px;
+  margin-bottom: var(--dlCtlGap);
+  box-shadow: var(--ua-shadow);
+  padding: 20px 10px; 
+}
+
+.dinolabsColorTypeLabSectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  color: #eaf2fb;
+  margin-bottom: 16px;
+  font-size: var(--dlCtlSm);
+
+}
+
+.dinolabsColorTypeLabRow {
+  display: flex;
+  flex-direction: column;
+  gap: var(--dlCtlGapSm);
+  margin-bottom: var(--dlCtlGapSm);
+  min-width: 0;
+  margin-bottom: 8px; 
+  padding: 6px; 
+}
+
+.dinolabsColorTypeLabLabel { font-size: var(--dlCtlSm); color: var(--ua-muted); font-weight: 700; }
+.dinolabsColorTypeLabSmall { font-size: var(--dlCtlTiny); color: var(--ua-muted); }
+
+.dinolabsColorTypeLabInput,
+.dinolabsColorTypeLabSelect,
+.dinolabsColorTypeLabTextArea,
+.dinolabsColorTypeLabNumber {
+  width: 100%;
+  background: #203142;
+  border: 1px solid var(--ua-border-2);
+  color: var(--ua-text);
+  border-radius: var(--dlCtlRadius);
+  padding: 8px 10px;
+  outline: none;
+  font-size: var(--dlCtlMd);
+  height: 34px;
+  min-width: 0;
+}
+.dinolabsColorTypeLabSelect { height: 34px; }
+.dinolabsColorTypeLabTextArea { height: auto; resize: vertical; min-height: 72px; }
+.dinolabsColorTypeLabInput:focus,
+.dinolabsColorTypeLabSelect:focus,
+.dinolabsColorTypeLabTextArea:focus,
+.dinolabsColorTypeLabNumber:focus {
+  border-color: var(--ua-accent);
+  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.22);
+}
+
+.dinolabsColorTypeLabColorRow {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr);
+  gap: 10px;
+  align-items: center;
+  min-width: 0;
+}
+
+.dinolabsColorTypeLabColorChip {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--dlCtlRadius);
+  cursor: pointer;
+  border: 1px solid #162334;
+  box-shadow: inset 0 0 0 1px #162334;
+}
+
+.dinolabsColorTypeLabActions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.dinolabsColorTypeLabMain {
+  background: var(--ua-panel);
+  overflow: auto;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.dinolabsColorTypeLabHeadBar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  padding: 10px 14px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--ua-border);
+  background: var(--ua-panel-2);
+}
+
+.dinolabsColorTypeLabHeadTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 900;
+  font-size: var(--dlCtlLg);
+  letter-spacing: 0.1px;
+  min-width: 0;
+}
+
+.dinolabsColorTypeLabHeadActions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+.dinolabsColorTypeLabMainGrid {
+  padding: 12px;
+  width: min(1200px, 100%);
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--dlCtlGap);
+  min-width: 0;
+}
+
+.dinolabsColorTypeLabCard {
+  background: var(--ua-panel-2);
+  border: 1px solid var(--ua-border-2);
+  border-radius: var(--dlCtlRadius);
+  box-shadow: var(--ua-shadow);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.dinolabsColorTypeLabCardTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  font-size: var(--dlCtlSm);
+  color: #e9f3ff;
+  min-width: 0;
+}
+
+.dinolabsColorTypeLabBrandGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+  gap: var(--dlCtlGap);
+  min-width: 0;
+}
+
+.dinolabsColorTypeLabBrandColumn { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.dinolabsColorTypeLabBrandLabel { font-weight: 800; color: #e9f3ff; font-size: var(--dlCtlSm); }
+
+.dinolabsColorTypeLabSwatchGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(84px, 1fr));
+  gap: 10px;
+  min-width: 0;
+}
+
+.dinolabsColorTypeLabSwatch {
+  border: 1px solid #162334;
+  border-radius: var(--dlCtlRadius);
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  cursor: pointer;
+  box-shadow: var(--ua-shadow);
+  transition: transform 0.08s ease, filter 0.08s ease;
+  min-height: 50px;
+  font-weight: 800;
+  font-size: var(--dlCtlTiny);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding: 0.6rem 0.8rem;
+}
+.dinolabsColorTypeLabSwatch:hover { transform: translateY(-1px); filter: brightness(1.04); }
+
+.dinolabsColorTypeLabGradientBlock {
+  border: 1px solid #162334;
+  border-radius: var(--dlCtlRadius);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 14px;
+  min-height: 120px;
+}
+.dinolabsColorTypeLabGradientText {
+  background: #0b1622cc;
+  border: 1px solid #0c1a28;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-weight: 800;
+  font-size: var(--dlCtlSm);
+}
+
+.dinolabsColorTypeLabContrastRow { display: flex; gap: 10px; flex-wrap: wrap; }
+.dinolabsColorTypeLabContrastChip {
+  flex: 1 1 180px;
+  border-radius: var(--dlCtlRadius);
+  border: 1px solid #162334;
+  padding: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-weight: 800;
+  min-width: 0;
+  margin: 6px 0; 
+  padding: 8px; 
+  font-size: 0.8rem; 
+}
+.dinolabsColorTypeLabMini { font-size: var(--dlCtlTiny); opacity: 0.9; }
+
+.dinolabsColorTypeLabContrastStack {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+.dinolabsColorTypeLabContrastTop {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+.dinolabsColorTypeLabContrastValue {
+  background: #0b1622cc;
+  border: 1px solid #0c1a28;
+  border-radius: 6px;
+  padding: 8px 10px;
+  font-weight: 900;
+  width: max-content;
+  font-size: 0.8rem; 
+  color: #c1c1c1; 
+  margin: 6px 0; 
+}
+.dinolabsColorTypeLabContrastBadges {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(108px, 1fr));
+  gap: 8px;
+  margin: 6px 0; 
+}
+.dinolabsColorTypeLabBadge {
+  padding: 0.6rem 0.8rem;
+  border-radius: 999px;
+  border: 1px solid #1a2b3b;
+  background: #223244;
+  color: #d7e5ef;
+  font-size: var(--dlCtlTiny);
+  font-weight: 800;
+  line-height: 1;
+  text-align: center;
+  white-space: nowrap;
+  border-radius: 6px; 
+}
+.dinolabsColorTypeLabBadge.good { background: #193825; border-color: #215b35; color: #c5f3d8; }
+.dinolabsColorTypeLabBadge.bad { background: #3a1c1c; border-color: #5a2a2a; color: #ffd6d6; }
+.dinolabsColorTypeLabContrastPreview {
+  border: 1px solid #162334;
+  border-radius: var(--dlCtlRadius);
+  min-height: 140px;
+  aspect-ratio: 4 / 3;
+  overflow: hidden;
+}
+.dinolabsColorTypeLabContrastPairs {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.dinolabsColorTypeLabTypeBox {
+  background: #13202d;
+  border: 1px solid #162334;
+  border-radius: var(--dlCtlRadius);
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+.dinolabsColorTypeLabTypeSample {
+  font-size: 16px;
+  font-weight: 800;
+  letter-spacing: 0.2px;
+  background: #0f1b27;
+  border: 1px solid #0c1622;
+  border-radius: var(--dlCtlRadius);
+  padding: 8px 10px;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dinolabsColorTypeLabScaleList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-height: min(36vh, 320px);
+  overflow: auto;
+  border-top: 1px dashed #243444;
+  padding-top: 10px;
+  min-width: 0;
+}
+.dinolabsColorTypeLabScaleItem {
+  background: #0f1b27;
+  border: 1px solid #0c1622;
+  border-radius: var(--dlCtlRadius);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+}
+.dinolabsColorTypeLabScaleMeta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: var(--dlCtlSm);
+  color: #c8dae9;
+  font-weight: 700;
+  min-width: 0;
+}
+.dinolabsColorTypeLabScaleText { font-weight: 700; min-width: 0; overflow-wrap: anywhere; }
+
+.dinolabsColorTypeLabExportBlock { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+.dinolabsColorTypeLabExportHeader { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 0; flex-wrap: wrap; }
+.dinolabsColorTypeLabExportTitle { font-weight: 800; font-size: var(--dlCtlSm); }
+.dinolabsColorTypeLabExportActions { display: flex; gap: 10px; flex-wrap: wrap; }
+.dinolabsColorTypeLabCode {
+  background: #0b1622;
+  border: 1px solid #0c1a28;
+  border-radius: var(--dlCtlRadius);
+  padding: 10px;
+  font-size: 11px;
+  color: #d8e6f5;
+  white-space: pre-wrap;
+  max-height: 200px;
+  overflow: auto;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  word-break: break-word;
+}
+
+.dinolabsColorTypeLabBtn {
+  background: #2a3a4a;
+  border: 1px solid #1f2a36;
+  color: #eef6ff;
+  border-radius: var(--dlCtlRadius);
+  font-weight: 800;
+  font-size: var(--dlCtlSm);
+  cursor: pointer;
+  box-shadow: var(--ua-shadow);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: transform 0.08s ease, filter 0.08s ease, box-shadow 0.08s ease;
+  padding: 0.6rem 0.8rem;
+}
+.dinolabsColorTypeLabBtn:hover { transform: translateY(-1px); filter: brightness(1.05); }
+.dinolabsColorTypeLabBtn:active { transform: translateY(0); filter: brightness(0.98); }
+.dinolabsColorTypeLabSubtle { background: #1c2936; color: #d2e5f2; box-shadow: none; }
+
+.dinolabsColorTypeLabSwatchRow { display: flex; gap: 10px; flex-wrap: wrap; padding: 0 10px;  }
+
+.dinolabsColorTypeLabSidebar::-webkit-scrollbar,
+.dinolabsColorTypeLabScaleList::-webkit-scrollbar,
+.dinolabsColorTypeLabMain::-webkit-scrollbar,
+.dinolabsColorTypeLabCode::-webkit-scrollbar { width: 8px; height: 8px; }
+.dinolabsColorTypeLabSidebar::-webkit-scrollbar-thumb,
+.dinolabsColorTypeLabScaleList::-webkit-scrollbar-thumb,
+.dinolabsColorTypeLabMain::-webkit-scrollbar-thumb,
+.dinolabsColorTypeLabCode::-webkit-scrollbar-thumb { background: #4a6175; border-radius: 6px; }
+.dinolabsColorTypeLabSidebar::-webkit-scrollbar-track,
+.dinolabsColorTypeLabScaleList::-webkit-scrollbar-track,
+.dinolabsColorTypeLabMain::-webkit-scrollbar-track,
+.dinolabsColorTypeLabCode::-webkit-scrollbar-track { background: #243444; }
+
+@media (max-width: 1280px) {
+  .dinolabsColorTypeLabMainGrid { grid-template-columns: 1fr; }
+}
+@media (max-width: 1100px) {
+  .dinolabsColorTypeLabShell { grid-template-columns: minmax(0, 1fr); }
+  .dinolabsColorTypeLabSidebar { order: 2; }
+  .dinolabsColorTypeLabMain { order: 1; }
+}
+@media (max-width: 560px) {
+  .dinolabsColorTypeLabHeadBar { flex-direction: column; align-items: stretch; gap: 10px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dinolabsColorTypeLabBtn, .dinolabsColorTypeLabSwatch { transition: none; }
+}
+
+.dinolabsColorTypeLabApp{
+  min-height: 100dvh;
+  height: 100dvh;
+}
+
+.dinolabsColorTypeLabSelect{
+  -webkit-appearance:none;
+  -moz-appearance:none;
+  appearance:none;
+  background-image:none !important;
+  font-weight: 700; 
+}
+.dinolabsColorTypeLabSelect::-ms-expand{ display:none; }

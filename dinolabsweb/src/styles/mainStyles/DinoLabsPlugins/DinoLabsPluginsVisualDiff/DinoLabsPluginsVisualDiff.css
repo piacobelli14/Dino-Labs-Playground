@@ -1,0 +1,619 @@
+.dinolabsVisualDiffApp {
+  width: 100%;
+  min-height: 100dvh;
+  height: 100dvh;
+  background: var(--ua-bg);
+  color: var(--ua-text);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Roboto", sans-serif;
+  --r: 6px;
+  --fz-base: 13px;
+  --fz-sm: 12px;
+  --fz-lg: 14px;
+}
+
+.dinolabsVisualDiffApp,
+.dinolabsVisualDiffApp * {
+  box-sizing: border-box;
+}
+
+.dinolabsVisualDiffApp button {
+  padding: 0.6rem 0.8rem;
+}
+
+.dinolabsVisualDiffContainer {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 340px 1fr;
+  height: 100%;
+  min-height: 0;
+  border-top: 1px solid var(--ua-border);
+}
+
+.dinolabsVisualDiffSidebar {
+  background: var(--ua-panel);
+  border-right: 1px solid var(--ua-border);
+  padding: 10px;
+  overflow: auto;
+  min-height: 0;
+  font-size: var(--fz-base);
+  padding: 20px;
+
+}
+
+.dinolabsVisualDiffMain {
+  background: var(--ua-panel);
+  overflow: auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 10px;
+  font-size: var(--fz-base);
+}
+
+.dinolabsVisualDiffSection {
+  background: var(--ua-panel-2);
+  border: 1px solid var(--ua-border-2);
+  border-radius: var(--r);
+  padding: 10px;
+  margin-bottom: 10px;
+  box-shadow: var(--ua-shadow);
+}
+
+.dinolabsVisualDiffSectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 800;
+  color: #eaf2fb;
+  margin-bottom: 8px;
+  font-size: var(--fz-lg);
+  margin-bottom: 20px;
+}
+
+.dinolabsVisualDiffTabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.dinolabsVisualDiffTab {
+  background: #14212e;
+  border: 1px solid #192a3b;
+  color: #d3e4f6;
+  border-radius: var(--r);
+  font-weight: 800;
+  cursor: pointer;
+  font-size: var(--fz-sm);
+  padding: 0.6rem 0.8rem; 
+  gap: 10px; 
+}
+
+.dinolabsVisualDiffTab.on {
+  background: #1b2a3b;
+  border-color: #26425d;
+}
+
+.dinolabsVisualDiffPickers {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  margin: 20px 0;
+}
+
+.dinolabsVisualDiffPicker {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dinolabsVisualDiffLabel {
+  font-weight: 800;
+  font-size: var(--fz-sm);
+  padding: 0 0.4rem;
+}
+
+.dinolabsVisualDiffDrop {
+  border: 1px dashed #2a3b4c;
+  background: #162334;
+  color: #d7e6f5;
+  border-radius: var(--r);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  text-align: center;
+  padding: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.dinolabsVisualDiffMeta {
+  font-size: var(--fz-sm);
+  color: #b8cce0;
+}
+
+.dinolabsVisualDiffField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-top: 6px;
+  font-weight: 600;
+  margin: 15px 0;
+}
+
+.dinolabsVisualDiffRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  font-weight: 600;
+  margin: 10px 0;
+}
+
+.dinolabsVisualDiffRowWrap {
+  flex-wrap: wrap;
+}
+
+.dinolabsVisualDiffChips {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.dinolabsVisualDiffChip {
+  background: #14212e;
+  border: 1px solid #192a3b;
+  color: #d3e4f6;
+  border-radius: var(--r);
+  font-weight: 800;
+  cursor: pointer;
+  font-size: var(--fz-sm);
+}
+
+.dinolabsVisualDiffChip.on {
+  background: #1b2a3b;
+  border-color: #26425d;
+}
+
+.dinolabsVisualDiffChipStat {
+  background: #14212e;
+  border: 1px solid #192a3b;
+  border-radius: var(--r);
+  padding: 10px;
+}
+
+.dinolabsVisualDiffChipValue {
+  font-weight: 800;
+  font-size: 15px;
+  color: #fff;
+}
+
+.dinolabsVisualDiffChipLabel {
+  font-size: var(--fz-sm);
+  color: #d2e1f0;
+}
+
+.dinolabsVisualDiffBtn {
+  background: #2a3a4a;
+  border: 1px solid #1f2a36;
+  color: #eef6ff;
+  border-radius: var(--r);
+  font-weight: 800;
+  font-size: var(--fz-sm);
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  transition: transform .08s ease, filter .08s ease;
+  box-shadow: var(--ua-shadow);
+}
+
+.dinolabsVisualDiffBtn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
+}
+
+.dinolabsVisualDiffBtn:active {
+  transform: translateY(0);
+  filter: brightness(.98);
+}
+
+.dinolabsVisualDiffBtn.subtle {
+  background: #1c2936;
+  color: #d2e5f2;
+  box-shadow: none;
+}
+
+.dinolabsVisualDiffBtn.tiny {
+  font-size: var(--fz-sm);
+}
+
+.dinolabsVisualDiffMono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--fz-sm);
+}
+
+.dinolabsVisualDiffCard {
+  background: var(--ua-panel-2);
+  border: 1px solid var(--ua-border-2);
+  border-radius: var(--r);
+  box-shadow: var(--ua-shadow);
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.dinolabsVisualDiffCardTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  color: #e9f3ff;
+  font-size: var(--fz-lg);
+}
+
+.dinolabsVisualDiffImageStage {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  grid-template-rows: auto auto;
+  gap: 10px;
+  border: 1px solid #192a3b;
+  border-radius: var(--r);
+  padding: 8px;
+  background: #0f1a26;
+}
+
+.dinolabsVisualDiffPane {
+  position: relative;
+  background: #0d1a27;
+  border: 1px solid #1a2b3b;
+  border-radius: var(--r);
+  overflow: hidden;
+}
+
+.dinolabsVisualDiffPaneLabel {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: #223244;
+  border: 1px solid #1a2b3b;
+  color: #d8e6f5;
+  font-weight: 700;
+  border-radius: var(--r);
+  padding: 2px 6px;
+  font-size: var(--fz-sm);
+}
+
+.dinolabsVisualDiffImgCanvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: #0c1621;
+  border-radius: 0;
+}
+
+.dinolabsVisualDiffImageStage.overlay {
+  grid-template-columns: 1fr;
+  grid-template-rows: auto auto;
+}
+
+.dinolabsVisualDiffImageStage.overlay .dinolabsVisualDiffPane:nth-child(2),
+.dinolabsVisualDiffImageStage.overlay .dinolabsVisualDiffPaneDiff {
+  display: none;
+}
+
+.dinolabsVisualDiffImageStage.overlay .dinolabsVisualDiffPaneOverlay {
+  grid-column: 1/-1;
+  height: auto;
+}
+
+.dinolabsVisualDiffImageStage.side {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.dinolabsVisualDiffImageStage.side .dinolabsVisualDiffPaneOverlay {
+  display: none;
+}
+
+.dinolabsVisualDiffImageStage.swipe {
+  grid-template-columns: repeat(2, 1fr);
+  position: relative;
+}
+
+.dinolabsVisualDiffSwipe {
+  position: absolute;
+  left: 8px;
+  right: 8px;
+  bottom: 8px;
+}
+
+.dinolabsVisualDiffThumbsRow {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 10px;
+}
+
+.dinolabsVisualDiffThumbCol {
+  background: #122032;
+  border: 1px solid #182a3d;
+  border-radius: var(--r);
+  padding: 10px;
+}
+
+.dinolabsVisualDiffThumbTitle {
+  font-weight: 800;
+  margin-bottom: 6px;
+  font-size: var(--fz-sm);
+}
+
+.dinolabsVisualDiffThumbStrip {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(60px, 1fr));
+  gap: 6px;
+}
+
+.dinolabsVisualDiffThumb {
+  width: 100%;
+  border-radius: var(--r);
+  border: 2px solid transparent;
+  cursor: pointer;
+}
+
+.dinolabsVisualDiffThumb.sel {
+  border-color: #4da3ff;
+}
+
+.dinolabsVisualDiffFrameDiff {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+}
+
+.dinolabsVisualDiffWaves {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.dinolabsVisualDiffWaveCol {
+  background: #122032;
+  border: 1px solid #182a3d;
+  border-radius: var(--r);
+  padding: 10px;
+}
+
+.dinolabsVisualDiffWaveCol canvas {
+  width: 100%;
+  height: auto;
+  display: block;
+  background: #0e1b29;
+  border: 1px solid #182a3d;
+  border-radius: var(--r);
+}
+
+.dinolabsVisualDiffGrid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.dinolabsVisualDiffTextarea {
+  width: 100%;
+  background: #203142;
+  border: 1px solid var(--ua-border-2);
+  color: #eaf2ff;
+  border-radius: var(--r);
+  padding: 8px 10px;
+  outline: none;
+  font-size: var(--fz-base);
+}
+
+.dinolabsVisualDiffFrame {
+  width: 100%;
+  height: 340px;
+  background: #0e1b29;
+  border: 1px solid #182a3d;
+  border-radius: var(--r);
+}
+
+.dinolabsVisualDiffAttrTable {
+  display: grid;
+  grid-template-columns: 2.2fr 0.8fr 1fr 1fr;
+  border: 1px solid #182a3d;
+  border-radius: var(--r);
+  overflow: hidden;
+}
+
+.dinolabsVisualDiffAttrTable>div {
+  padding: 8px;
+  border-right: 1px solid #182a3d;
+  border-bottom: 1px solid #182a3d;
+  font-size: var(--fz-sm);
+}
+
+.dinolabsVisualDiffStyleDiff {
+  background: #122032;
+  border: 1px solid #182a3d;
+  border-radius: var(--r);
+  padding: 10px;
+}
+
+.dinolabsVisualDiffStylePath {
+  font-weight: 800;
+  margin-bottom: 6px;
+  font-size: var(--fz-sm);
+}
+
+.dinolabsVisualDiffStyleTable {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  border: 1px solid #182a3d;
+  border-radius: var(--r);
+  overflow: hidden;
+}
+
+.dinolabsVisualDiffStyleTable>div {
+  padding: 6px 8px;
+  border-right: 1px solid #182a3d;
+  border-bottom: 1px solid #182a3d;
+  font-size: var(--fz-sm);
+}
+
+.dinolabsVisualDiffHunk {
+  background: #0f1a26;
+  border: 1px solid #182a3d;
+  border-radius: var(--r);
+  overflow: hidden;
+  margin-bottom: 8px;
+}
+
+.dinolabsVisualDiffLine {
+  display: grid;
+  grid-template-columns: 48px 48px 1fr auto;
+  align-items: stretch;
+}
+
+.dinolabsVisualDiffLn {
+  background: #0d1a24;
+  border-right: 1px solid #182a3d;
+  padding: 6px;
+  text-align: right;
+  color: #8fb0c9;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: var(--fz-sm);
+}
+
+.dinolabsVisualDiffCode {
+  margin: 0;
+  padding: 6px 10px;
+  white-space: pre-wrap;
+  font-size: var(--fz-base);
+}
+
+.dinolabsVisualDiffLine.ctx {
+  background: #122032;
+}
+
+.dinolabsVisualDiffLine.add {
+  background: #12321e;
+}
+
+.dinolabsVisualDiffLine.del {
+  background: #3a1f1f;
+}
+
+.dinolabsVisualDiffComments {
+  background: #122032;
+  border: 1px solid #182a3d;
+  border-radius: var(--r);
+  padding: 10px;
+}
+
+.dinolabsVisualDiffCommentsTitle {
+  font-weight: 800;
+  margin-bottom: 6px;
+  font-size: var(--fz-lg);
+}
+
+.dinolabsVisualDiffComment {
+  background: #0f1a26;
+  border: 1px solid #182a3d;
+  border-radius: var(--r);
+  padding: 8px;
+  margin: 6px 0;
+}
+
+.dinolabsVisualDiffComment .meta {
+  display: flex;
+  gap: 8px;
+  font-size: var(--fz-sm);
+  color: #9fb7cb;
+}
+
+.dinolabsVisualDiffComment .status {
+  padding: 2px 6px;
+  border-radius: var(--r);
+  border: 1px solid #274a2f;
+  background: #183524;
+  color: #baf5c9;
+  font-weight: 700;
+}
+
+.dinolabsVisualDiffComment .status.open {
+  background: #183042;
+  border-color: #2a4c6b;
+  color: #cde7ff;
+}
+
+.dinolabsVisualDiffComment .actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.dinolabsVisualDiffStats {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+  gap: 8px;
+}
+
+.dinolabsVisualDiffHint {
+  font-size: var(--fz-sm);
+  color: #9ab3ca;
+  font-weight: 600;
+}
+
+.dinolabsVisualDiffEmpty {
+  background: #14212e;
+  border: 1px dashed #1a2b3b;
+  border-radius: var(--r);
+  padding: 10px;
+  font-style: italic;
+  color: #cdddea;
+  text-align: center;
+  font-size: var(--fz-sm);
+}
+
+.dinolabsVisualDiffSidebar::-webkit-scrollbar,
+.dinolabsVisualDiffMain::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.dinolabsVisualDiffSidebar::-webkit-scrollbar-thumb,
+.dinolabsVisualDiffMain::-webkit-scrollbar-thumb {
+  background: #4a6175;
+  border-radius: 4px;
+}
+
+.dinolabsVisualDiffSidebar::-webkit-scrollbar-track,
+.dinolabsVisualDiffMain::-webkit-scrollbar-track {
+  background: #243444;
+}
+
+@media (max-width:1200px) {
+  .dinolabsVisualDiffContainer {
+    grid-template-columns: 1fr;
+  }
+
+  .dinolabsVisualDiffSidebar {
+    order: 2;
+  }
+
+  .dinolabsVisualDiffMain {
+    order: 1;
+  }
+}
+
+@media (prefers-reduced-motion:reduce) {
+  .dinolabsVisualDiffBtn {
+    transition: none;
+  }
+}

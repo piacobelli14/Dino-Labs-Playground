@@ -1,0 +1,189 @@
+.dinolabsPluginsPageWrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  flex-grow: 1;
+  min-height: 100vh;
+  background-color: #191919;
+  overflow-x: hidden; 
+}
+
+.dinolabsPluginsHeaderContainer {
+  display: flex;
+  flex-direction: column;
+  justify-content: flex-start;
+  align-items: center;
+  width: 100vw;
+  min-height: calc(100vh - 60px);
+  max-height: calc(100vh - 60px);
+  height: calc(100vh - 60px);
+  overflow: hidden;
+  position: relative;
+  box-sizing: border-box;
+  background: linear-gradient(135deg, #0f172a 0%, #463366 100%);
+  padding: 0 16px; 
+}
+
+.dinolabsPluginsGrid {
+  width: 100%;
+  margin: 0 auto;
+  padding: 24px 8px; 
+  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 24px;
+  overflow: hidden; 
+}
+
+.dinolabsPluginsToolCard {
+  position: relative;
+  display: grid;
+  grid-template-columns: 56px 1fr 20px;
+  gap: 12px;
+  align-items: center;
+  padding: 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  transition: transform 0.12s ease, box-shadow 0.12s ease, border-color 0.12s ease;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.25);
+  backdrop-filter: saturate(1.1);
+  min-width: 0; 
+}
+
+.dinolabsPluginsToolCard:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.25);
+}
+
+.dinolabsPluginsToolCard:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 8px 22px rgba(0, 0, 0, 0.35);
+  border-color: rgba(255, 255, 255, 0.18);
+}
+
+.dinolabsPluginsToolCardIconWrap {
+  width: 56px;
+  height: 56px;
+  display: grid;
+  place-items: center;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.12);
+  min-width: 56px; 
+}
+
+.dinolabsPluginsToolCardIcon {
+  font-size: 22px;
+}
+
+.dinolabsPluginsToolCardText {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0; 
+}
+
+.dinolabsPluginsToolCardTitle {
+  font-size: 16px;
+  font-weight: 600;
+  line-height: 1.2;
+  letter-spacing: 0.2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dinolabsPluginsToolCardDescription {
+  font-size: 13px;
+  font-weight: 600;
+  opacity: 0.9;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  min-height: calc(1.35em * 3);
+}
+
+.dinolabsPluginsToolCardChevron {
+  display: grid;
+  place-items: center;
+  opacity: 0.9;
+  min-width: 20px; 
+}
+
+.dinolabsPluginsGradientDictionary {
+  background: linear-gradient(135deg, #334155 0%, #3b82f6 100%);
+}
+
+.dinolabsPluginsGradientThesaurus {
+  background: linear-gradient(135deg, #3a3a55 0%, #a855f7 100%);
+}
+
+.dinolabsPluginsGradientCalculator {
+  background: linear-gradient(135deg, #2f3e46 0%, #10b981 100%);
+}
+
+.dinolabsPluginsGradientPlotter {
+  background: linear-gradient(135deg, #164e63 0%, #06b6d4 100%);
+}
+
+.dinolabsPluginsGradientMatrix {
+  background: linear-gradient(135deg, #3b5568 0%, #6e9fb8 100%);
+}
+
+.dinolabsPluginsGradientUnitLab {
+  background: linear-gradient(135deg, #2f5a3a 0%, #6fb585 100%);
+}
+
+.dinolabsPluginsGradientColorTypeLab {
+  background: linear-gradient(135deg, #4d4a86 0%, #d5957c 100%);
+}
+
+.dinolabsPluginsGradientA11y {
+  background: linear-gradient(135deg, #274661 0%, #66a2c0 100%);
+}
+
+.dinolabsPluginsGradientAsset {
+  background: linear-gradient(135deg, #4b4232 0%, #c4965a 100%);
+}
+
+.dinolabsPluginsGradientVisualDiff {
+  background: linear-gradient(135deg, #3c376a 0%, #a97fa8 100%);
+}
+
+.dinolabsPluginsGradientRegex {
+  background: linear-gradient(135deg, #324b5f 0%, #88a0cf 100%);
+}
+
+
+@media (max-width: 860px) {
+  .dinolabsPluginsToolCard {
+    grid-template-columns: 48px 1fr 16px;
+    padding: 14px;
+  }
+  .dinolabsPluginsToolCardIconWrap {
+    width: 48px;
+    height: 48px;
+    border-radius: 10px;
+    min-width: 48px;
+  }
+  .dinolabsPluginsToolCardTitle {
+    font-size: 15px;
+  }
+  .dinolabsPluginsToolCardDescription {
+    font-size: 12.5px;
+  }
+}
+
+@media (max-width: 520px) {
+  .dinolabsPluginsGrid {
+    padding: 16px 4px;
+    grid-template-columns: 1fr;
+  }
+}
+

@@ -1,0 +1,245 @@
+.default-token {
+    font-family: monospace;
+    font-weight: 700;
+    letter-spacing: 0;
+}
+.default-token.keyword {
+    color: #C586C0;
+    font-weight: bold;
+}
+.default-token.decorator,
+.default-token.annotation {
+    color: #C586C0;
+}
+.default-token.string {
+    color: #CE9178;
+}
+.default-token.comment {
+    color: #6A9955;
+    font-style: italic;
+}
+.default-token.number {
+    color: #B5CEA8;
+}
+.default-token.operator,
+.default-token.operator.logical,
+.default-token.operator.arithmetic,
+.default-token.operator.assignment,
+.default-token.operator.comparison {
+    color: #D4D4D4;
+}
+.default-token.datatype {
+    color: #4EC9B0;
+}
+.default-token.hex-color {
+    color: #CE9178;
+}
+.default-token.punctuation {
+    color: #D4D4D4;
+}
+.default-token.template {
+    color: #d4d4d4;
+}
+.default-token.function,
+.default-token.method,
+.default-token.magic-method {
+    color: #DCDCAA;
+}
+.default-token.variable {
+    color: #9CDCFE;
+}
+.default-token.type,
+.default-token.type-hint {
+    color: #569CD6;
+}
+.default-token.template-placeholder {
+    color: #c586c0;
+}
+.default-token.regex {
+    color: #d16969;
+}
+.default-token.boolean {
+    color: #D4D4D4;
+}
+.default-token.class-name {
+    color: #CE9178;
+}
+.default-token.parameter {
+    color: #9cdcfe;
+}
+.default-token.command {
+    color: #c586c0;
+}
+.default-token.superglobal {
+    color: #9cdcfe;
+}
+.default-token.namespace-use {
+    color: #c586c0;
+}
+.default-token.class-inheritance {
+    color: #d4d4d4;
+}
+.default-token.identifier {
+    color: #dcdcaa;
+}
+.default-token.protocol {
+    color: #c586c0;
+}
+.default-token.interface {
+    color: #A0E1FB;
+}
+.default-token.type-annotation {
+    color: #b5cea8;
+}
+.default-token.schema {
+    color: #c586c0;
+}
+.default-token.pseudo-class {
+    color: #d4d4d4;
+}
+.default-token.pseudo-element {
+    color: #d4d4d4;
+}
+.default-token.aggregate-function {
+    color: #c586c0;
+}
+.default-token.date-function {
+    color: #b5cea8;
+}
+.default-token.join-type {
+    color: #d4d4d4;
+}
+.default-token.lifetime {
+    color: #c586c0;
+}
+.default-token.enum,
+.default-token.struct,
+.default-token.trait,
+.default-token.namespace {
+    color: #A0E1FB;
+}
+.default-token.token.magic-method {
+    color: #FF00FF;
+}
+.default-token.preprocessor {
+    color: #FF00FF;
+}
+.default-token.arrow,
+.default-token.spread,
+.default-token.generator {
+    color: #D4D4D4;
+}
+.default-token.nullish,
+.default-token.optional {
+    color: #569CD6;
+}
+.default-token.jsx-tag {
+    color: #569CD6;
+}
+.default-token.jsx-attribute,
+.default-token.key {
+    color: #9CDCFE;
+}
+.default-token.jsx-string {
+    color: #CE9178;
+}
+.default-token.event-handler {
+    color: #D4D4D4;
+}
+.default-token.filepath,
+.default-token.memory-address {
+    color: #B5CEA8;
+}
+.default-token.variable-interpolation {
+    color: #9CDCFE;
+}
+.default-token.label {
+    color: #569CD6;
+}
+.default-token.register,
+.default-token.instruction {
+    color: #D4D4D4;
+}
+.default-token.directive,
+.default-token.macro {
+    color: #C586C0;
+}
+.default-token.constant {
+    color: #B5CEA8;
+}
+.default-token.builtin {
+    color: #4EC9B0;
+}
+.default-token.standard-library {
+    color: #4EC9B0;
+}
+.default-token.property {
+    color: #9CDCFE;
+}
+.default-token.value {
+    color: #CE9178;
+}
+.default-token.selector {
+    color: #569CD6;
+}
+.default-token.at-rule {
+    color: #FF00FF;
+}
+.default-token.unit {
+    color: #B5CEA8;
+}
+.default-token.vendor-prefix {
+    color: #C586C0;
+}
+.default-token.important {
+    color: #D4D4D4;
+}
+.default-token.class {
+    color: #569CD6;
+}
+.default-token.id {
+    color: #9CDCFE;
+}
+.default-token.property-name {
+    color: #9CDCFE;
+}
+.default-token.property-value {
+    color: #CE9178;
+}
+.default-token.semicolon {
+    color: #D4D4D4;
+}
+.default-token.tag {
+    color: #569CD6;
+}
+.default-token.attribute {
+    color: #9CDCFE;
+}
+.default-token.entity {
+    color: #B5CEA8;
+}
+.default-token.text {
+    color: #D4D4D4;
+}
+.default-token.doctype,
+.default-token.doctype-declaration {
+    color: #569CD6;
+}
+.default-token.processing-instruction {
+    color: #c586c0;
+}
+.default-token.operator {
+    color: #D4D4D4;
+}
+
+
+
+
+
+
+
+
+
+
+
+
