@@ -2328,41 +2328,6 @@ function DinoLabsAudioEditor({ fileHandle }) {
                         </div>
                     </div>
                 </div>
-                <div className="dinolabsAudioEditorCellWrapper">
-                    <div className="dinolabsAudioEditorHeaderFlex">
-                        <label className="dinolabsAudioEditorCellTitle">
-                            Spectrogram
-                        </label>
-                    </div>
-                    <div className="dinolabsAudioEditorCellFlexStack">
-                        <label className="dinolabsAudioEditorCellFlexTitle">FFT Size: {fftSize}</label>
-                        <div className="dinolabsAudioEditorCellFlex">
-                            <button
-                                onClick={() => setFftSize(Math.max(fftSize / 2, 512))}
-                                className="dinolabsAudioEditorToolButton"
-                            >
-                                <FontAwesomeIcon icon={faMinus} />
-                            </button>
-                            <div className="dinolabsAudioEditorSliderWrapper">
-                                <input
-                                    type="range"
-                                    min="512"
-                                    max="8192"
-                                    step="512"
-                                    value={fftSize}
-                                    onChange={(e) => setFftSize(Number(e.target.value))}
-                                    className="dinolabsSettingsSlider"
-                                />
-                            </div>
-                            <button
-                                onClick={() => setFftSize(Math.min(fftSize * 2, 8192))}
-                                className="dinolabsAudioEditorToolButton"
-                            >
-                                <FontAwesomeIcon icon={faPlus} />
-                            </button>
-                        </div>
-                    </div>
-                </div>
             </div>
             <div className="dinolabsAudioEditorContainerWrapper">
                 <div className="dinolabsAudioInputTopBar">
