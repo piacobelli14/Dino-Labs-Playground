@@ -128,6 +128,7 @@ function DinoLabsImageEditor({ fileHandle }) {
     const [undonePaths, setUndonePaths] = useState([]);
     const [tempPath, setTempPath] = useState(null);
     const isDrawingRef = useRef(false);
+    const drawingLayerDraggingRef = useRef(false);
     const currentPathPoints = useRef([]);
     const [borderRadius, setBorderRadius] = useState(0);
     const [borderTopLeftRadius, setBorderTopLeftRadius] = useState(0);
@@ -164,6 +165,7 @@ function DinoLabsImageEditor({ fileHandle }) {
     const fileInputRef = useRef(null);
     const historyUpdateTimeoutRef = useRef(null);
     const preventHistoryUpdate = useRef(false);
+    const [drawingLayers, setDrawingLayers] = useState([]);
     const [isDraggingOver, setIsDraggingOver] = useState(false);
     const [imageLayers, setImageLayers] = useState([]);
     const [selectedLayers, setSelectedLayers] = useState(['base']);
@@ -200,6 +202,10 @@ function DinoLabsImageEditor({ fileHandle }) {
     const lastTextLayerPosRef = useRef({ x: 0, y: 0 });
     const initialTextLayerSizeRef = useRef({ width: 0, height: 0 });
     const initialTextLayerPosRef = useRef({ x: 0, y: 0 });
+    const [resizingDrawingLayer, setResizingDrawingLayer] = useState(null);
+    const drawingLayerResizingRef = useRef(false);
+    const lastDrawingLayerPosRef = useRef({ x: 0, y: 0 });
+    const initialDrawingLayerZoomRef = useRef(1);
     const [geometryLayers, setGeometryLayers] = useState([]);
     const [editingGeometryId, setEditingGeometryId] = useState(null);
     const [selectedGeometryShape, setSelectedGeometryShape] = useState('rectangle');
@@ -300,6 +306,25 @@ function DinoLabsImageEditor({ fileHandle }) {
                     spread: geometryLayer.spread || 0,
                     grayscale: geometryLayer.grayscale || 0,
                     sepia: geometryLayer.sepia || 0
+                };
+            }
+
+            const drawingLayer = drawingLayers.find(l => l.id === selectedLayers[0]);
+            if (drawingLayer) {
+                return {
+                    zoom: drawingLayer.zoom || 1,
+                    rotation: drawingLayer.rotation || 0,
+                    flipX: drawingLayer.flipX || 1,
+                    flipY: drawingLayer.flipY || 1,
+                    hue: drawingLayer.hue || 0,
+                    saturation: drawingLayer.saturation || 100,
+                    brightness: drawingLayer.brightness || 100,
+                    contrast: drawingLayer.contrast || 100,
+                    opacity: drawingLayer.opacity || 100,
+                    blur: drawingLayer.blur || 0,
+                    spread: drawingLayer.spread || 0,
+                    grayscale: drawingLayer.grayscale || 0,
+                    sepia: drawingLayer.sepia || 0
                 };
             }
         }
@@ -437,6 +462,7 @@ function DinoLabsImageEditor({ fileHandle }) {
         setBorderBottomRightRadius(0);
         setPaths([]);
         setUndonePaths([]);
+        setDrawingLayers([]);
         setImageLayers([]);
         setTextLayers([]);
         setGeometryLayers([]);
@@ -449,6 +475,31 @@ function DinoLabsImageEditor({ fileHandle }) {
         calculateInitialSize(nativeWidth, nativeHeight);
         setIsCropDisabled(false);
         addToHistory("Image reset to original state.");
+    };
+
+    const getPathBounds = (pathData) => {
+        try {
+            const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+            svg.style.visibility = "hidden";
+            svg.style.position = "absolute";
+            document.body.appendChild(svg);
+            
+            const path = document.createElementNS("http://www.w3.org/2000/svg", "path");
+            path.setAttribute("d", pathData);
+            svg.appendChild(path);
+            
+            const bbox = path.getBBox();
+            document.body.removeChild(svg);
+            
+            return {
+                x: bbox.x,
+                y: bbox.y,
+                width: bbox.width,
+                height: bbox.height
+            };
+        } catch (error) {
+            return { x: 0, y: 0, width: 100, height: 100 };
+        }
     };
 
     const generateThumbnail = () => {
@@ -800,6 +851,12 @@ function DinoLabsImageEditor({ fileHandle }) {
             if (editingGeometryId === layerId) {
                 setEditingGeometryId(null);
             }
+        } else if (layerType === 'drawing') {
+            setDrawingLayers(prev => prev.filter(layer => layer.id !== layerId));
+            setSelectedLayers(prev => prev.filter(id => id !== layerId));
+            if (selectedLayers.includes(layerId) && selectedLayers.length === 1) {
+                setSelectedLayers(['base']);
+            }
         }
         addToHistory("Layer deleted.");
     };
@@ -1028,6 +1085,24 @@ function DinoLabsImageEditor({ fileHandle }) {
         lastTextLayerPosRef.current = { x: e.clientX, y: e.clientY };
     };
 
+    const handleDrawingLayerMouseDown = (layerId, e) => {
+        if (actionMode !== "Idle") return;
+        e.stopPropagation();
+
+        if (e.ctrlKey || e.metaKey) {
+            setSelectedLayers(prev =>
+                prev.includes(layerId)
+                    ? prev.filter(id => id !== layerId)
+                    : [...prev, layerId]
+            );
+        } else if (!selectedLayers.includes(layerId)) {
+            setSelectedLayers([layerId]);
+        }
+
+        drawingLayerDraggingRef.current = true;
+        lastDrawingLayerPosRef.current = { x: e.clientX, y: e.clientY };
+    };
+
     const handleGeometryLayerMouseDown = (layerId, e) => {
         if (actionMode !== "Idle") return;
         e.stopPropagation();
@@ -1063,6 +1138,24 @@ function DinoLabsImageEditor({ fileHandle }) {
         if (layer) {
             initialTextLayerSizeRef.current = { width: layer.width, height: layer.height };
             initialTextLayerPosRef.current = { x: layer.x, y: layer.y };
+        }
+    };
+
+    const handleDrawingLayerResizeMouseDown = (layerId, corner, e) => {
+        if (actionMode !== "Idle") return;
+        e.stopPropagation();
+        e.preventDefault();
+
+        if (!selectedLayers.includes(layerId)) {
+            setSelectedLayers([layerId]);
+        }
+
+        const layer = drawingLayers.find(l => l.id === layerId);
+        if (layer) {
+            setResizingDrawingLayer({ layerId, corner });
+            drawingLayerResizingRef.current = true;
+            lastDrawingLayerPosRef.current = { x: e.clientX, y: e.clientY };
+            initialDrawingLayerZoomRef.current = layer.zoom || 1;
         }
     };
 
@@ -1136,6 +1229,49 @@ function DinoLabsImageEditor({ fileHandle }) {
                         x: newX,
                         y: newY
                     };
+                }
+                return layer;
+            }));
+        }
+    };
+
+    const handleDrawingLayerGlobalMouseMove = (e) => {
+        if (drawingLayerDraggingRef.current && selectedLayers.some(id => drawingLayers.find(l => l.id === id))) {
+            const dx = e.clientX - lastDrawingLayerPosRef.current.x;
+            const dy = e.clientY - lastDrawingLayerPosRef.current.y;
+            const nativeDx = (dx / imageWidth) * nativeWidth;
+            const nativeDy = (dy / imageHeight) * nativeHeight;
+
+            setDrawingLayers(prev => prev.map(layer =>
+                selectedLayers.includes(layer.id)
+                    ? { ...layer, x: (layer.x || 0) + nativeDx, y: (layer.y || 0) + nativeDy }
+                    : layer
+            ));
+
+            lastDrawingLayerPosRef.current = { x: e.clientX, y: e.clientY };
+        }
+
+        if (drawingLayerResizingRef.current && resizingDrawingLayer) {
+            const dx = e.clientX - lastDrawingLayerPosRef.current.x;
+            const dy = e.clientY - lastDrawingLayerPosRef.current.y;
+
+            let zoomDelta = 0;
+            
+            if (resizingDrawingLayer.corner === "bottom-right") {
+                zoomDelta = (dx + dy) * 0.002;
+            } else if (resizingDrawingLayer.corner === "bottom-left") {
+                zoomDelta = (-dx + dy) * 0.002;
+            } else if (resizingDrawingLayer.corner === "top-right") {
+                zoomDelta = (dx - dy) * 0.002;
+            } else if (resizingDrawingLayer.corner === "top-left") {
+                zoomDelta = (-dx - dy) * 0.002;
+            }
+
+            const newZoom = Math.max(initialDrawingLayerZoomRef.current + zoomDelta, 0.1);
+
+            setDrawingLayers(prev => prev.map(layer => {
+                if (layer.id === resizingDrawingLayer.layerId) {
+                    return { ...layer, zoom: newZoom };
                 }
                 return layer;
             }));
@@ -1320,6 +1456,15 @@ function DinoLabsImageEditor({ fileHandle }) {
         setResizingTextLayer(null);
     };
 
+    const handleDrawingLayerGlobalMouseUp = () => {
+        if (drawingLayerDraggingRef.current || drawingLayerResizingRef.current) {
+            addToHistory("Drawing layer transformed.");
+        }
+        drawingLayerDraggingRef.current = false;
+        drawingLayerResizingRef.current = false;
+        setResizingDrawingLayer(null);
+    };
+
     const handleGeometryLayerGlobalMouseUp = () => {
         if (geometryLayerDraggingRef.current || geometryLayerResizingRef.current) {
             addToHistory("Geometry layer transformed.");
@@ -1327,6 +1472,23 @@ function DinoLabsImageEditor({ fileHandle }) {
         geometryLayerDraggingRef.current = false;
         geometryLayerResizingRef.current = false;
         setResizingGeometryLayer(null);
+    };
+
+    const moveDrawingLayer = (id, delta) => {
+        setDrawingLayers(prev => {
+            const index = prev.findIndex(layer => layer.id === id);
+            if (index === -1) return prev;
+            const layer = prev[index];
+            if (layer.locked) return prev;
+            const newIndex = index + delta;
+            if (newIndex < 0 || newIndex >= prev.length) return prev;
+            const newPrev = [...prev];
+            const temp = newPrev[newIndex];
+            newPrev[newIndex] = newPrev[index];
+            newPrev[index] = temp;
+            return newPrev;
+        });
+        addToHistory("Drawing layer order changed.");
     };
 
     const moveTextLayer = (id, delta) => {
@@ -1403,7 +1565,7 @@ function DinoLabsImageEditor({ fileHandle }) {
                         ? prev.filter(id => id !== 'base')
                         : [...prev, 'base']
                 );
-            } else if (layerType === 'image' || layerType === 'text' || layerType === 'geometry') {
+            } else if (layerType === 'image' || layerType === 'text' || layerType === 'geometry' || layerType === 'drawing') {
                 setSelectedLayers(prev =>
                     prev.includes(layerId)
                         ? prev.filter(id => id !== layerId)
@@ -1413,7 +1575,7 @@ function DinoLabsImageEditor({ fileHandle }) {
         } else {
             if (layerType === 'base') {
                 setSelectedLayers(['base']);
-            } else if (layerType === 'image' || layerType === 'text' || layerType === 'geometry') {
+            } else if (layerType === 'image' || layerType === 'text' || layerType === 'geometry' || layerType === 'drawing') {
                 setSelectedLayers([layerId]);
             }
         }
@@ -1428,6 +1590,7 @@ function DinoLabsImageEditor({ fileHandle }) {
                 const isImageLayer = imageLayers.find(l => l.id === layerId);
                 const isTextLayer = textLayers.find(l => l.id === layerId);
                 const isGeometryLayer = geometryLayers.find(l => l.id === layerId);
+                const isDrawingLayer = drawingLayers.find(l => l.id === layerId);
 
                 if (isImageLayer) {
                     transformation(layerId, 'image');
@@ -1435,6 +1598,8 @@ function DinoLabsImageEditor({ fileHandle }) {
                     transformation(layerId, 'text');
                 } else if (isGeometryLayer) {
                     transformation(layerId, 'geometry');
+                } else if (isDrawingLayer) {
+                    transformation(layerId, 'drawing');
                 }
             }
         });
@@ -1463,6 +1628,12 @@ function DinoLabsImageEditor({ fileHandle }) {
                         ? { ...layer, zoom: Math.max((layer.zoom || 1) + delta, 0.1) }
                         : layer
                 ));
+            } else if (layerType === 'drawing') {
+                setDrawingLayers(prev => prev.map(layer =>
+                    layer.id === layerId
+                        ? { ...layer, zoom: Math.max((layer.zoom || 1) + delta, 0.1) }
+                        : layer
+                ));
             }
         });
     };
@@ -1486,6 +1657,12 @@ function DinoLabsImageEditor({ fileHandle }) {
                 ));
             } else if (layerType === 'geometry') {
                 setGeometryLayers(prev => prev.map(layer =>
+                    layer.id === layerId
+                        ? { ...layer, rotation: (layer.rotation || 0) + delta }
+                        : layer
+                ));
+            } else if (layerType === 'drawing') {
+                setDrawingLayers(prev => prev.map(layer =>
                     layer.id === layerId
                         ? { ...layer, rotation: (layer.rotation || 0) + delta }
                         : layer
@@ -1564,6 +1741,23 @@ function DinoLabsImageEditor({ fileHandle }) {
                     }
                     return layer;
                 }));
+            } else if (layerType === 'drawing') {
+                setDrawingLayers(prev => prev.map(layer => {
+                    if (layer.id === layerId) {
+                        if (axis === 'x') {
+                            return {
+                                ...layer,
+                                flipX: (layer.flipX || 1) * -1
+                            };
+                        } else {
+                            return {
+                                ...layer,
+                                flipY: (layer.flipY || 1) * -1
+                            };
+                        }
+                    }
+                    return layer;
+                }));
             }
         });
     };
@@ -1583,6 +1777,18 @@ function DinoLabsImageEditor({ fileHandle }) {
 
         if (selectedLayers.some(id => geometryLayers.find(l => l.id === id))) {
             setGeometryLayers(prev => {
+                const updated = prev.map(layer => {
+                    if (selectedLayers.includes(layer.id)) {
+                        return { ...layer, [property]: value };
+                    }
+                    return layer;
+                });
+                return updated;
+            });
+        }
+
+        if (selectedLayers.some(id => drawingLayers.find(l => l.id === id))) {
+            setDrawingLayers(prev => {
                 const updated = prev.map(layer => {
                     if (selectedLayers.includes(layer.id)) {
                         return { ...layer, [property]: value };
@@ -1726,6 +1932,8 @@ function DinoLabsImageEditor({ fileHandle }) {
         window.addEventListener("mouseup", handleTextLayerGlobalMouseUp);
         window.addEventListener("mousemove", handleGeometryLayerGlobalMouseMove);
         window.addEventListener("mouseup", handleGeometryLayerGlobalMouseUp);
+        window.addEventListener("mousemove", handleDrawingLayerGlobalMouseMove);
+        window.addEventListener("mouseup", handleDrawingLayerGlobalMouseUp);
         return () => {
             window.removeEventListener("mousemove", handleImageLayerGlobalMouseMove);
             window.removeEventListener("mouseup", handleImageLayerGlobalMouseUp);
@@ -1733,8 +1941,10 @@ function DinoLabsImageEditor({ fileHandle }) {
             window.removeEventListener("mouseup", handleTextLayerGlobalMouseUp);
             window.removeEventListener("mousemove", handleGeometryLayerGlobalMouseMove);
             window.removeEventListener("mouseup", handleGeometryLayerGlobalMouseUp);
+            window.removeEventListener("mousemove", handleDrawingLayerGlobalMouseMove);
+            window.removeEventListener("mouseup", handleDrawingLayerGlobalMouseUp);
         };
-    }, [selectedLayers, resizingImageLayer, resizingTextLayer, resizingGeometryLayer]);
+    }, [selectedLayers, resizingImageLayer, resizingTextLayer, resizingGeometryLayer, resizingDrawingLayer]);
 
     useEffect(() => {
         window.addEventListener('keydown', handleKeyDown);
@@ -2444,16 +2654,35 @@ function DinoLabsImageEditor({ fileHandle }) {
                     d += ` Q ${pts[i].x} ${pts[i].y} ${x_mid} ${y_mid}`;
                 }
                 d += ` L ${pts[pts.length - 1].x} ${pts[pts.length - 1].y}`;
-                const newPath = {
+
+                const newDrawingLayer = {
                     id: Date.now(),
-                    name: `Stroke ${paths.length + 1}`,
-                    visible: true,
-                    locked: false,
+                    name: `${actionMode === "Drawing" ? "Drawing" : "Highlight"} ${drawingLayers.length + 1}`,
+                    type: actionMode.toLowerCase(),
                     d,
                     color: actionMode === "Drawing" ? drawColor : highlightColor,
-                    width: (actionMode === "Drawing" ? drawBrushSize : highlightBrushSize) * 3
+                    strokeWidth: (actionMode === "Drawing" ? drawBrushSize : highlightBrushSize) * 3,
+                    x: 0,
+                    y: 0, 
+                    rotation: 0,
+                    zoom: 1,
+                    flipX: 1,
+                    flipY: 1,
+                    opacity: 100,
+                    hue: 0,
+                    saturation: 100,
+                    brightness: 100,
+                    contrast: 100,
+                    blur: 0,
+                    spread: 0,
+                    grayscale: 0,
+                    sepia: 0,
+                    visible: true,
+                    locked: false
                 };
-                setPaths(prev => [...prev, newPath]);
+
+                setDrawingLayers(prev => [...prev, newDrawingLayer]);
+                setSelectedLayers([newDrawingLayer.id]);
             }
             setTempPath(null);
             currentPathPoints.current = [];
@@ -2496,13 +2725,13 @@ function DinoLabsImageEditor({ fileHandle }) {
     };
 
     const undoStroke = () => {
-        setPaths(prev => {
+        setDrawingLayers(prev => {
             if (prev.length === 0) return prev;
-            const newPaths = [...prev];
-            const undoneStroke = newPaths.pop();
-            setUndonePaths(ups => [...ups, undoneStroke]);
-            addToHistory("Stroke undone.");
-            return newPaths;
+            const newLayers = [...prev];
+            const undoneLayer = newLayers.pop();
+            setUndonePaths(ups => [...ups, undoneLayer]);
+            addToHistory("Drawing layer undone.");
+            return newLayers;
         });
     };
 
@@ -2510,9 +2739,9 @@ function DinoLabsImageEditor({ fileHandle }) {
         setUndonePaths(prev => {
             if (prev.length === 0) return prev;
             const newUndone = [...prev];
-            const strokeToRedo = newUndone.pop();
-            setPaths(ps => [...ps, strokeToRedo]);
-            addToHistory("Stroke redone.");
+            const layerToRedo = newUndone.pop();
+            setDrawingLayers(layers => [...layers, layerToRedo]);
+            addToHistory("Drawing layer redone.");
             return newUndone;
         });
     };
@@ -3454,7 +3683,6 @@ function DinoLabsImageEditor({ fileHandle }) {
                             }} />} visible={isTextShadowColorOpen} onClickOutside={() => setIsTextShadowColorOpen(false)} interactive={true} placement="right" className="color-picker-tippy" >
                                 <label className="dinolabsImageEditorColorPicker" onClick={() => setIsTextShadowColorOpen((prev) => !prev)} style={{ backgroundColor: editingTextId ? (textLayers.find(t => t.id === editingTextId)?.shadowColor || textSettings.shadowColor) : textSettings.shadowColor, width: '40px', height: '30px', borderRadius: '4px', cursor: 'pointer', border: '1px solid #ccc' }} />
                             </Tippy>
-                            {/* Blur */}
                             <input
                                 type="number"
                                 value={editingTextId ? (textLayers.find(t => t.id === editingTextId)?.shadowBlur || 0) : textSettings.shadowBlur}
@@ -3471,7 +3699,6 @@ function DinoLabsImageEditor({ fileHandle }) {
                                 className="dinolabsImageEditorPositionInput"
                                 style={{ margin: 0 }}
                             />
-                            {/* X */}
                             <input
                                 type="number"
                                 value={editingTextId ? (textLayers.find(t => t.id === editingTextId)?.shadowOffsetX || 0) : textSettings.shadowOffsetX}
@@ -3488,7 +3715,6 @@ function DinoLabsImageEditor({ fileHandle }) {
                                 className="dinolabsImageEditorPositionInput"
                                 style={{ margin: 0 }}
                             />
-                            {/* Y */}
                             <input
                                 type="number"
                                 value={editingTextId ? (textLayers.find(t => t.id === editingTextId)?.shadowOffsetY || 0) : textSettings.shadowOffsetY}
@@ -3878,6 +4104,43 @@ function DinoLabsImageEditor({ fileHandle }) {
                                 </button>
                             </div>
                         </li>
+                        {drawingLayers.map(layer => (
+                            <li
+                                key={`drawing-${layer.id}`}
+                                className="dinolabsLayerItem"
+                                style={{ backgroundColor: selectedLayers.includes(layer.id) ? "rgba(0,0,0,0.2)" : "" }}
+                                onClick={(e) => handleLayerSelect(layer.id, 'drawing', e)}
+                            >
+                                <input
+                                    className="dinolabsImageEditorPositionInput"
+                                    style={{ maxWidth: "100%" }}
+                                    value={layer.name}
+                                    onChange={(e) => {
+                                        e.stopPropagation();
+                                        setDrawingLayers(prev => prev.map(l => l.id === layer.id ? { ...l, name: e.target.value } : l));
+                                        addToHistory("Layer name changed.");
+                                    }}
+                                    onClick={(e) => e.stopPropagation()}
+                                />
+                                <div className="dinolabsTextEditorLayerListFlex">
+                                    <button onClick={(e) => { e.stopPropagation(); setDrawingLayers(prev => prev.map(l => l.id === layer.id ? { ...l, visible: !l.visible } : l)); addToHistory("Layer visibility changed."); }} className="dinolabsImageEditorToolButton">
+                                        <FontAwesomeIcon icon={layer.visible ? faEye : faEyeSlash} />
+                                    </button>
+                                    <button onClick={(e) => { e.stopPropagation(); setDrawingLayers(prev => prev.map(l => l.id === layer.id ? { ...l, locked: !l.locked } : l)); addToHistory("Layer lock changed."); }} className="dinolabsImageEditorToolButton">
+                                        <FontAwesomeIcon icon={layer.locked ? faLock : faLockOpen} />
+                                    </button>
+                                    <button onClick={(e) => { e.stopPropagation(); moveDrawingLayer(layer.id, -1); }} className="dinolabsImageEditorToolButton">
+                                        <FontAwesomeIcon icon={faArrowUp} />
+                                    </button>
+                                    <button onClick={(e) => { e.stopPropagation(); moveDrawingLayer(layer.id, 1); }} className="dinolabsImageEditorToolButton">
+                                        <FontAwesomeIcon icon={faArrowDown} />
+                                    </button>
+                                    <button onClick={(e) => { e.stopPropagation(); deleteLayer(layer.id, 'drawing'); }} className="dinolabsImageEditorToolButton">
+                                        <FontAwesomeIcon icon={faTrash} />
+                                    </button>
+                                </div>
+                            </li>
+                        ))}
                         {imageLayers.map(layer => (
                             <li
                                 key={`image-${layer.id}`}
@@ -4219,18 +4482,76 @@ function DinoLabsImageEditor({ fileHandle }) {
                             </div>
                         ))}
 
-                        {paths.filter(p => p.visible).map((p, index) => (
-                            <svg key={`drawing-${index}`} viewBox={`0 0 ${nativeWidth} ${nativeHeight}`} style={{
-                                position: "absolute",
-                                top: 0,
-                                left: 0,
-                                width: "100%",
-                                height: "100%",
-                                pointerEvents: "none"
-                            }} >
-                                <path d={p.d} stroke={p.color} strokeWidth={p.width} fill="none" strokeLinecap="round" vectorEffect="non-scaling-stroke" />
-                            </svg>
-                        ))}
+                        {drawingLayers.filter(layer => layer.visible).map((layer) => {
+                            const bounds = getPathBounds(layer.d);
+                            const padding = Math.max(layer.strokeWidth || 3, 10);
+                            
+                            return (
+                                <div
+                                    key={`drawing-layer-container-${layer.id}`}
+                                    style={{
+                                        position: "absolute",
+                                        left: `${((bounds.x - padding + (layer.x || 0)) / nativeWidth) * 100}%`,
+                                        top: `${((bounds.y - padding + (layer.y || 0)) / nativeHeight) * 100}%`,
+                                        width: `${((bounds.width + padding * 2) / nativeWidth) * 100}%`,
+                                        height: `${((bounds.height + padding * 2) / nativeHeight) * 100}%`,
+                                        transform: `rotate(${layer.rotation || 0}deg) scale(${(layer.zoom || 1) * (layer.flipX || 1)}, ${(layer.zoom || 1) * (layer.flipY || 1)})`,
+                                        opacity: (layer.opacity || 100) / 100,
+                                        filter: `hue-rotate(${layer.hue || 0}deg) saturate(${layer.saturation || 100}%) brightness(${layer.brightness || 100}%) contrast(${layer.contrast || 100}%) blur(${layer.blur || 0}px) grayscale(${layer.grayscale || 0}%) sepia(${layer.sepia || 0}%) ${(layer.spread || 0) ? `drop-shadow(0 0 ${layer.spread}px rgba(0,0,0,0.5))` : ""}`,
+                                        outline: selectedLayers.includes(layer.id) && actionMode === "Idle" ? "2px dashed #5C2BE2" : "none",
+                                        outlineOffset: "0px",
+                                        pointerEvents: layer.locked ? "none" : "auto",
+                                        cursor: actionMode === "Idle" ? (selectedLayers.includes(layer.id) ? "move" : "pointer") : "default"
+                                    }}
+                                    onMouseDown={(e) => handleDrawingLayerMouseDown(layer.id, e)}
+                                    onClick={(e) => {
+                                        if (actionMode === "Idle") {
+                                            e.stopPropagation();
+                                            if (e.ctrlKey || e.metaKey) {
+                                                setSelectedLayers(prev =>
+                                                    prev.includes(layer.id)
+                                                        ? prev.filter(id => id !== layer.id)
+                                                        : [...prev, layer.id]
+                                                );
+                                            } else {
+                                                setSelectedLayers([layer.id]);
+                                            }
+                                            addToHistory("Layer selected.");
+                                        }
+                                    }}
+                                >
+                                    <svg 
+                                        viewBox={`${bounds.x - padding} ${bounds.y - padding} ${bounds.width + padding * 2} ${bounds.height + padding * 2}`}
+                                        style={{
+                                            position: "absolute",
+                                            top: 0,
+                                            left: 0,
+                                            width: "100%",
+                                            height: "100%",
+                                            overflow: "visible"
+                                        }}
+                                    >
+                                        <path 
+                                            d={layer.d} 
+                                            stroke={layer.color} 
+                                            strokeWidth={layer.strokeWidth} 
+                                            fill="none" 
+                                            strokeLinecap="round" 
+                                            vectorEffect="non-scaling-stroke" 
+                                        />
+                                    </svg>
+
+                                    {selectedLayers.includes(layer.id) && actionMode === "Idle" && !layer.locked && (
+                                        <>
+                                            <div className="dinolabsImageEditorResizeHandle top-left" onMouseDown={(e) => handleDrawingLayerResizeMouseDown(layer.id, "top-left", e)} style={{ top: `-6px`, left: `-6px` }} />
+                                            <div className="dinolabsImageEditorResizeHandle top-right" onMouseDown={(e) => handleDrawingLayerResizeMouseDown(layer.id, "top-right", e)} style={{ top: `-6px`, right: `-6px` }} />
+                                            <div className="dinolabsImageEditorResizeHandle bottom-left" onMouseDown={(e) => handleDrawingLayerResizeMouseDown(layer.id, "bottom-left", e)} style={{ bottom: `-6px`, left: `-6px` }} />
+                                            <div className="dinolabsImageEditorResizeHandle bottom-right" onMouseDown={(e) => handleDrawingLayerResizeMouseDown(layer.id, "bottom-right", e)} style={{ bottom: `-6px`, right: `-6px` }} />
+                                        </>
+                                    )}
+                                </div>
+                            );
+                        })}
 
                         {(actionMode === "Drawing" || actionMode === "Highlighting" || actionMode === "Geometry") && (
                             <svg viewBox={`0 0 ${nativeWidth} ${nativeHeight}`} style={{

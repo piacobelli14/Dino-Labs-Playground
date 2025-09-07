@@ -20,8 +20,16 @@ button {
   font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
   --aoRadius: 6px;
 }
-.dinolabsAssetOptimizerApp *, .dinolabsAssetOptimizerApp *::before, .dinolabsAssetOptimizerApp *::after { box-sizing: border-box; }
-.dinolabsAssetOptimizerApp button { padding: 0.6rem 0.8rem; }
+
+.dinolabsAssetOptimizerApp *,
+.dinolabsAssetOptimizerApp *::before,
+.dinolabsAssetOptimizerApp *::after {
+  box-sizing: border-box;
+}
+
+.dinolabsAssetOptimizerApp button {
+  padding: 0.6rem 0.8rem;
+}
 
 .dinolabsAssetOptimizerContainer {
   flex: 1;
@@ -40,7 +48,7 @@ button {
   overflow: auto;
   min-height: 0;
   min-width: 0;
-  padding: 20px; 
+  padding: 20px;
   box-sizing: border-box;
 }
 
@@ -70,7 +78,7 @@ button {
   color: #eaf2fb;
   margin-bottom: 8px;
   font-size: 13px;
-  margin-bottom: 20px; 
+  margin-bottom: 20px;
 }
 
 .dinolabsAssetOptimizerDrop {
@@ -85,14 +93,24 @@ button {
   gap: 6px;
   cursor: pointer;
   text-align: center;
-  font-weight: 600; 
-  padding: 24px 16px; 
-  font-size: 0.8rem; 
+  font-weight: 600;
+  padding: 24px 16px;
+  font-size: 0.8rem;
 }
 
-.dinolabsAssetOptimizerSmall { font-size: 0.7rem; color: #b8cce0; }
+.dinolabsAssetOptimizerSmall {
+  font-size: 0.7rem;
+  color: #b8cce0;
+}
 
-.dinolabsAssetOptimizerList { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; min-width: 0; }
+.dinolabsAssetOptimizerList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 10px;
+  min-width: 0;
+}
+
 .dinolabsAssetOptimizerItem {
   background: #14212e;
   border: 1px solid #192a3b;
@@ -104,6 +122,7 @@ button {
   align-items: center;
   min-width: 0;
 }
+
 .dinolabsAssetOptimizerBadge {
   padding: 2px 8px;
   border-radius: 6px;
@@ -114,13 +133,40 @@ button {
   border: 1px solid #1a2836;
   color: #d9e6f6;
 }
-.dinolabsAssetOptimizerBadge.image{ background:#203347; }
-.dinolabsAssetOptimizerBadge.video{ background:#2b304a; }
-.dinolabsAssetOptimizerBadge.audio{ background:#2c3840; }
-.dinolabsAssetOptimizerBadge.font{ background:#24384a; }
-.dinolabsAssetOptimizerBadge.atlas{ background:#25424c; }
-.dinolabsAssetOptimizerName { font-weight: 800; color: #e9f3ff; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.dinolabsAssetOptimizerSize { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
+
+.dinolabsAssetOptimizerBadge.image {
+  background: #203347;
+}
+
+.dinolabsAssetOptimizerBadge.video {
+  background: #2b304a;
+}
+
+.dinolabsAssetOptimizerBadge.audio {
+  background: #2c3840;
+}
+
+.dinolabsAssetOptimizerBadge.font {
+  background: #24384a;
+}
+
+.dinolabsAssetOptimizerBadge.atlas {
+  background: #25424c;
+}
+
+.dinolabsAssetOptimizerName {
+  font-weight: 800;
+  color: #e9f3ff;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 0.7rem; 
+}
+
+.dinolabsAssetOptimizerSize {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.7rem;;
+}
 
 .dinolabsAssetOptimizerBtn {
   background: #2a3a4a;
@@ -136,21 +182,77 @@ button {
   transition: transform .08s ease, filter .08s ease;
   box-shadow: var(--ua-shadow);
 }
-.dinolabsAssetOptimizerBtn:hover { transform: translateY(-1px); filter: brightness(1.05); }
-.dinolabsAssetOptimizerBtn:active { transform: translateY(0); filter: brightness(.98); }
-.dinolabsAssetOptimizerSubtle { background:#1c2936; color:#d2e5f2; box-shadow:none; }
 
-.dinolabsAssetOptimizerFieldGroup { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
-.dinolabsAssetOptimizerField { display: flex; flex-direction: column; gap: 6px; min-width: 0; font-weight: 600; 
-  font-size: 0.8rem;  }
-.dinolabsAssetOptimizerField label {
-  font-weight: 600; 
-  font-size: 0.8rem; 
+.dinolabsAssetOptimizerBtn:hover {
+  transform: translateY(-1px);
+  filter: brightness(1.05);
 }
-.dinolabsAssetOptimizerRow { display: flex; gap: 8px; align-items: center; min-width: 0; margin: 8px 0;  }
-.dinolabsAssetOptimizerRowSpace { justify-content: space-between; }
-.dinolabsAssetOptimizerWrap { flex-wrap: wrap; }
-.dinolabsAssetOptimizerGrid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; min-width: 0; }
+
+.dinolabsAssetOptimizerBtn:active {
+  transform: translateY(0);
+  filter: brightness(.98);
+}
+
+.dinolabsAssetOptimizerSubtle {
+  background: #1c2936;
+  color: #d2e5f2;
+  box-shadow: none;
+}
+
+.dinolabsAssetOptimizerFieldGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+.dinolabsAssetOptimizerField {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
+  font-weight: 600;
+  font-size: 0.8rem;
+}
+
+.dinolabsAssetOptimizerField label {
+  font-weight: 700;
+  font-size: 0.8rem;
+  margin-left: 0.6rem; 
+}
+
+.dinolabsAssetOptimizerField label svg {
+  font-weight: 600;
+  font-size: 0.8rem;
+  margin-right: 0.6rem; 
+}
+
+.dinolabsAssetOptimizerRow {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+  margin: 8px 0;
+}
+
+.dinolabsAssetOptimizerRow span {
+  font-weight: 700; 
+}
+
+.dinolabsAssetOptimizerRowSpace {
+  justify-content: space-between;
+}
+
+.dinolabsAssetOptimizerWrap {
+  flex-wrap: wrap;
+}
+
+.dinolabsAssetOptimizerGrid2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  min-width: 0;
+}
 
 .dinolabsAssetOptimizerPill {
   background: #14212e;
@@ -165,8 +267,16 @@ button {
   font-weight: 700;
   font-size: 12px;
 }
-.dinolabsAssetOptimizerPillOn { background: #1b2a3b; border-color: #26425d; }
-.dinolabsAssetOptimizerPillMuted { opacity: .6; cursor: not-allowed; }
+
+.dinolabsAssetOptimizerPillOn {
+  background: #1b2a3b;
+  border-color: #26425d;
+}
+
+.dinolabsAssetOptimizerPillMuted {
+  opacity: .6;
+  cursor: not-allowed;
+}
 
 .dinolabsAssetOptimizerInput {
   width: 100%;
@@ -180,7 +290,12 @@ button {
   height: 34px;
   min-width: 0;
 }
-.dinolabsAssetOptimizerSmallInput { height: 30px; padding: 6px 8px; }
+
+.dinolabsAssetOptimizerSmallInput {
+  height: 30px;
+  padding: 6px 8px;
+}
+
 .dinolabsAssetOptimizerTextarea {
   width: 100%;
   background: #203142;
@@ -192,8 +307,14 @@ button {
   font-size: 13px;
 }
 
-.dinolabsAssetOptimizerMono { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; }
-.dinolabsAssetOptimizerHint { font-size: 12px; color: #9ab3ca; }
+.dinolabsAssetOptimizerMono {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+}
+
+.dinolabsAssetOptimizerHint {
+  font-size: 12px;
+  color: #9ab3ca;
+}
 
 .dinolabsAssetOptimizerHeadBar {
   position: sticky;
@@ -206,8 +327,20 @@ button {
   border-bottom: 1px solid var(--ua-border);
   background: var(--ua-panel-2);
 }
-.dinolabsAssetOptimizerHeadTitle { display: flex; align-items: center; gap: 8px; font-weight: 900; font-size: 16px; }
-.dinolabsAssetOptimizerHeadActions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.dinolabsAssetOptimizerHeadTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 900;
+  font-size: 16px;
+}
+
+.dinolabsAssetOptimizerHeadActions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
 
 .dinolabsAssetOptimizerMainInner {
   padding: 12px;
@@ -230,61 +363,224 @@ button {
   gap: 10px;
   min-width: 0;
 }
-.dinolabsAssetOptimizerCardTitle { display: flex; align-items: center; gap: 8px; font-weight: 800; color: #e9f3ff; }
 
-.dinolabsAssetOptimizerSummaryGrid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
-.dinolabsAssetOptimizerChip { background: #14212e; border: 1px solid #192a3b; border-radius: 6px; padding: 10px; }
-.dinolabsAssetOptimizerChipValue { font-weight: 900; font-size: 18px; color: #fff; }
-.dinolabsAssetOptimizerChipLabel { font-size: 12px; color: #d2e1f0; }
-
-.dinolabsAssetOptimizerTable { display: flex; flex-direction: column; border: 1px solid #192a3b; border-radius: 6px; overflow: hidden; min-width: 0; }
-.dinolabsAssetOptimizerTableHead, .dinolabsAssetOptimizerTableRow { display: grid; grid-template-columns: 2fr 100px 100px 100px 100px 1fr 140px; min-width: 700px; }
-.dinolabsAssetOptimizerTableHead { background: #0e1a27; font-weight: 800; color: #eaf2ff; border-bottom: 1px solid #192a3b; }
-.dinolabsAssetOptimizerTableHead > div, .dinolabsAssetOptimizerTableRow > div { padding: 8px; border-right: 1px solid #192a3b; }
-.dinolabsAssetOptimizerTableRow:nth-child(odd){ background:#14212e; }
-.dinolabsAssetOptimizerTableRow:nth-child(even){ background:#172536; }
-.dinolabsAssetOptimizerPath { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.dinolabsAssetOptimizerOutputs { display: flex; flex-wrap: wrap; gap: 6px; }
-.dinolabsAssetOptimizerOutTag { background: #213141; border: 1px solid #1a2836; color: #d8e6f5; padding: 2px 8px; border-radius: 6px; font-size: 11px; font-weight: 800; }
-.dinolabsAssetOptimizerDim { color: #b9cce0; font-size: 12px; }
-.dinolabsAssetOptimizerProg { display: flex; align-items: center; }
-.dinolabsAssetOptimizerBar { width: 120px; height: 8px; background: #1c2b3b; border: 1px solid #213244; border-radius: 6px; overflow: hidden; }
-.dinolabsAssetOptimizerFill { height: 100%; background: #2fd18b; }
-
-.dinolabsAssetOptimizerOutputsGrid { display: grid; grid-template-columns: repeat(auto-fill,minmax(220px,1fr)); gap: 10px; }
-.dinolabsAssetOptimizerOutCard {
-  background:#162334; border:1px solid #14202d; border-radius:10px; padding:10px;
-  display:grid; grid-template-columns:auto 1fr auto; gap:8px; align-items:center; min-width: 0;
+.dinolabsAssetOptimizerCardTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 800;
+  color: #e9f3ff;
 }
 
-.dinolabsAssetOptimizerLog { display: flex; flex-direction: column; gap: 4px; max-height: 180px; overflow: auto; background: #132033; border: 1px solid #18263a; border-radius: 6px; padding: 8px; }
-.dinolabsAssetOptimizerLogLine { font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace; font-size: 12px; color: #d2e6fa; }
+.dinolabsAssetOptimizerSummaryGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 10px;
+}
+
+.dinolabsAssetOptimizerChip {
+  background: #14212e;
+  border: 1px solid #192a3b;
+  border-radius: 6px;
+  padding: 10px;
+}
+
+.dinolabsAssetOptimizerChipValue {
+  font-weight: 900;
+  font-size: 18px;
+  color: #fff;
+}
+
+.dinolabsAssetOptimizerChipLabel {
+  font-size: 12px;
+  color: #d2e1f0;
+}
+
+.dinolabsAssetOptimizerTable {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid #192a3b;
+  border-radius: 6px;
+  overflow: hidden;
+  min-width: 0;
+}
+
+.dinolabsAssetOptimizerTableHead,
+.dinolabsAssetOptimizerTableRow {
+  display: grid;
+  grid-template-columns: 2fr 100px 100px 100px 100px 1fr 140px;
+  min-width: 700px;
+  font-size: 0.7rem; 
+  font-weight: 600; 
+  color: #c1c1c1; 
+}
+
+.dinolabsAssetOptimizerTableHead {
+  background: #0e1a27;
+  font-weight: 800;
+  font-size: 0.7rem; 
+  color: #c1c1c1; 
+  color: #eaf2ff;
+  border-bottom: 1px solid #192a3b;
+}
+
+.dinolabsAssetOptimizerTableHead>div,
+.dinolabsAssetOptimizerTableRow>div {
+  padding: 8px;
+  border-right: 1px solid #192a3b;
+}
+
+.dinolabsAssetOptimizerTableRow:nth-child(odd) {
+  background: #14212e;
+}
+
+.dinolabsAssetOptimizerTableRow:nth-child(even) {
+  background: #172536;
+}
+
+.dinolabsAssetOptimizerPath {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.dinolabsAssetOptimizerOutputs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.dinolabsAssetOptimizerOutTag {
+  background: #213141;
+  border: 1px solid #1a2836;
+  color: #d8e6f5;
+  padding: 2px 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.dinolabsAssetOptimizerDim {
+  color: #b9cce0;
+  font-size: 12px;
+}
+
+.dinolabsAssetOptimizerProg {
+  display: flex;
+  align-items: center;
+}
+
+.dinolabsAssetOptimizerBar {
+  width: 120px;
+  height: 8px;
+  background: #1c2b3b;
+  border: 1px solid #213244;
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.dinolabsAssetOptimizerFill {
+  height: 100%;
+  background: #2fd18b;
+}
+
+.dinolabsAssetOptimizerOutputsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+  gap: 10px;
+}
+
+.dinolabsAssetOptimizerOutCard {
+  background: #162334;
+  border: 1px solid #14202d;
+  border-radius: 10px;
+  padding: 10px;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  gap: 8px;
+  align-items: center;
+  min-width: 0;
+}
+
+.dinolabsAssetOptimizerLog {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  max-height: 180px;
+  overflow: auto;
+  background: #132033;
+  border: 1px solid #18263a;
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.dinolabsAssetOptimizerLogLine {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 12px;
+  font-weight: 600;
+  color: #d2e6fa;
+}
 
 .dinolabsAssetOptimizerEmpty {
-  background:#14212e; border:1px dashed #1a2b3b; border-radius:10px;
-  padding:10px; font-style:italic; color:#cdddea; text-align:center;
-  font-weight: 600; 
+  background: #14212e;
+  border: 1px dashed #1a2b3b;
+  border-radius: 10px;
+  padding: 10px;
+  font-style: italic;
+  color: #cdddea;
+  text-align: center;
+  font-weight: 600;
+  font-size: 0.7rem; 
 }
 
 .dinolabsAssetOptimizerSidebar::-webkit-scrollbar,
 .dinolabsAssetOptimizerMain::-webkit-scrollbar,
-.dinolabsAssetOptimizerLog::-webkit-scrollbar { width: 8px; height: 8px; }
+.dinolabsAssetOptimizerLog::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
 .dinolabsAssetOptimizerSidebar::-webkit-scrollbar-thumb,
 .dinolabsAssetOptimizerMain::-webkit-scrollbar-thumb,
-.dinolabsAssetOptimizerLog::-webkit-scrollbar-thumb { background: #4a6175; border-radius: 6px; }
+.dinolabsAssetOptimizerLog::-webkit-scrollbar-thumb {
+  background: #4a6175;
+  border-radius: 6px;
+}
+
 .dinolabsAssetOptimizerSidebar::-webkit-scrollbar-track,
 .dinolabsAssetOptimizerMain::-webkit-scrollbar-track,
-.dinolabsAssetOptimizerLog::-webkit-scrollbar-track { background: #243444; }
+.dinolabsAssetOptimizerLog::-webkit-scrollbar-track {
+  background: #243444;
+}
 
 @media (max-width: 1200px) {
-  .dinolabsAssetOptimizerContainer { grid-template-columns: 1fr; }
-  .dinolabsAssetOptimizerSidebar { order: 2; }
-  .dinolabsAssetOptimizerMain { order: 1; }
+  .dinolabsAssetOptimizerContainer {
+    grid-template-columns: 1fr;
+  }
+
+  .dinolabsAssetOptimizerSidebar {
+    order: 2;
+  }
+
+  .dinolabsAssetOptimizerMain {
+    order: 1;
+  }
 }
+
 @media (max-width: 760px) {
-  .dinolabsAssetOptimizerHeadBar { flex-direction: column; align-items: stretch; gap: 10px; }
-  .dinolabsAssetOptimizerTable { overflow-x: auto; }
+  .dinolabsAssetOptimizerHeadBar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .dinolabsAssetOptimizerTable {
+    overflow-x: auto;
+  }
 }
+
 @media (prefers-reduced-motion: reduce) {
-  .dinolabsAssetOptimizerBtn { transition: none; }
+  .dinolabsAssetOptimizerBtn {
+    transition: none;
+  }
 }

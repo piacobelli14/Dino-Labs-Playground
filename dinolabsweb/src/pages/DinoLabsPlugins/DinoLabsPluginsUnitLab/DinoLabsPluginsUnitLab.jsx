@@ -276,43 +276,62 @@ const convertAbsoluteTemperature = (value, fromName, toName) => {
   return g(toName, f(fromName, value));
 };
 
+const powMap = (map, p) => {
+  const exp = typeof p === "number" ? p : (p?.value ?? 1);
+  const out = new Map();
+  for (const [k, v] of (map || new Map()).entries()) out.set(k, v * exp);
+  return out;
+};
+
+const mergeMap = (A, B, op) => {
+  const out = new Map(A || new Map());
+  for (const [k, v] of (B || new Map()).entries()) {
+    out.set(k, (out.get(k) || 0) + (op === "*" ? v : -v));
+  }
+  return out;
+};
+
 const unitStrip = (unitExpr) => {
-  const tokens = tokenize(unitExpr).filter(t=>!isNumber(t));
-  const rpn = toRPN(tokens);
-  const st = [];
+  const rpn = toRPN(tokenize(unitExpr));
+  const st = []; 
+
   for (const t of rpn) {
+    if (isNumber(t)) {
+      st.push({ map: new Map(), value: Number(t) });
+      continue;
+    }
     if (t === "^") {
-      const p = st.pop(); const a = st.pop();
-      st.push({type:"unit", map: powMap(a.map, p)});
-    } else if (t === "*" || t === "/") {
-      const b = st.pop(); const a = st.pop();
-      st.push({type:"unit", map: mergeMap(a.map, b.map, t)});
-    } else if (t !== "(" && t !== ")") {
+      const p = st.pop();
+      const a = st.pop();
+      if (!a) { st.push({ map: new Map() }); continue; }
+      st.push({ map: powMap(a.map, p) });
+      continue;
+    }
+    if (t === "*" || t === "/") {
+      const b = st.pop() || { map: new Map() };
+      const a = st.pop() || { map: new Map() };
+      st.push({ map: mergeMap(a.map, b.map, t) });
+      continue;
+    }
+    if (t !== "(" && t !== ")") {
       const u = findUnit(t);
-      if (!u) continue;
-      const m = new Map(); m.set(u.names[0], 1);
-      st.push({type:"unit", map:m});
+      if (u) {
+        const m = new Map();
+        m.set(u.names[0], 1);
+        st.push({ map: m });
+      }
     }
   }
-  const map = st[0]?.map || new Map();
-  const num=[], den=[];
-  for (const [k,v] of map.entries()){
-    if (v>0) num.push(v===1? k: `${k}^${v}`);
-    if (v<0) den.push(v===-1? k: `${k}^{${-v}}`);
+
+  const finalMap = st.reduce((acc, cur) => mergeMap(acc, cur.map, "*"), new Map());
+
+  const num = [];
+  const den = [];
+  for (const [k, v] of finalMap.entries()) {
+    if (v > 0) num.push(v === 1 ? k : `${k}^${v}`);
+    if (v < 0) den.push(v === -1 ? k : `${k}^{${-v}}`);
   }
-  return {num,den};
-};
-
-const powMap = (map, p) => {
-  const out = new Map();
-  for (const [k,v] of map.entries()) out.set(k, v*p.value);
-  return out;
-};
-
-const mergeMap = (A,B,op) => {
-  const out = new Map(A);
-  for (const [k,v] of B.entries()) out.set(k, (out.get(k)||0) + (op==="*" ? v : -v));
-  return out;
+  return { num, den };
 };
 
 const INLINE_FROM_STRIP = ({num, den}) => {
@@ -370,8 +389,36 @@ const chooseAutoUnit = (dim) => {
   return { unit: "", table:[] };
 };
 
+const dimToString = (dim) => {
+  const labels = ["m","kg","s","A","K","mol","cd"];
+  const parts = dim.map((e,i)=> e!==0 ? `${labels[i]}${e===1? "": `^${e}`}` : null).filter(Boolean);
+  return parts.length ? parts.join("·") : "—";
+};
+
+async function writeClipboard(text) {
+  try {
+    await navigator.clipboard.writeText(text);
+    return true;
+  } catch {
+    try {
+      const ta = document.createElement("textarea");
+      ta.value = text;
+      ta.setAttribute("readonly", "");
+      ta.style.position = "fixed";
+      ta.style.opacity = "0";
+      document.body.appendChild(ta);
+      ta.select();
+      const ok = document.execCommand("copy");
+      document.body.removeChild(ta);
+      return ok;
+    } catch {
+      return false;
+    }
+  }
+}
+
 const DinoLabsPluginsUnitLab = () => {
-  const [expr, setExpr] = useState("3.5 ft/s * 2 hr -> km/h");
+  const [expr, setExpr] = useState("3.5 ft/s -> km/h");
   const [resultStr, setResultStr] = useState("");
   const [unitStripView, setUnitStripView] = useState({num:[],den:[]});
   const [formatMode, setFormatMode] = useState("fraction");
@@ -379,7 +426,18 @@ const DinoLabsPluginsUnitLab = () => {
   const [history, setHistory] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [showSuggest, setShowSuggest] = useState(false);
+  const [copied, setCopied] = useState({}); 
   const inputRef = useRef(null);
+
+  const markCopied = useCallback((key) => {
+    setCopied(prev => ({ ...prev, [key]: true }));
+    setTimeout(() => setCopied(prev => ({ ...prev, [key]: false })), 2000);
+  }, []);
+
+  const handleCopy = useCallback(async (text, key) => {
+    const ok = await writeClipboard(text || "");
+    if (ok) markCopied(key);
+  }, [markCopied]);
 
   useEffect(()=>{
     inputRef.current?.focus();
@@ -404,17 +462,21 @@ const DinoLabsPluginsUnitLab = () => {
     "3 m^3/h -> L/min",
     "1 T -> G",
     "500 W -> hp",
-    "100 lpm -> m^3/h"
+    "100 lpm -> m^3/h",
+    "3.5 ft/s -> km/h",
+    "3.5 ft/s * 2 h -> km"
   ];
 
   const refreshSuggestions = useCallback((s) => {
     const norm = normalizeInput(s);
     const m = norm.match(/([A-Za-z°μΩ_]+)$/);
-    const head = m?.[1] || "";
-    if (!head) { setSuggestions([]); return; }
-    const hay = [...ALL_UNIT_NAMES, ...SUGGESTION_BONUS];
-    const list = hay.filter(n => n.toLowerCase().includes(head.toLowerCase())).slice(0, 10);
-    setSuggestions(list);
+    thead: {
+      const head = m?.[1] || "";
+      if (!head) { setSuggestions([]); break thead; }
+      const hay = [...ALL_UNIT_NAMES, ...SUGGESTION_BONUS];
+      const list = hay.filter(n => n.toLowerCase().includes(head.toLowerCase())).slice(0, 10);
+      setSuggestions(list);
+    }
   },[]);
 
   const applySuggestion = (text) => {
@@ -439,11 +501,16 @@ const DinoLabsPluginsUnitLab = () => {
       const isDataLike = unitTokens.some(t => dataTokens.some(d=>d.toLowerCase()===t.toLowerCase()));
       const onlyUnit = tokens.find(t=>/^[A-Za-z°μΩ_]+$/.test(t));
       const onlyUnitObj = onlyUnit ? findUnit(onlyUnit) : null;
+
       let valueOut, unitOut, stepNotes = [];
       if (target) {
         const tQ = evaluateUnitExpression(target);
         if (!sameDim(q.dim, tQ.dim)) {
-          throw new Error("Target Unit Is Dimensionally Incompatible.");
+          const suggestion = (chooseAutoUnit(q.dim).unit || "");
+          const hint = suggestion ? ` Try '-> ${suggestion}'.` : "";
+          throw new Error(
+            `Target Unit Is Dimensionally Incompatible: left is ${dimToString(q.dim)}, target is ${dimToString(tQ.dim)}.${hint}`
+          );
         }
         if (onlyUnitObj?.isTemp && !onlyUnitObj?.isDeltaTemp && /^[A-Za-z°μΩ_]+$/.test(target) && findUnit(target)?.isTemp) {
           const numTok = tokens.find(isNumber);
@@ -474,15 +541,14 @@ const DinoLabsPluginsUnitLab = () => {
         valueOut = chosen.value;
         unitOut = chosen.unit;
       }
+
       setResultStr(`${roundNice(valueOut)} ${unitOut}`.trim());
-      const {num, den} = unitStrip(left);
-      setUnitStripView({num, den});
+
+      let strip = {num:[], den:[]};
+      try { strip = unitStrip(left); } catch {}
+      setUnitStripView(strip);
+
       const unitSteps = [];
-      const dimToString = (dim) => {
-        const labels = ["m","kg","s","A","K","mol","cd"];
-        const parts = dim.map((e,i)=> e!==0 ? `${labels[i]}${e===1? "": `^${e}`}` : null).filter(Boolean);
-        return parts.length? parts.join("·") : "—";
-      };
       for (const t of unitTokens) {
         const u = findUnit(t);
         if (!u) continue;
@@ -499,15 +565,23 @@ const DinoLabsPluginsUnitLab = () => {
 
   const onEnter = (e) => { if (e.key === "Enter") { e.preventDefault(); evaluate(); } };
   const pasteQuick = (sample) => setExpr(sample);
-  const copyResult = async () => { try { await navigator.clipboard.writeText(resultStr); } catch {} };
-  const copyShareLink = async () => {
+
+  const copyResult = async () => handleCopy(resultStr, "copyResult");
+
+  const copyShareLink = useCallback(async () => {
     try {
       const url = new URL(window.location.href);
       url.searchParams.set("expr", expr);
-      await navigator.clipboard.writeText(url.toString());
+      const ok = await writeClipboard(url.toString());
+      if (ok) {
+        try { window.history.replaceState({}, "", url.toString()); } catch {}
+        markCopied("copyShare");
+      }
     } catch {}
-  };
+  }, [expr, markCopied]);
+
   const historyJson = useMemo(()=>JSON.stringify(history, null, 2), [history]);
+
   const downloadHistory = () => {
     const blob = new Blob([historyJson], { type: "application/json;charset=utf-8" });
     const u = URL.createObjectURL(blob);
@@ -515,10 +589,20 @@ const DinoLabsPluginsUnitLab = () => {
     a.href = u; a.download = "unitlab-history.json";
     document.body.appendChild(a); a.click(); a.remove(); URL.revokeObjectURL(u);
   };
-  const copyLatex = async () => {
-    const latex = `${resultStr.split(" ")[0]}\\,${FRACTION_LATEX_FROM_STRIP(unitStripView)}`.trim();
-    try { await navigator.clipboard.writeText(latex); } catch {}
-  };
+
+  const copyLatex = useCallback(async () => {
+    try {
+      const norm = normalizeInput(expr);
+      const { left } = splitTarget(norm);
+      let latexUnits = "";
+      try { latexUnits = FRACTION_LATEX_FROM_STRIP(unitStrip(left)); } catch { latexUnits = ""; }
+      const valuePart = (resultStr && resultStr.split(" ")[0]) || "";
+      const latex = (valuePart ? `${valuePart}\\,` : "") + (latexUnits || "");
+      const ok = await writeClipboard(latex || (resultStr || ""));
+      if (ok) markCopied("copyLatex");
+    } catch {}
+  }, [expr, resultStr, markCopied]);
+
   const onInputChange = (v) => {
     setExpr(v);
     refreshSuggestions(v);
@@ -544,7 +628,7 @@ const DinoLabsPluginsUnitLab = () => {
                   onChange={(e)=>onInputChange(e.target.value)}
                   onKeyDown={(e)=>{ if (e.key==="Escape") setShowSuggest(false); onEnter(e); }}
                   onFocus={()=>refreshSuggestions(expr)}
-                  placeholder="E.g., 3.5 ft/s * 2 hr -> km/h"
+                  placeholder="E.g., 3.5 ft/s -> km/h"
                   autoComplete="off"
                   aria-label="Expression"
                 />
@@ -559,7 +643,11 @@ const DinoLabsPluginsUnitLab = () => {
                 )}
               </div>
 
-              <button type="button" className="dinolabsUnitLabBtn primary">
+              <button
+                type="button"
+                className="dinolabsUnitLabBtn primary"
+                onClick={() => { setShowSuggest(false); evaluate(); }}
+              >
                 <FontAwesomeIcon icon={faChevronRight}/> Evaluate
               </button>
 
@@ -568,7 +656,7 @@ const DinoLabsPluginsUnitLab = () => {
                   <FontAwesomeIcon icon={faDeleteLeft}/> Clear
                 </button>
                 <button type="button" className="dinolabsUnitLabBtn" onClick={copyResult}>
-                  <FontAwesomeIcon icon={faCopy}/> Copy Result
+                  <FontAwesomeIcon icon={faCopy}/> {copied.copyResult ? "Copied" : "Copy Result"}
                 </button>
               </div>
 
@@ -582,9 +670,15 @@ const DinoLabsPluginsUnitLab = () => {
               </div>
 
               <div className="dinolabsUnitLabRowThree">
-                <button className="dinolabsUnitLabBtn tiny" title="Copy LaTeX" onClick={copyLatex}><FontAwesomeIcon icon={faCode}/> LaTeX</button>
-                <button className="dinolabsUnitLabBtn tiny" title="Copy Share Link" onClick={copyShareLink}><FontAwesomeIcon icon={faLink}/> Share</button>
-                <button className="dinolabsUnitLabBtn tiny" title="Download History" onClick={downloadHistory}><FontAwesomeIcon icon={faDownload}/> History</button>
+                <button className="dinolabsUnitLabBtn tiny" title="LaTeX" onClick={copyLatex}>
+                  <FontAwesomeIcon icon={faCode}/> {copied.copyLatex ? "Copied" : "LaTeX"}
+                </button>
+                <button className="dinolabsUnitLabBtn tiny" title="Share" onClick={copyShareLink}>
+                  <FontAwesomeIcon icon={faLink}/> {copied.copyShare ? "Copied" : "Share"}
+                </button>
+                <button className="dinolabsUnitLabBtn tiny" title="Download History" onClick={downloadHistory}>
+                  <FontAwesomeIcon icon={faDownload}/> History
+                </button>
               </div>
             </div>
           </div>
@@ -675,8 +769,7 @@ const DinoLabsPluginsUnitLab = () => {
         <main className="dinolabsUnitLabMain">
           <div className="dinolabsUnitLabResultPanel">
             <div className="dinolabsUnitLabResultHeader">
-              <div className="dinolabsUnitLabResultTitle">
-              </div>
+              <div className="dinolabsUnitLabResultTitle"></div>
               <div className="dinolabsUnitLabResultActions">
                 <button type="button" className="dinolabsUnitLabBtn subtle" onClick={evaluate}>
                   <FontAwesomeIcon icon={faArrowRotateRight}/> Re-Run
@@ -722,14 +815,27 @@ const DinoLabsPluginsUnitLab = () => {
                     <div className="dinolabsUnitLabHistoryOut">{h.out}</div>
                     <div className="dinolabsUnitLabHistoryActions">
                       <button type="button" className="dinolabsUnitLabBtn tiny" onClick={()=>setExpr(h.expr)}>Load</button>
-                      <button type="button" className="dinolabsUnitLabBtn tiny" onClick={()=>navigator.clipboard.writeText(h.out)}>Copy</button>
+                      <button
+                        type="button"
+                        className="dinolabsUnitLabBtn tiny"
+                        onClick={()=>handleCopy(h.out, `hist-${idx}`)}
+                      >
+                        {copied[`hist-${idx}`] ? "Copied" : "Copy"}
+                      </button>
                     </div>
                   </div>
                 ))}
               </div>
               <div className="dinolabsUnitLabHistoryExport">
-                <button className="dinolabsUnitLabBtn tiny" onClick={downloadHistory}><FontAwesomeIcon icon={faDownload}/> Download History (JSON)</button>
-                <button className="dinolabsUnitLabBtn tiny" onClick={async()=>{ try{ await navigator.clipboard.writeText(historyJson);}catch{}}}><FontAwesomeIcon icon={faCopy}/> Copy History</button>
+                <button className="dinolabsUnitLabBtn tiny" onClick={downloadHistory}>
+                  <FontAwesomeIcon icon={faDownload}/> Download History (JSON)
+                </button>
+                <button
+                  className="dinolabsUnitLabBtn tiny"
+                  onClick={()=>handleCopy(historyJson, "copyHistory")}
+                >
+                  <FontAwesomeIcon icon={faCopy}/> {copied.copyHistory ? "Copied" : "Copy History"}
+                </button>
               </div>
             </div>
           </div>

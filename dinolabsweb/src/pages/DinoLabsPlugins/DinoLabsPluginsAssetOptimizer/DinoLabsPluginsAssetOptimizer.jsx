@@ -18,6 +18,13 @@ const VIDEO_TYPES = new Set(["video/mp4","video/webm","video/ogg","video/quickti
 const AUDIO_TYPES = new Set(["audio/wav","audio/x-wav","audio/mpeg","audio/mp3","audio/ogg","audio/flac","audio/aac","audio/x-aac","audio/mp4"]);
 const FONT_TYPES  = new Set(["font/ttf","font/otf","font/woff","font/woff2","application/x-font-ttf","application/x-font-opentype","application/font-woff","application/font-woff2"]);
 
+const withTimeout = (promise, ms, errorMsg) => {
+  return Promise.race([
+    promise,
+    new Promise((_, reject) => setTimeout(() => reject(new Error(errorMsg)), ms))
+  ]);
+};
+
 const guessKind = (f) => {
   const t = (f.type || "").toLowerCase();
   if (IMAGE_TYPES.has(t)) return "image";
@@ -27,24 +34,65 @@ const guessKind = (f) => {
   return "other";
 };
 
+const isValidFile = (f) => {
+  if (!f || !f.size || !f.type) return false;
+  const kind = guessKind(f);
+  return kind !== "other" && f.size < 1024 * 1024 * 100;
+};
+
+const canPlayVideo = async (file) => {
+  const url = URL.createObjectURL(file);
+  try {
+    const video = document.createElement("video");
+    video.src = url;
+    await withTimeout(
+      new Promise((ok, err) => { video.onloadedmetadata = ok; video.onerror = err; }),
+      5000,
+      `Video validation failed for ${file.name}: Metadata load timed out`
+    );
+    const canPlay = video.canPlayType(file.type);
+    return canPlay === "probably" || canPlay === "maybe";
+  } catch {
+    return false;
+  } finally {
+    URL.revokeObjectURL(url);
+  }
+};
+
 const canCanvasEncode = async (mime) =>
-  await new Promise((res) => {
-    const c = document.createElement("canvas"); c.width = 1; c.height = 1;
-    c.toBlob((b) => res(!!b), mime, 0.8);
-  });
+  await withTimeout(
+    new Promise((res) => {
+      const c = document.createElement("canvas"); c.width = 1; c.height = 1;
+      c.toBlob((b) => res(!!b), mime, 0.8);
+    }),
+    5000,
+    "Canvas encoding check timed out"
+  );
 
 const toBitmap = async (fileOrBlob) => {
   try {
-    return await createImageBitmap(fileOrBlob);
+    return await withTimeout(
+      createImageBitmap(fileOrBlob),
+      10000,
+      `Bitmap creation timed out for ${fileOrBlob.name || 'unknown'}`
+    );
   } catch {
     const url = URL.createObjectURL(fileOrBlob);
     try {
       const img = new Image();
       img.decoding = "async";
-      await new Promise((ok, err) => { img.onload = ok; img.onerror = err; img.src = url; });
+      await withTimeout(
+        new Promise((ok, err) => { img.onload = ok; img.onerror = err; img.src = url; }),
+        10000,
+        `Image loading timed out for ${fileOrBlob.name || 'unknown'}`
+      );
       const c = document.createElement("canvas"); c.width = img.naturalWidth; c.height = img.naturalHeight;
       const ctx = c.getContext("2d"); ctx.drawImage(img, 0, 0);
-      const b = await createImageBitmap(c);
+      const b = await withTimeout(
+        createImageBitmap(c),
+        10000,
+        `Bitmap creation from canvas timed out for ${fileOrBlob.name || 'unknown'}`
+      );
       URL.revokeObjectURL(url);
       return b;
     } catch (error) {
@@ -64,7 +112,11 @@ const drawScaled = (bmp, maxW, maxH) => {
 };
 
 const encodeCanvas = (canvas, mime, quality) =>
-  new Promise((res, rej) => canvas.toBlob((b) => (b ? res(b) : rej(new Error("Encode Failed."))), mime, quality));
+  withTimeout(
+    new Promise((res, rej) => canvas.toBlob((b) => (b ? res(b) : rej(new Error("Encode Failed."))), mime, quality)),
+    10000,
+    "Canvas encoding timed out"
+  );
 
 const CRC_TABLE = (() => {
   const t = new Uint32Array(256);
@@ -209,29 +261,41 @@ const DinoLabsPluginsAssetOptimizer = () => {
   const [log, setLog] = useState([]);
   const [support, setSupport] = useState({ webp:false, avif:false, mrVideo:false, mrAudio:false });
   const [videoProgress, setVideoProgress] = useState({});
+  const [isOptimizing, setIsOptimizing] = useState(false);
+  const [overallProgress, setOverallProgress] = useState(0);
 
   const addLog = (m) => setLog((L)=>[m, ...L].slice(0,500));
 
   useEffect(() => {
     (async () => {
-      const webp = await canCanvasEncode("image/webp");
-      const avif = await canCanvasEncode("image/avif");
-      const mrVideo = typeof MediaRecorder !== "undefined" &&
-        (MediaRecorder.isTypeSupported?.("video/webm;codecs=vp9") || MediaRecorder.isTypeSupported?.("video/webm;codecs=vp8"));
-      const mrAudio = typeof MediaRecorder !== "undefined" &&
-        (MediaRecorder.isTypeSupported?.("audio/webm;codecs=opus") || MediaRecorder.isTypeSupported?.("audio/webm"));
-      setSupport({ webp, avif, mrVideo, mrAudio });
-      setImageOpts((o)=>({ ...o, avif: avif && o.avif, webp: webp || o.webp }));
-      setVideoOpts((o)=>({ ...o, mime: mrVideo && MediaRecorder.isTypeSupported?.("video/webm;codecs=vp9") ? "video/webm;codecs=vp9" : "video/webm;codecs=vp8" }));
-      setAudioOpts((o)=>({ ...o, opus: mrAudio && o.opus }));
+      try {
+        addLog("Checking browser support...");
+        const webp = await canCanvasEncode("image/webp");
+        const avif = await canCanvasEncode("image/avif");
+        const mrVideo = typeof MediaRecorder !== "undefined" &&
+          (MediaRecorder.isTypeSupported?.("video/webm;codecs=vp9") || MediaRecorder.isTypeSupported?.("video/webm;codecs=vp8"));
+        const mrAudio = typeof MediaRecorder !== "undefined" &&
+          (MediaRecorder.isTypeSupported?.("audio/webm;codecs=opus") || MediaRecorder.isTypeSupported?.("audio/webm"));
+        setSupport({ webp, avif, mrVideo, mrAudio });
+        setImageOpts((o)=>({ ...o, avif: avif && o.avif, webp: webp && o.webp }));
+        setVideoOpts((o)=>({ ...o, mime: mrVideo && MediaRecorder.isTypeSupported?.("video/webm;codecs=vp9") ? "video/webm;codecs=vp9" : "video/webm;codecs=vp8" }));
+        setAudioOpts((o)=>({ ...o, opus: mrAudio && o.opus }));
+        addLog(`Browser support: WebP=${webp}, AVIF=${avif}, MediaRecorder Video=${mrVideo}, MediaRecorder Audio=${mrAudio}, Browser=${navigator.userAgent}`);
+      } catch (error) {
+        addLog(`Error checking browser support: ${error.message}`);
+      }
     })();
   }, []);
 
   const addFiles = (list) => {
     const arr = Array.from(list || []);
+    const validFiles = arr.filter(isValidFile);
+    if (validFiles.length < arr.length) {
+      addLog(`Skipped ${arr.length - validFiles.length} invalid or unsupported files.`);
+    }
     setFiles((prev)=>[
       ...prev,
-      ...arr.map((f)=>({ id: uid(), file: f, name: f.name, sizeMB: bytesToMB(f.size), kind: guessKind(f) }))
+      ...validFiles.map((f)=>({ id: uid(), file: f, name: f.name, sizeMB: bytesToMB(f.size), kind: guessKind(f) }))
     ]);
   };
 
@@ -241,239 +305,393 @@ const DinoLabsPluginsAssetOptimizer = () => {
   };
 
   const transcodeImage = useCallback(async (file, fmt, q, maxW, maxH) => {
-    const bmp = await toBitmap(file);
-    const canvas = drawScaled(bmp, maxW, maxH);
-    const mime = fmt === "jpeg" ? "image/jpeg" : fmt === "avif" ? "image/avif" : "image/webp";
-    const blob = await encodeCanvas(canvas, mime, clamp(q/100, 0, 1));
-    const name = file.name.replace(/\.[^.]+$/, "") + (fmt==="jpeg" ? ".jpg" : `.${fmt}`);
-    return new File([blob], name, { type: blob.type });
+    addLog(`Starting image transcoding for ${file.name} to ${fmt}`);
+    try {
+      const bmp = await toBitmap(file);
+      const canvas = drawScaled(bmp, maxW, maxH);
+      const mime = fmt === "jpeg" ? "image/jpeg" : fmt === "avif" ? "image/avif" : "image/webp";
+      const blob = await encodeCanvas(canvas, mime, clamp(q/100, 0, 1));
+      const name = file.name.replace(/\.[^.]+$/, "") + (fmt==="jpeg" ? ".jpg" : `.${fmt}`);
+      addLog(`Completed image transcoding for ${file.name} to ${fmt}`);
+      return new File([blob], name, { type: blob.type });
+    } catch (error) {
+      throw new Error(`Image transcoding failed for ${file.name} to ${fmt}: ${error.message}`);
+    }
   }, []);
 
   const transcodeVideoWebM = useCallback(async (file, { mime, fps, maxW, maxH, onProgress }) => {
     if (!support.mrVideo) throw new Error("MediaRecorder Not Supported For Video On This Browser.");
+    addLog(`Starting video transcoding for ${file.name}`);
+    const canPlay = await canPlayVideo(file);
+    if (!canPlay) {
+      addLog(`Video ${file.name} cannot be played by this browser, attempting to include original file.`);
+      return file; 
+    }
     const url = URL.createObjectURL(file);
-    const video = document.createElement("video");
-    video.src = url; video.muted = true; video.playsInline = true; video.preload = "metadata";
-    await video.play().catch(()=>{});
-    await new Promise((ok, err) => { video.onloadedmetadata = ok; video.onerror = err; });
-    const r = Math.min(maxW / video.videoWidth, maxH / video.videoHeight, 1);
-    const W = Math.max(2, Math.floor(video.videoWidth * r));
-    const H = Math.max(2, Math.floor(video.videoHeight * r));
-    const canvas = document.createElement("canvas"); canvas.width = W; canvas.height = H;
-    const ctx = canvas.getContext("2d");
-    const stream = canvas.captureStream(fps || 30);
-    const mrType = MediaRecorder.isTypeSupported?.(mime) ? mime : "video/webm";
-    const rec = new MediaRecorder(stream, { mimeType: mrType });
-    const chunks = [];
-    rec.ondataavailable = (e)=>{ if (e.data && e.data.size) chunks.push(e.data); };
-    const duration = video.duration || 0;
-    let rafId = null;
-    const draw = () => {
-      ctx.drawImage(video, 0, 0, W, H);
-      if (!video.paused && !video.ended) {
-        onProgress?.(video.currentTime / (duration || 1));
-        rafId = requestAnimationFrame(draw);
+    try {
+      const video = document.createElement("video");
+      video.src = url; video.muted = true; video.playsInline = true; video.preload = "metadata";
+      await withTimeout(
+        new Promise((ok, err) => { video.onloadedmetadata = ok; video.onerror = err; }),
+        30000,
+        `Video metadata load timed out for ${file.name}`
+      );
+      addLog(`Video ${file.name} metadata: ${video.videoWidth}x${video.videoHeight}, duration=${video.duration}s`);
+      await withTimeout(
+        video.play().catch(() => {}),
+        10000,
+        `Video playback initiation timed out for ${file.name}`
+      );
+      const r = Math.min(maxW / video.videoWidth, maxH / video.videoHeight, 1);
+      const W = Math.max(2, Math.floor(video.videoWidth * r));
+      const H = Math.max(2, Math.floor(video.videoHeight * r));
+      const canvas = document.createElement("canvas"); canvas.width = W; canvas.height = H;
+      const ctx = canvas.getContext("2d");
+      const stream = canvas.captureStream(fps || 30);
+      const mrType = MediaRecorder.isTypeSupported?.(mime) ? mime : "video/webm";
+      if (!MediaRecorder.isTypeSupported?.(mrType)) {
+        addLog(`MediaRecorder does not support ${mrType} for ${file.name}, attempting to include original file.`);
+        return file;
       }
-    };
-    await new Promise((ok)=> setTimeout(ok, 0));
-    rec.start(250);
-    video.currentTime = 0;
-    await video.play();
-    draw();
-    await new Promise((ok)=> video.onended = ok);
-    cancelAnimationFrame(rafId);
-    rec.stop();
-    await new Promise((ok)=> rec.onstop = ok);
-    URL.revokeObjectURL(url);
-    const blob = new Blob(chunks, { type: mrType });
-    const out = new File([blob], file.name.replace(/\.[^.]+$/, "") + ".webm", { type: mrType });
-    return out;
+      const rec = new MediaRecorder(stream, { mimeType: mrType });
+      const chunks = [];
+      rec.ondataavailable = (e) => { if (e.data && e.data.size) chunks.push(e.data); };
+      const duration = video.duration || 0;
+      let rafId = null;
+      const draw = () => {
+        ctx.drawImage(video, 0, 0, W, H);
+        if (!video.paused && !video.ended) {
+          onProgress?.(video.currentTime / (duration || 1));
+          rafId = requestAnimationFrame(draw);
+        }
+      };
+      await new Promise((ok) => setTimeout(ok, 0));
+      rec.start(250);
+      video.currentTime = 0;
+      await withTimeout(
+        video.play(),
+        30000,
+        `Video playback timed out for ${file.name}`
+      );
+      draw();
+      await withTimeout(
+        new Promise((ok) => video.onended = ok),
+        60000,
+        `Video playback completion timed out for ${file.name}`
+      );
+      cancelAnimationFrame(rafId);
+      rec.stop();
+      await withTimeout(
+        new Promise((ok) => rec.onstop = ok),
+        10000,
+        `MediaRecorder stop timed out for ${file.name}`
+      );
+      const blob = new Blob(chunks, { type: mrType });
+      const out = new File([blob], file.name.replace(/\.[^.]+$/, "") + ".webm", { type: mrType });
+      addLog(`Completed video transcoding for ${file.name}`);
+      return out;
+    } catch (error) {
+      throw new Error(`Video transcoding failed for ${file.name}: ${error.message}`);
+    } finally {
+      URL.revokeObjectURL(url);
+    }
   }, [support.mrVideo]);
 
   const snapshotPoster = useCallback(async (file, ts = 0.2, maxW=1280, maxH=720) => {
+    addLog(`Starting poster snapshot for ${file.name}`);
     const url = URL.createObjectURL(file);
-    const video = document.createElement("video");
-    video.src = url; video.muted = true; video.playsInline = true; video.preload = "metadata";
-    await new Promise((ok, err)=>{ video.onloadedmetadata = ok; video.onerror = err; });
-    video.currentTime = Math.min(ts * (video.duration || 1), (video.duration || 1));
-    await new Promise((ok)=> video.onseeked = ok);
-    const r = Math.min(maxW / video.videoWidth, maxH / video.videoHeight, 1);
-    const W = Math.max(2, Math.floor(video.videoWidth * r));
-    const H = Math.max(2, Math.floor(video.videoHeight * r));
-    const c = document.createElement("canvas"); c.width=W; c.height=H;
-    c.getContext("2d").drawImage(video, 0, 0, W, H);
-    URL.revokeObjectURL(url);
-    const blob = await encodeCanvas(c, "image/jpeg", 0.85);
-    const name = file.name.replace(/\.[^.]+$/, "") + "_poster.jpg";
-    return new File([blob], name, { type: "image/jpeg" });
+    try {
+      const video = document.createElement("video");
+      video.src = url; video.muted = true; video.playsInline = true; video.preload = "metadata";
+      await withTimeout(
+        new Promise((ok, err) => { video.onloadedmetadata = ok; video.onerror = err; }),
+        30000,
+        `Video metadata load for poster timed out for ${file.name}`
+      );
+      video.currentTime = Math.min(ts * (video.duration || 1), (video.duration || 1));
+      await withTimeout(
+        new Promise((ok) => video.onseeked = ok),
+        10000,
+        `Video seek for poster timed out for ${file.name}`
+      );
+      const r = Math.min(maxW / video.videoWidth, maxH / video.videoHeight, 1);
+      const W = Math.max(2, Math.floor(video.videoWidth * r));
+      const H = Math.max(2, Math.floor(video.videoHeight * r));
+      const c = document.createElement("canvas"); c.width=W; c.height=H;
+      c.getContext("2d").drawImage(video, 0, 0, W, H);
+      const blob = await encodeCanvas(c, "image/jpeg", 0.85);
+      const name = file.name.replace(/\.[^.]+$/, "") + "_poster.jpg";
+      addLog(`Completed poster snapshot for ${file.name}`);
+      return new File([blob], name, { type: "image/jpeg" });
+    } catch (error) {
+      throw new Error(`Poster snapshot failed for ${file.name}: ${error.message}`);
+    } finally {
+      URL.revokeObjectURL(url);
+    }
   }, []);
 
   const transcodeAudio = useCallback(async (file, { wav, opus, normalize }) => {
-    const out = [];
-    const ac = new (window.AudioContext || window.webkitAudioContext)();
-    const buf = await file.arrayBuffer();
-    const audioBuffer = await ac.decodeAudioData(buf.slice(0));
-    let target = audioBuffer;
-    if (normalize) {
-      const chs = audioBuffer.numberOfChannels;
-      let peak = 0;
-      for (let c=0;c<chs;c++){
-        const data = audioBuffer.getChannelData(c);
-        for (let i=0;i<data.length;i++) peak = Math.max(peak, Math.abs(data[i]));
-      }
-      if (peak > 0 && peak < 0.99) {
-        const gain = 0.99 / peak;
-        const dest = ac.createBuffer(chs, audioBuffer.length, audioBuffer.sampleRate);
+    addLog(`Starting audio transcoding for ${file.name}`);
+    try {
+      const out = [];
+      const ac = new (window.AudioContext || window.webkitAudioContext)();
+      const buf = await withTimeout(
+        file.arrayBuffer(),
+        10000,
+        `Audio buffer load timed out for ${file.name}`
+      );
+      const audioBuffer = await withTimeout(
+        ac.decodeAudioData(buf.slice(0)),
+        10000,
+        `Audio decoding timed out for ${file.name}`
+      );
+      let target = audioBuffer;
+      if (normalize) {
+        const chs = audioBuffer.numberOfChannels;
+        let peak = 0;
         for (let c=0;c<chs;c++){
-          const src = audioBuffer.getChannelData(c);
-          const dst = dest.getChannelData(c);
-          for (let i=0;i<src.length;i++) dst[i] = clamp(src[i]*gain, -1, 1);
+          const data = audioBuffer.getChannelData(c);
+          for (let i=0;i<data.length;i++) peak = Math.max(peak, Math.abs(data[i]));
         }
-        target = dest;
+        if (peak > 0 && peak < 0.99) {
+          const gain = 0.99 / peak;
+          const dest = ac.createBuffer(chs, audioBuffer.length, audioBuffer.sampleRate);
+          for (let c=0;c<chs;c++){
+            const src = audioBuffer.getChannelData(c);
+            const dst = dest.getChannelData(c);
+            for (let i=0;i<src.length;i++) dst[i] = clamp(src[i]*gain, -1, 1);
+          }
+          target = dest;
+        }
       }
-    }
-    if (wav) {
-      const blob = encodeWAVFromAudioBuffer(target);
-      out.push(new File([blob], file.name.replace(/\.[^.]+$/, "") + ".wav", { type: "audio/wav" }));
-    }
-    if (opus && support.mrAudio) {
-      const off = new OfflineAudioContext(target.numberOfChannels, target.length, target.sampleRate);
-      const src = off.createBufferSource(); src.buffer = target;
-      const dest = off.createMediaStreamDestination?.();
-      if (dest) {
-        src.connect(dest); src.start();
-        const mr = new MediaRecorder(dest.stream, { mimeType: "audio/webm;codecs=opus" });
-        const chunks = [];
-        mr.ondataavailable = (e)=>{ if (e.data.size) chunks.push(e.data); };
-        mr.start(200);
-        await off.startRendering();
-        mr.stop();
-        await new Promise((ok)=> mr.onstop = ok);
-        const blob = new Blob(chunks, { type: "audio/webm;codecs=opus" });
-        out.push(new File([blob], file.name.replace(/\.[^.]+$/, "") + ".webm", { type: blob.type }));
+      if (wav) {
+        const blob = encodeWAVFromAudioBuffer(target);
+        out.push(new File([blob], file.name.replace(/\.[^.]+$/, "") + ".wav", { type: "audio/wav" }));
       }
+      if (opus && support.mrAudio) {
+        const off = new OfflineAudioContext(target.numberOfChannels, target.length, target.sampleRate);
+        const src = off.createBufferSource(); src.buffer = target;
+        const dest = off.createMediaStreamDestination?.();
+        if (dest) {
+          src.connect(dest); src.start();
+          const mr = new MediaRecorder(dest.stream, { mimeType: "audio/webm;codecs=opus" });
+          const chunks = [];
+          mr.ondataavailable = (e) => { if (e.data.size) chunks.push(e.data); };
+          mr.start(200);
+          await withTimeout(
+            off.startRendering(),
+            30000,
+            `Audio rendering timed out for ${file.name}`
+          );
+          mr.stop();
+          await withTimeout(
+            new Promise((ok) => mr.onstop = ok),
+            10000,
+            `MediaRecorder stop timed out for ${file.name}`
+          );
+          const blob = new Blob(chunks, { type: "audio/webm;codecs=opus" });
+          out.push(new File([blob], file.name.replace(/\.[^.]+$/, "") + ".webm", { type: blob.type }));
+        }
+      }
+      await ac.close();
+      addLog(`Completed audio transcoding for ${file.name}`);
+      return out;
+    } catch (error) {
+      throw new Error(`Audio transcoding failed for ${file.name}: ${error.message}`);
     }
-    await ac.close();
-    return out;
   }, [support.mrAudio]);
 
   const buildSpriteAtlas = useCallback(async (items, opt) => {
-    const bitmaps = [];
-    for (const it of items) {
-      const bmp = await toBitmap(it.file);
-      bitmaps.push({ id: it.id, name: it.name, w: bmp.width, h: bmp.height, bmp });
-    }
-    const pack = packShelves(bitmaps, opt.maxW, opt.maxH, opt.padding);
-    if (!pack) throw new Error("Images Do Not Fit Max Atlas Size.");
-    let W = pack.W, H = pack.H;
-    if (opt.pow2) {
-      const nextPow2 = (n)=> 1 << (32 - Math.clz32(n - 1));
-      W = nextPow2(W); H = nextPow2(H);
-    }
-    const c = document.createElement("canvas"); c.width = W; c.height = H;
-    const ctx = c.getContext("2d");
-    const frames = {};
-    for (const r of pack.rects) {
-      const x = r.x + opt.padding, y = r.y + opt.padding;
-      ctx.drawImage(r.item.bmp, x, y);
-      if (opt.extrude) {
-        ctx.drawImage(r.item.bmp, x-1, y, 1, r.item.h, x-1, y, 1, r.item.h);
-        ctx.drawImage(r.item.bmp, x+r.item.w, y, 1, r.item.h, x+r.item.w, y, 1, r.item.h);
-        ctx.drawImage(r.item.bmp, x, y-1, r.item.w, 1, x, y-1, r.item.w, 1);
-        ctx.drawImage(r.item.bmp, x, y+r.item.h, r.item.w, 1, x, y+r.item.h, r.item.w, 1);
+    addLog("Starting sprite atlas creation");
+    try {
+      const bitmaps = [];
+      for (const it of items) {
+        const bmp = await toBitmap(it.file);
+        bitmaps.push({ id: it.id, name: it.name, w: bmp.width, h: bmp.height, bmp });
       }
-      frames[r.item.name] = { x, y, w: r.item.w, h: r.item.h };
+      const pack = packShelves(bitmaps, opt.maxW, opt.maxH, opt.padding);
+      if (!pack) throw new Error("Images Do Not Fit Max Atlas Size.");
+      let W = pack.W, H = pack.H;
+      if (opt.pow2) {
+        const nextPow2 = (n) => 1 << (32 - Math.clz32(n - 1));
+        W = nextPow2(W); H = nextPow2(H);
+      }
+      const c = document.createElement("canvas"); c.width = W; c.height = H;
+      const ctx = c.getContext("2d");
+      const frames = {};
+      for (const r of pack.rects) {
+        const x = r.x + opt.padding, y = r.y + opt.padding;
+        ctx.drawImage(r.item.bmp, x, y);
+        if (opt.extrude) {
+          ctx.drawImage(r.item.bmp, x-1, y, 1, r.item.h, x-1, y, 1, r.item.h);
+          ctx.drawImage(r.item.bmp, x+r.item.w, y, 1, r.item.h, x+r.item.w, y, 1, r.item.h);
+          ctx.drawImage(r.item.bmp, x, y-1, r.item.w, 1, x, y-1, r.item.w, 1);
+          ctx.drawImage(r.item.bmp, x, y+r.item.h, r.item.w, 1, x, y+r.item.h, r.item.w, 1);
+        }
+        frames[r.item.name] = { x, y, w: r.item.w, h: r.item.h };
+      }
+      const png = await encodeCanvas(c, "image/png", 1);
+      addLog("Completed sprite atlas creation");
+      return {
+        atlasPng: new File([png], "sprite-atlas.png", { type: "image/png" }),
+        atlasJson: new File([JSON.stringify({ meta:{ w:W, h:H, padding:opt.padding, pow2:opt.pow2 }, frames }, null, 2)], "sprite-atlas.json", { type: "application/json" })
+      };
+    } catch (error) {
+      throw new Error(`Sprite atlas creation failed: ${error.message}`);
     }
-    const png = await encodeCanvas(c, "image/png", 1);
-    return {
-      atlasPng: new File([png], "sprite-atlas.png", { type: "image/png" }),
-      atlasJson: new File([JSON.stringify({ meta:{ w:W, h:H, padding:opt.padding, pow2:opt.pow2 }, frames }, null, 2)], "sprite-atlas.json", { type: "application/json" })
-    };
   }, []);
 
   const makeFontCss = (file, family, ranges) => {
-    const srcUrl = URL.createObjectURL(file);
-    const ext = file.name.split(".").pop()?.toLowerCase();
-    const fmt = ext === "woff2" ? "woff2" : ext === "woff" ? "woff" : ext === "otf" ? "opentype" : "truetype";
-    const css =
+    addLog(`Generating font CSS for ${file.name}`);
+    try {
+      const srcUrl = URL.createObjectURL(file);
+      const ext = file.name.split(".").pop()?.toLowerCase();
+      const fmt = ext === "woff2" ? "woff2" : ext === "woff" ? "woff" : ext === "otf" ? "opentype" : "truetype";
+      const css =
 `@font-face{
   font-family:"${family}"; src:url(${JSON.stringify(srcUrl)}) format("${fmt}");
   font-display:swap; unicode-range: ${ranges};
 }`;
-    return new File([css], file.name.replace(/\.[^.]+$/, ".css"), { type: "text/css" });
+      addLog(`Completed font CSS for ${file.name}`);
+      return new File([css], file.name.replace(/\.[^.]+$/, ".css"), { type: "text/css" });
+    } catch (error) {
+      throw new Error(`Font CSS generation failed for ${file.name}: ${error.message}`);
+    }
   };
 
   const run = async () => {
-    setJobs([]); setLog([]);
+    if (isOptimizing) {
+      addLog("Optimization already in progress, please wait.");
+      return;
+    }
+    if (files.length === 0) {
+      addLog("No files to optimize.");
+      return;
+    }
+    setIsOptimizing(true);
+    setJobs([]); setLog([]); setOverallProgress(0);
+    addLog("Starting optimization...");
+
     const outputs = [];
     const imgTargets = [
       imageOpts.webp && support.webp ? "webp" : null,
       imageOpts.avif && support.avif ? "avif" : null,
       imageOpts.jpeg ? "jpeg" : null
     ].filter(Boolean);
+    const totalFiles = files.length + (spriteOpts.enabled && files.some(x=>x.kind==="image") ? 1 : 0);
+    let processedFiles = 0;
+
     for (const it of files) {
+      if (!isValidFile(it.file)) {
+        addLog(`Skipping invalid file: ${it.name}`);
+        processedFiles++;
+        setOverallProgress((processedFiles / totalFiles) * 100);
+        outputs.push({ sourceId: it.id, name: it.name, file: it.file, kind: it.kind, target: "original" });
+        continue;
+      }
       const f = it.file;
       try {
+        addLog(`Processing file: ${f.name} (${it.kind})`);
         if (it.kind === "image" && imgTargets.length) {
           for (const fmt of imgTargets) {
             try {
-              const out = await transcodeImage(f, fmt, imageOpts.quality, imageOpts.maxW, imageOpts.maxH);
+              const out = await withTimeout(
+                transcodeImage(f, fmt, imageOpts.quality, imageOpts.maxW, imageOpts.maxH),
+                30000,
+                `Image transcoding timed out for ${f.name} to ${fmt}`
+              );
               outputs.push({ sourceId: it.id, name: out.name, file: out, kind: "image", target: `${fmt}@${imageOpts.quality}%` });
               addLog(`Image ${f.name} → ${out.name}.`);
-            } catch {
-              addLog(`Image Failed: ${f.name} → ${fmt}.`);
+            } catch (error) {
+              addLog(`Image Failed: ${f.name} → ${fmt} - ${error.message}`);
+              outputs.push({ sourceId: it.id, name: f.name, file: f, kind: "image", target: "original" });
             }
           }
         }
         if (it.kind === "video" && videoOpts.enable && support.mrVideo) {
           const update = (p) => setVideoProgress((m)=>({ ...m, [it.id]: p }));
           try {
-            const out = await transcodeVideoWebM(f, { mime: videoOpts.mime, fps: videoOpts.fps, maxW: videoOpts.maxW, maxH: videoOpts.maxH, onProgress: update });
-            outputs.push({ sourceId: it.id, name: out.name, file: out, kind: "video", target: "webm" });
+            const out = await withTimeout(
+              transcodeVideoWebM(f, { mime: videoOpts.mime, fps: videoOpts.fps, maxW: videoOpts.maxW, maxH: videoOpts.maxH, onProgress: update }),
+              60000,
+              `Video transcoding timed out for ${f.name}`
+            );
+            outputs.push({ sourceId: it.id, name: out.name, file: out, kind: "video", target: out.name.endsWith(".webm") ? "webm" : "original" });
             addLog(`Video ${f.name} → ${out.name}.`);
-            const poster = await snapshotPoster(f);
-            outputs.push({ sourceId: it.id, name: poster.name, file: poster, kind: "image", target: "poster" });
-          } catch {
-            addLog(`Video Failed: ${f.name}.`);
+            try {
+              const poster = await withTimeout(
+                snapshotPoster(f),
+                30000,
+                `Poster snapshot timed out for ${f.name}`
+              );
+              outputs.push({ sourceId: it.id, name: poster.name, file: poster, kind: "image", target: "poster" });
+            } catch (error) {
+              addLog(`Poster Failed: ${f.name} - ${error.message}`);
+            }
+          } catch (error) {
+            addLog(`Video Failed: ${f.name} - ${error.message}`);
+            outputs.push({ sourceId: it.id, name: f.name, file: f, kind: "video", target: "original" });
           } finally {
             setVideoProgress((m)=>({ ...m, [it.id]: 1 }));
           }
         }
         if (it.kind === "audio") {
           try {
-            const outs = await transcodeAudio(f, audioOpts);
+            const outs = await withTimeout(
+              transcodeAudio(f, audioOpts),
+              30000,
+              `Audio transcoding timed out for ${f.name}`
+            );
             for (const o of outs) {
               outputs.push({ sourceId: it.id, name: o.name, file: o, kind: "audio", target: o.type.includes("opus") ? "opus" : "wav" });
               addLog(`Audio ${f.name} → ${o.name}.`);
             }
-          } catch {
-            addLog(`Audio Failed: ${f.name}.`);
+          } catch (error) {
+            addLog(`Audio Failed: ${f.name} - ${error.message}`);
+            outputs.push({ sourceId: it.id, name: f.name, file: f, kind: "audio", target: "original" });
           }
         }
         if (it.kind === "font") {
-          const css = makeFontCss(f, fontFamilyName, fontCssRanges);
-          outputs.push({ sourceId: it.id, name: css.name, file: css, kind: "font-css", target: "unicode-range-css" });
-          addLog(`Font CSS Generated For ${f.name}.`);
+          try {
+            const css = makeFontCss(f, fontFamilyName, fontCssRanges);
+            outputs.push({ sourceId: it.id, name: css.name, file: css, kind: "font-css", target: "unicode-range-css" });
+            addLog(`Font CSS Generated For ${f.name}.`);
+          } catch (error) {
+            addLog(`Font CSS Failed: ${f.name} - ${error.message}`);
+            outputs.push({ sourceId: it.id, name: f.name, file: f, kind: "font", target: "original" });
+          }
         }
-      } catch {
-        addLog(`Error On ${it.name}.`);
+      } catch (error) {
+        addLog(`Error On ${it.name}: ${error.message}`);
+        outputs.push({ sourceId: it.id, name: f.name, file: f, kind: it.kind, target: "original" });
       }
+      processedFiles++;
+      setOverallProgress((processedFiles / totalFiles) * 100);
+      addLog(`Progress: ${processedFiles}/${totalFiles} files processed`);
     }
     if (spriteOpts.enabled) {
       const sprites = files.filter(x=>x.kind==="image");
       if (sprites.length) {
         try {
-          const { atlasPng, atlasJson } = await buildSpriteAtlas(sprites, spriteOpts);
+          const { atlasPng, atlasJson } = await withTimeout(
+            buildSpriteAtlas(sprites, spriteOpts),
+            60000,
+            "Sprite atlas creation timed out"
+          );
           outputs.push({ sourceId: "__atlas__", name: atlasPng.name, file: atlasPng, kind: "atlas", target: "png" });
           outputs.push({ sourceId: "__atlas__", name: atlasJson.name, file: atlasJson, kind: "atlas-map", target: "json" });
           addLog("Sprite Atlas Generated.");
-        } catch {
-          addLog("Atlas Failed.");
+        } catch (error) {
+          addLog(`Atlas Failed: ${error.message}`);
         }
       }
+      processedFiles++;
+      setOverallProgress((processedFiles / totalFiles) * 100);
+      addLog(`Progress: ${processedFiles}/${totalFiles} files processed`);
     }
     setJobs(outputs);
-    addLog("Optimization Completed Successfully.");
+    addLog(`Optimization completed with ${outputs.length} outputs.`);
+    setIsOptimizing(false);
   };
 
   const totals = useMemo(() => {
@@ -490,51 +708,61 @@ const DinoLabsPluginsAssetOptimizer = () => {
   }, [files, jobs]);
 
   const downloadBundle = async () => {
-    const manifest = {
-      createdAt: new Date().toISOString(),
-      inputs: files.map(f=>({ name:f.name, bytes:f.file.size, kind:f.kind })),
-      outputs: jobs.map(j=>({ name:j.name, bytes:j.file.size, kind:j.kind, target:j.target, sourceId:j.sourceId })),
-      totals: { inMB: totals.totalInMB, outMB: totals.totalOutMB, savedMB: totals.totalSavedMB },
-      notes: "Created In No-Dependency Mode."
-    };
-    const zipFiles = [];
-    zipFiles.push({ name: "deliverables/manifest.json", u8: strToU8(JSON.stringify(manifest, null, 2)) });
-    for (const j of jobs) {
-      const buf = new Uint8Array(await j.file.arrayBuffer());
-      zipFiles.push({ name: "deliverables/assets/" + j.name, u8: buf });
+    try {
+      const manifest = {
+        createdAt: new Date().toISOString(),
+        inputs: files.map(f=>({ name:f.name, bytes:f.file.size, kind:f.kind })),
+        outputs: jobs.map(j=>({ name:j.name, bytes:j.file.size, kind:j.kind, target:j.target, sourceId:j.sourceId })),
+        totals: { inMB: totals.totalInMB, outMB: totals.totalOutMB, savedMB: totals.totalSavedMB },
+        notes: "Created In No-Dependency Mode."
+      };
+      const zipFiles = [];
+      zipFiles.push({ name: "deliverables/manifest.json", u8: strToU8(JSON.stringify(manifest, null, 2)) });
+      for (const j of jobs) {
+        const buf = new Uint8Array(await j.file.arrayBuffer());
+        zipFiles.push({ name: "deliverables/assets/" + j.name, u8: buf });
+      }
+      const blob = await withTimeout(
+        buildZip(zipFiles),
+        30000,
+        "ZIP creation timed out"
+      );
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a"); a.href=url; a.download="deliverables.zip"; document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+      addLog("Bundle downloaded successfully.");
+    } catch (error) {
+      addLog(`Download Bundle Failed: ${error.message}`);
     }
-    const blob = await buildZip(zipFiles);
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a"); a.href=url; a.download="deliverables.zip"; document.body.appendChild(a); a.click(); a.remove();
-    URL.revokeObjectURL(url);
   };
 
   const copySnippets = async () => {
-    const imgs = jobs.filter(j=>j.kind==="image");
-    const vids = jobs.filter(j=>j.kind==="video");
-    const atlas = jobs.find(j=>j.name==="sprite-atlas.png");
-    const atlasMap = jobs.find(j=>j.name==="sprite-atlas.json");
-    const lines = [];
-    if (imgs.length) {
-      const avif = imgs.find(i=>/\.avif$/i.test(i.name));
-      const webp = imgs.find(i=>/\.webp$/i.test(i.name));
-      const jpg  = imgs.find(i=>/\.jpe?g$/i.test(i.name)) || imgs[0];
-      lines.push("<picture>");
-      if (avif) lines.push(`  <source srcset="/assets/${avif.name}" type="image/avif">`);
-      if (webp) lines.push(`  <source srcset="/assets/${webp.name}" type="image/webp">`);
-      lines.push(`  <img src="/assets/${jpg.name}" alt="">`);
-      lines.push("</picture>");
-    }
-    if (vids.length) {
-      const webm = vids[0];
-      const poster = imgs.find(i=>/_poster\.jpe?g$/i.test(i.name));
-      lines.push(`<video controls preload="metadata"${poster?` poster="/assets/${poster.name}"`:""}>`);
-      lines.push(`  <source src="/assets/${webm.name}" type="${webm.file.type}">`);
-      lines.push("</video>");
-    }
-    if (atlas && atlasMap) {
-      lines.push(`<canvas id="atlasCanvas"></canvas>`);
-      lines.push(`<script>
+    try {
+      const imgs = jobs.filter(j=>j.kind==="image");
+      const vids = jobs.filter(j=>j.kind==="video" && j.target !== "original"); 
+      const atlas = jobs.find(j=>j.name==="sprite-atlas.png");
+      const atlasMap = jobs.find(j=>j.name==="sprite-atlas.json");
+      const lines = [];
+      if (imgs.length) {
+        const avif = imgs.find(i=>/\.avif$/i.test(i.name));
+        const webp = imgs.find(i=>/\.webp$/i.test(i.name));
+        const jpg  = imgs.find(i=>/\.jpe?g$/i.test(i.name)) || imgs[0];
+        lines.push("<picture>");
+        if (avif) lines.push(`  <source srcset="/assets/${avif.name}" type="image/avif">`);
+        if (webp) lines.push(`  <source srcset="/assets/${webp.name}" type="image/webp">`);
+        lines.push(`  <img src="/assets/${jpg.name}" alt="">`);
+        lines.push("</picture>");
+      }
+      if (vids.length) {
+        const webm = vids[0];
+        const poster = imgs.find(i=>/_poster\.jpe?g$/i.test(i.name));
+        lines.push(`<video controls preload="metadata"${poster?` poster="/assets/${poster.name}"`:""}>`);
+        lines.push(`  <source src="/assets/${webm.name}" type="${webm.file.type}">`);
+        lines.push("</video>");
+      }
+      if (atlas && atlasMap) {
+        lines.push(`<canvas id="atlasCanvas"></canvas>`);
+        lines.push(`<script>
 (async()=>{
   const img = new Image(); img.src = "/assets/${atlas.name}";
   const map = await (await fetch("/assets/${atlasMap.name}")).json();
@@ -545,8 +773,12 @@ const DinoLabsPluginsAssetOptimizer = () => {
   c.width = f.w; c.height=f.h; ctx.drawImage(img, f.x, f.y, f.w, f.h, 0,0,f.w,f.h);
 })();
 </script>`);
+      }
+      await navigator.clipboard.writeText(lines.join("\n"));
+      addLog("Snippets copied to clipboard.");
+    } catch (error) {
+      addLog(`Copy Snippets Failed: ${error.message}`);
     }
-    try { await navigator.clipboard.writeText(lines.join("\n")); } catch {}
   };
 
   const fileInputRef = useRef(null);
@@ -671,7 +903,14 @@ const DinoLabsPluginsAssetOptimizer = () => {
             </div>
 
             <div className="dinolabsAssetOptimizerRow dinolabsAssetOptimizerRowSpace">
-              <button className="dinolabsAssetOptimizerBtn" onClick={run}><FontAwesomeIcon icon={faWandMagicSparkles}/> Optimize</button>
+              <button
+                className="dinolabsAssetOptimizerBtn"
+                onClick={run}
+                disabled={isOptimizing || files.length === 0}
+              >
+                <FontAwesomeIcon icon={faWandMagicSparkles}/>
+                {isOptimizing ? `Optimizing (${Math.round(overallProgress)}%)` : "Optimize"}
+              </button>
             </div>
           </section>
 

@@ -15,7 +15,6 @@ import DinoLabsPluginsCalculator from "./pages/DinoLabsPlugins/DinoLabsPluginsCa
 import DinoLabsPluginsMatrix from "./pages/DinoLabsPlugins/DinoLabsPluginsMatrix/DinoLabsPluginsMatrix";
 import DinoLabsPluginsUnitLab from "./pages/DinoLabsPlugins/DinoLabsPluginsUnitLab/DinoLabsPluginsUnitLab";
 import DinoLabsPluginsColorTypeLab from "./pages/DinoLabsPlugins/DinoLabsPluginsColorTypeLab/DinoLabsPluginsColorTypeLab";
-import DinoLabsPluginsA11yInspector from "./pages/DinoLabsPlugins/DinoLabsPluginsA11yInspector/DinoLabsPluginsA11yInspector";
 import DinoLabsPluginsAssetOptimizer from "./pages/DinoLabsPlugins/DinoLabsPluginsAssetOptimizer/DinoLabsPluginsAssetOptimizer";
 import DinoLabsPluginsVisualDiff from "./pages/DinoLabsPlugins/DinoLabsPluginsVisualDiff/DinoLabsPluginsVisualDiff";
 import DinoLabsPluginsRegexDataLab from "./pages/DinoLabsPlugins/DinoLabsPluginsRegexDataLab/DinoLabsPluginsRegexDataLab";
@@ -92,11 +91,6 @@ function App() {
           <Route path="/colortypelab" element={
             <ProtectedRoute>
               <DinoLabsPluginsColorTypeLab />
-            </ProtectedRoute>
-          } />
-          <Route path="/a11yinspector" element={
-            <ProtectedRoute>
-              <DinoLabsPluginsA11yInspector />
             </ProtectedRoute>
           } />
           <Route path="/assetoptimizer" element={

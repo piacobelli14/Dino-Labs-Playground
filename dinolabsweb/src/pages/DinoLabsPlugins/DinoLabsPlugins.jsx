@@ -85,14 +85,6 @@ const DinoLabsPlugins = () => {
         path: "/colortypelab"
       },
       {
-        key: "a11yinspector",
-        title: "Accessibility & QA Inspector",
-        description: "Alt-text, headings, tab order, ARIA, contrast, motion.",
-        icon: faUniversalAccess,
-        gradientClass: "dinolabsPluginsGradientA11y",
-        path: "/a11yinspector"
-      },
-      {
         key: "assetoptimizer",
         title: "Asset Pipeline Optimizer",
         description: "Batch image/video/audio optimization & deliverables.",

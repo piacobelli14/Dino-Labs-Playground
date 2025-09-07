@@ -121,11 +121,11 @@ const DinoLabsMarkdown = forwardRef((props, ref) => {
   const scrollContainerRef = useRef(null);
   const searchInputRef = useRef(null);
   const debounceTimer = useRef(null);
+  const lintDebounceTimer = useRef(null);
+  const syntaxDebounceTimer = useRef(null);
   const mirrorRef = useRef(null);
   const editorId = useRef(generateEditorId()).current;
   const isInitializedRef = useRef(false);
-  const terminalInputRef = useRef(null);
-  const terminalOutputRef = useRef(null);
   const containerRef = useRef(null);
   const isResizingRef = useRef(false);
 
@@ -148,17 +148,10 @@ const DinoLabsMarkdown = forwardRef((props, ref) => {
   const [lintErrors, setLintErrors] = useState([]);
   const [mutedLines, setMutedLines] = useState([]);
   
-  const [activeConsoleTab, setActiveConsoleTab] = useState("problems");
-  const [terminalOutput, setTerminalOutput] = useState([]);
-  const [currentCommand, setCurrentCommand] = useState("");
-  const [commandHistory, setCommandHistory] = useState([]);
-  const [historyIndex, setHistoryIndex] = useState(-1);
-  const [isCommandRunning, setIsCommandRunning] = useState(false);
-  const [currentDirectory, setCurrentDirectory] = useState("~");
-  const [terminalInitialized, setTerminalInitialized] = useState(false);
-  
   const [editorGrow, setEditorGrow] = useState(70);
   const [consoleGrow, setConsoleGrow] = useState(30);
+
+  const [highlightedCodeCache, setHighlightedCodeCache] = useState("");
 
   const dividerHeight = 10;
   const minHeight = 50;
@@ -173,15 +166,22 @@ const DinoLabsMarkdown = forwardRef((props, ref) => {
         .replace(/&/g, "&amp;")
         .replace(/</g, "&lt;")
         .replace(/>/g, "&gt;");
-    } else {
-      return syntaxHighlight(
-        editorContent,
-        currentLanguage.toLowerCase(),
-        searchTerm,
-        isCaseSensitiveSearch
-      );
     }
-  }, [editorContent, currentLanguage, searchTerm, isCaseSensitiveSearch]);
+    
+    if (syntaxDebounceTimer.current) {
+      return highlightedCodeCache || editorContent
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
+    }
+    
+    return syntaxHighlight(
+      editorContent,
+      currentLanguage.toLowerCase(),
+      searchTerm,
+      isCaseSensitiveSearch
+    );
+  }, [editorContent, currentLanguage, searchTerm, isCaseSensitiveSearch, highlightedCodeCache]);
 
   const isLanguageSupported = useMemo(() => {
     const lang = currentLanguage.toLowerCase();
@@ -208,104 +208,6 @@ const DinoLabsMarkdown = forwardRef((props, ref) => {
     handleContentChange(newValue);
   }, [handleContentChange]);
 
-  const addToTerminalOutput = useCallback((content, type = "output") => {
-    const timestamp = new Date().toLocaleTimeString();
-    setTerminalOutput(prev => [...prev, { content, type, timestamp, id: Date.now() + Math.random() }]);
-  }, []);
-
-  const handleLocalCommand = useCallback((command) => {
-    const cmd = command.trim().toLowerCase();
-    
-    if (cmd === "clear" || cmd === "cls") {
-      setTerminalOutput([]);
-    } else if (cmd.startsWith("echo ")) {
-      const message = command.slice(5);
-      addToTerminalOutput(message, "output");
-    } else if (cmd === "pwd") {
-      addToTerminalOutput(currentDirectory, "output");
-    } else if (cmd === "date") {
-      addToTerminalOutput(new Date().toString(), "output");
-    } else if (cmd === "whoami") {
-      addToTerminalOutput(userID || "user", "output");
-    } else if (cmd.startsWith("cd ")) {
-      const newDir = command.slice(3).trim();
-      if (newDir === "..") {
-        const parts = currentDirectory.split("/");
-        if (parts.length > 1) {
-          parts.pop();
-          setCurrentDirectory(parts.length > 1 ? parts.join("/") : "~");
-        }
-      } else if (newDir.startsWith("/")) {
-        setCurrentDirectory(newDir);
-      } else if (newDir === "~" || newDir === "") {
-        setCurrentDirectory("~");
-      } else {
-        setCurrentDirectory(currentDirectory === "~" ? newDir : `${currentDirectory}/${newDir}`);
-      }
-    } else if (cmd === "ls" || cmd === "dir") {
-      addToTerminalOutput("file1.txt  file2.js  folder1/  folder2/", "output");
-    } else if (cmd === "help") {
-      addToTerminalOutput(`Available commands:
-File operations: ls, dir, pwd, cd, mkdir, rmdir, touch, cat, cp, mv, rm
-Text processing: echo, grep, find, head, tail, sort, uniq, wc
-Development: npm, node, python, python3, pip, git
-System: date, whoami, clear, help
-
-Note: Commands are restricted to your workspace for security.`, "output");
-    } else {
-      addToTerminalOutput(`Command not found: ${command}\nType "help" for available commands.`, "error");
-    }
-  }, [currentDirectory, userID, addToTerminalOutput]);
-
-  const executeCommand = useCallback(async (command) => {
-    if (!command.trim()) return;
-    
-    setIsCommandRunning(true);
-    const promptText = `${userID || "user"}@dinolabs:${currentDirectory}$ ${command}`;
-    addToTerminalOutput(promptText, "command");
-    
-    setCommandHistory(prev => {
-      const newHistory = [...prev, command];
-      return newHistory.slice(-100);
-    });
-    setHistoryIndex(-1);
-    
-    try {
-      const response = await fetch(`${import.meta.env.VITE_API_AUTH_URL}/execute-command`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "Authorization": `Bearer ${token}`,
-        },
-        body: JSON.stringify({
-          command: command.trim(),
-          cwd: currentDirectory,
-          organizationID,
-          userID,
-        }),
-      });
-      
-      if (response.ok) {
-        const result = await response.json();
-        if (result.output && result.output.trim()) {
-          addToTerminalOutput(result.output, "output");
-        }
-        if (result.error && result.error.trim()) {
-          addToTerminalOutput(result.error, "error");
-        }
-        if (result.cwd) {
-          setCurrentDirectory(result.cwd);
-        }
-      } else {
-        handleLocalCommand(command);
-      }
-    } catch (error) {
-      handleLocalCommand(command);
-    }
-    
-    setIsCommandRunning(false);
-  }, [currentDirectory, token, organizationID, userID, addToTerminalOutput, handleLocalCommand]);
-
   const performSearch = useCallback(() => {
     if (!searchTerm) {
       setSearchPositions([]);
@@ -330,7 +232,7 @@ Note: Commands are restricted to your workspace for security.`, "output");
       setSearchPositions([]);
       setCurrentSearchIndex(-1);
     }
-  }, [searchTerm, isCaseSensitiveSearch, editorContent]);
+  }, [searchTerm, isCaseSensitiveSearch, editorContent, setSearchPositions, setCurrentSearchIndex]);
 
   const performNextSearch = () => {
     if (searchPositions.length === 0) return;
@@ -522,52 +424,6 @@ Note: Commands are restricted to your workspace for security.`, "output");
     }
   };
 
-  const handleTerminalKeyDown = useCallback((e) => {
-    if (e.key === "Enter") {
-      e.preventDefault();
-      if (currentCommand.trim()) {
-        executeCommand(currentCommand);
-        setCurrentCommand("");
-      }
-    } else if (e.key === "ArrowUp") {
-      e.preventDefault();
-      if (commandHistory.length > 0) {
-        const newIndex = historyIndex === -1 ? commandHistory.length - 1 : Math.max(0, historyIndex - 1);
-        setHistoryIndex(newIndex);
-        setCurrentCommand(commandHistory[newIndex]);
-      }
-    } else if (e.key === "ArrowDown") {
-      e.preventDefault();
-      if (historyIndex !== -1) {
-        const newIndex = historyIndex + 1;
-        if (newIndex >= commandHistory.length) {
-          setHistoryIndex(-1);
-          setCurrentCommand("");
-        } else {
-          setHistoryIndex(newIndex);
-          setCurrentCommand(commandHistory[newIndex]);
-        }
-      }
-    } else if (e.key === "Tab") {
-      e.preventDefault();
-      const commands = ["clear", "echo", "pwd", "date", "whoami", "cd", "ls", "help"];
-      const matches = commands.filter(cmd => cmd.startsWith(currentCommand.toLowerCase()));
-      if (matches.length === 1) {
-        setCurrentCommand(matches[0] + " ");
-      }
-    } else if (e.ctrlKey && e.key === "c") {
-      e.preventDefault();
-      if (isCommandRunning) {
-        addToTerminalOutput("^C", "error");
-        setIsCommandRunning(false);
-      }
-      setCurrentCommand("");
-    } else if (e.ctrlKey && e.key === "l") {
-      e.preventDefault();
-      setTerminalOutput([]);
-    }
-  }, [currentCommand, commandHistory, historyIndex, executeCommand, isCommandRunning, addToTerminalOutput]);
-
   const handleMouseDown = (e) => {
     e.preventDefault();
     isResizingRef.current = true;
@@ -676,30 +532,6 @@ Note: Commands are restricted to your workspace for security.`, "output");
   };
 
   useEffect(() => {
-    if (fileHandle && fileHandle.name) {
-      const fileName = fileHandle.name;
-      if (fileName.includes("/")) {
-        const dirPath = fileName.substring(0, fileName.lastIndexOf("/"));
-        setCurrentDirectory(dirPath || "~");
-      }
-    }
-  }, [fileHandle]);
-
-  useEffect(() => {
-    if (!terminalInitialized && activeConsoleTab === "terminal") {
-      const welcomeMessage = `DinoLabs Terminal v1.0.0
-Type "help" to see available commands.`;
-      setTerminalOutput([{
-        content: welcomeMessage,
-        type: "output",
-        timestamp: new Date().toLocaleTimeString(),
-        id: Date.now()
-      }]);
-      setTerminalInitialized(true);
-    }
-  }, [activeConsoleTab, terminalInitialized]);
-
-  useEffect(() => {
     if (fileContent !== undefined && fileContent !== null) {
       const safeContent = String(fileContent || "");
       if (!isInitializedRef.current || safeContent !== editorContent) {
@@ -713,20 +545,6 @@ Type "help" to see available commands.`;
       isInitializedRef.current = true;
     }
   }, [fileContent, forceOpen]);
-
-  useEffect(() => {
-    if (terminalOutputRef.current) {
-      terminalOutputRef.current.scrollTop = terminalOutputRef.current.scrollHeight;
-    }
-  }, [terminalOutput]);
-
-  useEffect(() => {
-    if (activeConsoleTab === "terminal" && terminalInputRef.current) {
-      setTimeout(() => {
-        terminalInputRef.current.focus();
-      }, 100);
-    }
-  }, [activeConsoleTab]);
 
   useEffect(() => {
     const handleResize = () => setScreenSize(window.innerWidth);
@@ -761,8 +579,20 @@ Type "help" to see available commands.`;
   }, [colorTheme]);
 
   useEffect(() => {
-    const errors = getLintErrors(currentLanguage, editorContent);
-    setLintErrors(errors);
+    if (lintDebounceTimer.current) {
+      clearTimeout(lintDebounceTimer.current);
+    }
+    
+    lintDebounceTimer.current = setTimeout(() => {
+      const errors = getLintErrors(currentLanguage, editorContent);
+      setLintErrors(errors);
+    }, 500); 
+
+    return () => {
+      if (lintDebounceTimer.current) {
+        clearTimeout(lintDebounceTimer.current);
+      }
+    };
   }, [editorContent, currentLanguage]);
 
   useEffect(() => {
@@ -851,10 +681,6 @@ Type "help" to see available commands.`;
     },
     pasteAtCursor: (text) => {
       mirrorRef.current?.pasteAtCursor?.(text);
-    },
-    executeInTerminal: (command) => {
-      setActiveConsoleTab("terminal");
-      executeCommand(command);
     },
   }));
 
@@ -1135,7 +961,6 @@ Type "help" to see available commands.`;
             onTouchStart={handleTouchStart}
           />
 
-          {/* Console content - AFFECTED by zoom */}
           <div
             className="codeConsoleWrapper"
             style={{ flexGrow: consoleGrow }}
@@ -1144,20 +969,12 @@ Type "help" to see available commands.`;
               <div className="codeConsoleHeader">
                 <div className="codeConsoleNavigatorButtonsFlex">
                   <button 
-                    className={`codeConsoleNavigatorButton ${activeConsoleTab === "problems" ? "active" : ""}`}
-                    onClick={() => setActiveConsoleTab("problems")}
+                    className={`codeConsoleNavigatorButton active`}
                   > 
                     Problems
                   </button>
-                  <button 
-                    className={`codeConsoleNavigatorButton ${activeConsoleTab === "terminal" ? "active" : ""}`}
-                    onClick={() => setActiveConsoleTab("terminal")}
-                  >
-                    Terminal
-                  </button>
                 </div>
                 
-                {activeConsoleTab === "problems" && (
                   <div className="codeLintErrorWrapper">
                     <label className="codeLintErrorCount">
                       <span>Errors:</span> {lintErrors.length} (Muted: {mutedLines.length})
@@ -1170,25 +987,11 @@ Type "help" to see available commands.`;
                       Unmute
                     </button>
                   </div>
-                )}
                 
-                {activeConsoleTab === "terminal" && (
-                  <div className="codeTerminalControls">
-                    <Tippy content="Clear Terminal" theme="tooltip-light">
-                      <button
-                        className="codeLintMessageMuteButtonMain"
-                        onClick={() => setTerminalOutput([])}
-                      >
-                        <FontAwesomeIcon icon={faTrash}/>
-                        Clear
-                      </button>
-                    </Tippy>
-                  </div>
-                )}
               </div>
             )}
 
-            {activeConsoleTab === "problems" && isLanguageSupported && visibleLintErrors.length > 0 && (
+            {isLanguageSupported && visibleLintErrors.length > 0 && (
               visibleLintErrors.map((err, idx) => (
                 <div
                   className="codeLintMessage"
@@ -1208,55 +1011,6 @@ Type "help" to see available commands.`;
                   </button>
                 </div>
               ))
-            )}
-
-            {activeConsoleTab === "terminal" && (
-              <div className="codeTerminalWrapper">
-                <div 
-                  className="codeTerminalOutput" 
-                  ref={terminalOutputRef}
-                  onClick={() => terminalInputRef.current?.focus()}
-                  style={zoomedTerminalStyle}
-                >
-                  {terminalOutput.map((entry) => (
-                    <div 
-                      key={entry.id} 
-                      className={`terminalLine terminalLine--${entry.type}`}
-                    >
-                      {entry.type === "command" && (
-                        <div className="terminalCommandLine">
-                          <span className="terminalPrompt">{entry.content}</span>
-                        </div>
-                      )}
-                      {entry.type === "output" && entry.content && (
-                        <div className="terminalOutputLine">{entry.content}</div>
-                      )}
-                      {entry.type === "error" && entry.content && (
-                        <div className="terminalErrorLine">{entry.content}</div>
-                      )}
-                    </div>
-                  ))}
-                  {isCommandRunning && (
-                    <div className="terminalLine terminalLine--running">
-                      <span className="terminalRunningLine">Running command...</span>
-                    </div>
-                  )}
-                  <div className="terminalInputLine">
-                    <span className="terminalPromptInput">{userID || "user"}@dinolabs:{currentDirectory}$ </span>
-                    <input
-                      ref={terminalInputRef}
-                      type="text"
-                      value={currentCommand}
-                      onChange={(e) => setCurrentCommand(e.target.value)}
-                      onKeyDown={handleTerminalKeyDown}
-                      className="terminalCommandInput"
-                      disabled={isCommandRunning}
-                      autoComplete="off"
-                      spellCheck={false}
-                    />
-                  </div>
-                </div>
-              </div>
             )}
           </div>
         </div>

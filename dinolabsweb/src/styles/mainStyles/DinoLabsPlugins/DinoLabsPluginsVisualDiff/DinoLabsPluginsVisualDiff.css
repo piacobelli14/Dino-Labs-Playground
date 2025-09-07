@@ -103,6 +103,7 @@
   grid-template-columns: 1fr 1fr;
   gap: 8px;
   margin: 20px 0;
+  overflow: scroll;
 }
 
 .dinolabsVisualDiffPicker {
@@ -136,6 +137,9 @@
 .dinolabsVisualDiffMeta {
   font-size: var(--fz-sm);
   color: #b8cce0;
+  font-weight: 600;
+  padding: 0 0.4rem;
+  overflow: scroll; 
 }
 
 .dinolabsVisualDiffField {
@@ -429,6 +433,8 @@
   border: 1px solid #182a3d;
   border-radius: var(--r);
   overflow: hidden;
+  font-weight: 700; 
+  text-align: center;
 }
 
 .dinolabsVisualDiffAttrTable>div {
@@ -472,6 +478,8 @@
   border-radius: var(--r);
   overflow: hidden;
   margin-bottom: 8px;
+  text-align: center;
+  font-weight: 700;
 }
 
 .dinolabsVisualDiffLine {
@@ -483,11 +491,16 @@
 .dinolabsVisualDiffLn {
   background: #0d1a24;
   border-right: 1px solid #182a3d;
-  padding: 6px;
   text-align: right;
   color: #8fb0c9;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   font-size: var(--fz-sm);
+  text-align: center;
+  font-weight: 700;
+  display: flex; 
+  justify-content: center;
+  align-items: center;
+
 }
 
 .dinolabsVisualDiffCode {
@@ -579,6 +592,8 @@
   color: #cdddea;
   text-align: center;
   font-size: var(--fz-sm);
+  overflow: scroll; 
+  font-weight: 700; 
 }
 
 .dinolabsVisualDiffSidebar::-webkit-scrollbar,

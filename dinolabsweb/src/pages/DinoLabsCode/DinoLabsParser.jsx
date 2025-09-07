@@ -1,4 +1,3 @@
-
 export const getTokenPatterns = (language) => {
     switch (language.toLowerCase()) {
         case 'python':
@@ -595,9 +594,35 @@ export const tokenTypes = {
     ]
 };
 
-export const tokenize = (codeStr, language) => {
+const regexCache = new Map();
+const tokenCacheSize = 50; 
+
+const getCompiledRegex = (language) => {
+    if (regexCache.has(language)) {
+        return regexCache.get(language);
+    }
+    
     const patterns = getTokenPatterns(language);
-    if (!patterns) {
+    if (!patterns) return null;
+    
+    const regex = new RegExp(patterns.join('|'), 'gi');
+    
+    if (regexCache.size >= tokenCacheSize) {
+        const firstKey = regexCache.keys().next().value;
+        regexCache.delete(firstKey);
+    }
+    
+    regexCache.set(language, regex);
+    return regex;
+};
+
+export const tokenize = (codeStr, language) => {
+    if (!codeStr || codeStr.length < 3) {
+        return [{ value: codeStr || "", lineNumber: 1 }];
+    }
+
+    const regex = getCompiledRegex(language);
+    if (!regex) {
         const fallback = baseTokenPatterns[language?.toLowerCase()];
         if (!fallback) {
             const allLines = codeStr.split(/\r?\n/);
@@ -609,68 +634,67 @@ export const tokenize = (codeStr, language) => {
         const regexFallback = new RegExp(fallback.join('|'), 'gi');
         return doTokenize(codeStr, regexFallback, language);
     }
-    const regex = new RegExp(patterns.join('|'), 'gi');
+    
+    regex.lastIndex = 0;
     return doTokenize(codeStr, regex, language);
 };
 
 const baseTokenPatterns = {};
 
 function doTokenize(codeStr, regex, language) {
-    let match;
-    let lastIndex = 0;
     const tokens = [];
-    let currentLine = 1;
-    while ((match = regex.exec(codeStr)) !== null) {
-        const precedingText = codeStr.slice(lastIndex, match.index);
-        if (precedingText) {
-            const lines = precedingText.split(/\r?\n/);
-            lines.forEach((line, idx) => {
-                if (line) {
-                    tokens.push({ value: line, lineNumber: currentLine });
-                }
-                if (idx < lines.length - 1) {
-                    currentLine += 1;
-                }
-            });
+    const lines = codeStr.split(/\r?\n/);
+    const lowerLang = language?.toLowerCase();
+    const typeMap = tokenTypes[lowerLang] || [];
+    
+    for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
+        const line = lines[lineIndex];
+        const lineNumber = lineIndex + 1;
+        
+        if (!line) {
+            tokens.push({ value: "", lineNumber });
+            continue;
         }
-        let tokenType = null;
-        const lowerLang = language?.toLowerCase();
-        const typeMap = tokenTypes[lowerLang] || [];
-        for (let i = 1; i < match.length; i++) {
-            if (match[i] !== undefined) {
-                tokenType = typeMap[i - 1] || null;
-                break;
+        
+        let match;
+        let lastIndex = 0;
+        regex.lastIndex = 0; 
+        
+        while ((match = regex.exec(line)) !== null) {
+            if (match.index > lastIndex) {
+                const precedingText = line.slice(lastIndex, match.index);
+                if (precedingText) {
+                    tokens.push({ value: precedingText, lineNumber });
+                }
+            }
+            
+            let tokenType = null;
+            for (let i = 1; i < match.length; i++) {
+                if (match[i] !== undefined) {
+                    tokenType = typeMap[i - 1] || null;
+                    break;
+                }
+            }
+            
+            if (match[0]) {
+                tokens.push({
+                    value: match[0],
+                    type: tokenType,
+                    lineNumber
+                });
+            }
+            
+            lastIndex = regex.lastIndex;
+        }
+        
+        if (lastIndex < line.length) {
+            const remainingText = line.slice(lastIndex);
+            if (remainingText) {
+                tokens.push({ value: remainingText, lineNumber });
             }
         }
-        if (match[0]) {
-            const lines = match[0].split(/\r?\n/);
-            lines.forEach((line, idx) => {
-                if (line) {
-                    tokens.push({
-                        value: line,
-                        type: tokenType,
-                        lineNumber: currentLine
-                    });
-                }
-                if (idx < lines.length - 1) {
-                    currentLine += 1;
-                }
-            });
-        }
-        lastIndex = regex.lastIndex;
     }
-    const remainingText = codeStr.slice(lastIndex);
-    if (remainingText) {
-        const lines = remainingText.split(/\r?\n/);
-        lines.forEach((line, idx) => {
-            if (line) {
-                tokens.push({ value: line, lineNumber: currentLine });
-            }
-            if (idx < lines.length - 1) {
-                currentLine += 1;
-            }
-        });
-    }
+    
     return tokens;
 }
 
@@ -687,6 +711,30 @@ export const escapeRegExp = (string) => {
     return string.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 };
 
+const getSimplifiedHighlighting = (codeStr, language) => {
+    if (!codeStr) return "";
+    
+    const commonKeywords = {
+        javascript: /\b(function|const|let|var|if|else|for|while|return|class|import|export)\b/g,
+        typescript: /\b(function|const|let|var|if|else|for|while|return|class|import|export|interface|type)\b/g,
+        python: /\b(def|class|if|else|for|while|return|import|from|try|except)\b/g,
+        java: /\b(public|private|class|interface|if|else|for|while|return|import)\b/g,
+        c: /\b(int|char|float|double|if|else|for|while|return|include)\b/g,
+        "c++": /\b(int|char|float|double|if|else|for|while|return|include|class|public|private)\b/g,
+        "c#": /\b(public|private|class|interface|if|else|for|while|return|using)\b/g,
+    };
+    
+    const keywordRegex = commonKeywords[language.toLowerCase()];
+    if (!keywordRegex) {
+        return escapeHtml(codeStr);
+    }
+    
+    return escapeHtml(codeStr).replace(keywordRegex, '<span class="keyword">$1</span>');
+};
+
+const highlightCache = new Map();
+const maxCacheSize = 50; 
+
 export const syntaxHighlight = (
     codeStr,
     language,
@@ -698,8 +746,23 @@ export const syntaxHighlight = (
     if ((language || "").toLowerCase() === "unknown") {
         return escapeHtml(codeStr).replace(/\n/g, "<br/>");
     }
+    
+    if (themeName === "simple") {
+        const simplified = getSimplifiedHighlighting(codeStr, language);
+        return simplified.replace(/\n/g, "<br/>");
+    }
+    
+    let result = null;
+    if (codeStr.length < 5000) {
+        const cacheKey = `${language}-${searchTerm}-${isCaseSensitive}-${codeStr.length}-${codeStr.substring(0, 100)}`;
+        if (highlightCache.has(cacheKey)) {
+            return highlightCache.get(cacheKey);
+        }
+    }
+    
     const tokens = tokenize(codeStr, language);
     const lines = codeStr.split(/\r?\n/);
+    
     let themeClass = "default-token";
     switch ((themeName || "").toLowerCase()) {
         case "dark":
@@ -711,94 +774,129 @@ export const syntaxHighlight = (
         default:
             themeClass = "default-token";
     }
-    const highlightedLines = lines.map((_, lineIndex) => {
+    
+    let searchRegex = null;
+    if (searchTerm) {
+        try {
+            const escapedSearchTerm = escapeRegExp(searchTerm);
+            const flags = isCaseSensitive ? "g" : "gi";
+            searchRegex = new RegExp(escapedSearchTerm, flags);
+        } catch (error) {
+            searchRegex = null;
+        }
+    }
+    
+    const highlightedLines = [];
+    
+    for (let lineIndex = 0; lineIndex < lines.length; lineIndex++) {
         const lineNumber = lineIndex + 1;
         const lineTokens = tokens.filter((token) => token.lineNumber === lineNumber);
         const plainText = lineTokens.map((t) => t.value).join("");
-        let regex = null;
-        if (searchTerm) {
-            try {
-                const escapedSearchTerm = escapeRegExp(searchTerm);
-                const flags = isCaseSensitive ? "g" : "gi";
-                regex = new RegExp(escapedSearchTerm, flags);
-            } catch (error) {
-                regex = null;
-            }
+        
+        let matches = [];
+        let matchRanges = [];
+        
+        if (searchRegex) {
+            matches = Array.from(plainText.matchAll(searchRegex));
+            matchRanges = matches.map((m) => ({
+                start: m.index,
+                end: m.index + m[0].length
+            }));
         }
-        let lineHTML = "";
-        let currentChar = 0;
-        const matches = regex ? Array.from(plainText.matchAll(regex)) : [];
-        const matchRanges = matches.map((m) => ({
-            start: m.index,
-            end: m.index + m[0].length
-        }));
+        
         const isTokenInMatch = (start, end) => {
             return matchRanges.some((range) => start < range.end && end > range.start);
         };
+        
         const isTokenFullyInMatch = (start, end) => {
             return matchRanges.some(
                 (range) => start >= range.start && end <= range.end
             );
         };
+        
+        let lineHTML = "";
+        let currentChar = 0;
+        
         for (const token of lineTokens) {
             const tokenText = token.value;
             const tokenLength = tokenText.length;
             const tokenStart = currentChar;
             const tokenEnd = currentChar + tokenLength;
             currentChar += tokenLength;
+            
             let tokenHtml = token.type && token.type !== "space"
                 ? `<span class="${themeClass} ${token.type}">${escapeHtml(tokenText)}</span>`
                 : escapeHtml(tokenText);
-            if (isTokenFullyInMatch(tokenStart, tokenEnd)) {
-                tokenHtml = `<span class="searchHighlight">${tokenHtml}</span>`;
-            } else if (isTokenInMatch(tokenStart, tokenEnd)) {
-                const overlappingRanges = matchRanges.filter(
-                    (range) => tokenStart < range.end && tokenEnd > range.start
-                );
-                let newTokenHtml = "";
-                let localIndex = 0;
-                for (const range of overlappingRanges) {
-                    if (range.start > tokenStart + localIndex) {
-                        const beforeCount = range.start - (tokenStart + localIndex);
-                        const beforeText = tokenText.substr(localIndex, beforeCount);
+            
+            if (searchRegex) {
+                if (isTokenFullyInMatch(tokenStart, tokenEnd)) {
+                    tokenHtml = `<span class="searchHighlight">${tokenHtml}</span>`;
+                } else if (isTokenInMatch(tokenStart, tokenEnd)) {
+                    const overlappingRanges = matchRanges.filter(
+                        (range) => tokenStart < range.end && tokenEnd > range.start
+                    );
+                    let newTokenHtml = "";
+                    let localIndex = 0;
+                    
+                    for (const range of overlappingRanges) {
+                        if (range.start > tokenStart + localIndex) {
+                            const beforeCount = range.start - (tokenStart + localIndex);
+                            const beforeText = tokenText.substr(localIndex, beforeCount);
+                            if (token.type && token.type !== "space") {
+                                newTokenHtml += `<span class="${themeClass} ${token.type}">${escapeHtml(
+                                    beforeText
+                                )}</span>`;
+                            } else {
+                                newTokenHtml += escapeHtml(beforeText);
+                            }
+                            localIndex += beforeCount;
+                        }
+                        
+                        const highlightCount =
+                            Math.min(range.end, tokenEnd) - Math.max(range.start, tokenStart);
+                        const matchedText = tokenText.substr(localIndex, highlightCount);
+                        newTokenHtml += `<span class="searchHighlight">`;
                         if (token.type && token.type !== "space") {
                             newTokenHtml += `<span class="${themeClass} ${token.type}">${escapeHtml(
-                                beforeText
+                                matchedText
                             )}</span>`;
                         } else {
-                            newTokenHtml += escapeHtml(beforeText);
+                            newTokenHtml += escapeHtml(matchedText);
                         }
-                        localIndex += beforeCount;
+                        newTokenHtml += `</span>`;
+                        localIndex += highlightCount;
                     }
-                    const highlightCount =
-                        Math.min(range.end, tokenEnd) - Math.max(range.start, tokenStart);
-                    const matchedText = tokenText.substr(localIndex, highlightCount);
-                    newTokenHtml += `<span class="searchHighlight">`;
-                    if (token.type && token.type !== "space") {
-                        newTokenHtml += `<span class="${themeClass} ${token.type}">${escapeHtml(
-                            matchedText
-                        )}</span>`;
-                    } else {
-                        newTokenHtml += escapeHtml(matchedText);
+                    
+                    if (localIndex < tokenText.length) {
+                        const remainder = tokenText.substr(localIndex);
+                        if (token.type && token.type !== "space") {
+                            newTokenHtml += `<span class="${themeClass} ${token.type}">${escapeHtml(
+                                remainder
+                            )}</span>`;
+                        } else {
+                            newTokenHtml += escapeHtml(remainder);
+                        }
                     }
-                    newTokenHtml += `</span>`;
-                    localIndex += highlightCount;
+                    tokenHtml = newTokenHtml;
                 }
-                if (localIndex < tokenText.length) {
-                    const remainder = tokenText.substr(localIndex);
-                    if (token.type && token.type !== "space") {
-                        newTokenHtml += `<span class="${themeClass} ${token.type}">${escapeHtml(
-                            remainder
-                        )}</span>`;
-                    } else {
-                        newTokenHtml += escapeHtml(remainder);
-                    }
-                }
-                tokenHtml = newTokenHtml;
             }
+            
             lineHTML += tokenHtml;
         }
-        return lineHTML;
-    });
-    return highlightedLines.join("<br/>");
-};
+        
+        highlightedLines.push(lineHTML);
+    }
+    
+    result = highlightedLines.join("<br/>");
+    
+    if (codeStr.length < 5000) {
+        const cacheKey = `${language}-${searchTerm}-${isCaseSensitive}-${codeStr.length}-${codeStr.substring(0, 100)}`;
+        if (highlightCache.size >= maxCacheSize) {
+            const firstKey = highlightCache.keys().next().value;
+            highlightCache.delete(firstKey);
+        }
+        highlightCache.set(cacheKey, result);
+    }
+    
+    return result;
+}

@@ -172,6 +172,10 @@ const DinoLabsMirror = forwardRef(function DinoLabsMirror(
   const minimapWrapperRef = useRef(null);
   const minimapContentRef = useRef(null);
   const minimapViewportRef = useRef(null);
+  const foldingDebounceTimer = useRef(null);
+  const minimapDebounceTimer = useRef(null);
+  const lastCodeHashRef = useRef("");
+  
   const [contextMenuState, setContextMenuState] = useState({ visible: false, x: 0, y: 0 });
   const [foldedRegions, setFoldedRegions] = useState(new Set());
   const [breakpoints, setBreakpoints] = useState(new Set()); 
@@ -198,18 +202,50 @@ const DinoLabsMirror = forwardRef(function DinoLabsMirror(
     setGutterPx(Math.max(60, Math.ceil(totalWidth)));
   }, [viewCode, fontSize]);
 
+  const getCodeHash = useCallback((code) => {
+    if (!code) return "";
+    let hash = 0;
+    for (let i = 0; i < code.length; i++) {
+      const char = code.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+    }
+    return hash.toString();
+  }, []);
+
   const foldableRegions = useMemo(() => {
     const currentCode = viewCode || "";
+    const currentHash = getCodeHash(currentCode);
+    
+    if (lastCodeHashRef.current === currentHash && foldableRegionsRef.current.length > 0) {
+      return foldableRegionsRef.current;
+    }
     
     if (forceRecalcRef.current) {
       const regions = detectFoldableRegions(currentCode);
       foldableRegionsRef.current = regions;
       previousCodeRef.current = currentCode;
+      lastCodeHashRef.current = currentHash;
       forceRecalcRef.current = false;
       return regions;
     }
     
-    if (isEditingRef.current) return foldableRegionsRef.current;
+    if (isEditingRef.current) {
+      if (foldingDebounceTimer.current) {
+        clearTimeout(foldingDebounceTimer.current);
+      }
+      
+      foldingDebounceTimer.current = setTimeout(() => {
+        if (!isEditingRef.current) {
+          const regions = detectFoldableRegions(currentCode);
+          foldableRegionsRef.current = regions;
+          previousCodeRef.current = currentCode;
+          lastCodeHashRef.current = currentHash;
+        }
+      }, 300);
+      
+      return foldableRegionsRef.current;
+    }
     
     if (foldableRegionsRef.current.length > 0 && previousCodeRef.current) {
       const previousLines = previousCodeRef.current.split("\n");
@@ -219,21 +255,27 @@ const DinoLabsMirror = forwardRef(function DinoLabsMirror(
         const regions = detectFoldableRegions(currentCode);
         foldableRegionsRef.current = regions;
         previousCodeRef.current = currentCode;
+        lastCodeHashRef.current = currentHash;
         return regions;
       }
       
       previousCodeRef.current = currentCode;
+      lastCodeHashRef.current = currentHash;
       return foldableRegionsRef.current;
     }
     
     const regions = detectFoldableRegions(currentCode);
     foldableRegionsRef.current = regions;
     previousCodeRef.current = currentCode;
+    lastCodeHashRef.current = currentHash;
     return regions;
-  }, [viewCode]);
+  }, [viewCode, getCodeHash]);
 
   const { displayCode, displayHighlightedCode, lineMapping } = useMemo(() => {
     if (!viewCode) return { displayCode: "", displayHighlightedCode: "", lineMapping: new Map() };
+    
+    const foldedString = Array.from(foldedRegions).sort().join(',');
+    const cacheKey = `${getCodeHash(viewCode)}-${foldedString}`;
     
     const lines = viewCode.split("\n");
     const highlightLines = highlightedCode.includes("<br")
@@ -265,7 +307,7 @@ const DinoLabsMirror = forwardRef(function DinoLabsMirror(
       displayHighlightedCode: visibleHighlightLines.join("\n"),
       lineMapping: mapping,
     };
-  }, [viewCode, highlightedCode, foldedRegions, foldableRegions]);
+  }, [viewCode, highlightedCode, foldedRegions, foldableRegions, getCodeHash]);
 
   const canFoldLine = useCallback(
     (originalLineNumber) => foldableRegions.some((region) => region.startLine === originalLineNumber),
@@ -406,17 +448,23 @@ const DinoLabsMirror = forwardRef(function DinoLabsMirror(
     const node = minimapContentRef.current;
     if (!node) return;
     
-    const lines = (displayHighlightedCode || "").split(/\r\n|\r|\n/);
-    const html = lines
-      .map((line) => (line.trim() === "" ? "\u200B" : line))
-      .join("<br>");
+    if (minimapDebounceTimer.current) {
+      clearTimeout(minimapDebounceTimer.current);
+    }
+    
+    minimapDebounceTimer.current = setTimeout(() => {
+      const lines = (displayHighlightedCode || "").split(/\r\n|\r|\n/);
+      const html = lines
+        .map((line) => (line.trim() === "" ? "\u200B" : line))
+        .join("<br>");
 
-    node.innerHTML = `<pre class="minimapPre" style="font-size: ${fontSize}px; line-height: ${lineHeight}px; margin: 0; padding: 0;">${html}</pre>`;
+      node.innerHTML = `<pre class="minimapPre" style="font-size: ${fontSize}px; line-height: ${lineHeight}px; margin: 0; padding: 0;">${html}</pre>`;
 
-    requestAnimationFrame(() => {
-      syncMinimapViewport();
-      syncMinimapContent();
-    });
+      requestAnimationFrame(() => {
+        syncMinimapViewport();
+        syncMinimapContent();
+      });
+    }, 100);
   }, [displayHighlightedCode, fontSize, lineHeight, syncMinimapViewport, syncMinimapContent]);
 
   const handleAnyScroll = useCallback(() => {
@@ -1169,94 +1217,100 @@ const DinoLabsMirror = forwardRef(function DinoLabsMirror(
   useEffect(() => {
     if (!highlightRef.current) return;
     
-    const splitted = displayHighlightedCode.split(/\r\n|\r|\n/);
-    const highlightLines = splitted.map((line) => (line.trim() === "" ? "\u200B" : line));
-    let finalHTML = "";
-    
-    for (let i = 0; i < highlightLines.length; i++) {
-      if (highlightLines[i] === "\u200B") finalHTML += `<span class="hlLine">\u200B<br></span>`;
-      else finalHTML += `<span class="hlLine">${highlightLines[i]}\n</span>`;
-    }
-    
-    highlightRef.current.innerHTML = finalHTML;
+    const timeoutId = setTimeout(() => {
+      const splitted = displayHighlightedCode.split(/\r\n|\r|\n/);
+      const highlightLines = splitted.map((line) => (line.trim() === "" ? "\u200B" : line));
+      let finalHTML = "";
+      
+      for (let i = 0; i < highlightLines.length; i++) {
+        if (highlightLines[i] === "\u200B") finalHTML += `<span class="hlLine">\u200B<br></span>`;
+        else finalHTML += `<span class="hlLine">${highlightLines[i]}\n</span>`;
+      }
+      
+      highlightRef.current.innerHTML = finalHTML;
+    }, isEditingRef.current ? 50 : 0);
+
+    return () => clearTimeout(timeoutId);
   }, [displayHighlightedCode]);
 
   const splitted = displayHighlightedCode.split(/\r\n|\r|\n/);
   const lines = splitted.map((l) => (l === "" ? "\u200B" : l));
 
-  const lineElements = lines.map((lineHtml, i) => {
-    const displayLineNumber = i + 1;
-    const originalLineNumber = lineMapping.get(displayLineNumber);
-    const hasError = lintErrors.some((e) => e.line === originalLineNumber);
-    const canFold = originalLineNumber ? canFoldLine(originalLineNumber) : false;
-    const isFolded = originalLineNumber ? isLineFolded(originalLineNumber) : false;
-    const showFoldIndicator = !!(originalLineNumber && isFolded);
-    const showErrorIndicator = !!hasError;
-    const showBreakpoint = originalLineNumber ? hasBreakpoint(originalLineNumber) : false;
-    
-    return (
-      <div
-        key={`line-${displayLineNumber}-${editorId}`}
-        data-line-number={displayLineNumber}
-        data-original-line={originalLineNumber}
-        className={`codeLine${hasError ? " errorHighlight" : ""}${isFolded ? " foldedLine" : ""}`}
-        style={{ fontSize: `${fontSize}px`, lineHeight: `${lineHeight}px` }}
-      >
-        {isFolded && <div className="foldedGuide" style={{ height: `${lineHeight}px` }} />}
-        <div 
-          className={`lineNumberMarginWrapper${showBreakpoint ? " hasBreakpoint" : ""}`}
-          onClick={() => originalLineNumber && toggleBreakpoint(originalLineNumber)}
-          style={{ 
-            cursor: originalLineNumber ? "pointer" : "default",
-            fontSize: `${fontSize}px`,
-            lineHeight: `${lineHeight}px`,
-            display: "flex",
-            alignItems: "center",
-            gap: `${Math.max(2, fontSize * 0.15)}px`,
-            paddingLeft: `${Math.max(2, fontSize * 0.1)}px`,
-            paddingRight: `${Math.max(2, fontSize * 0.1)}px`
-          }}
+  const lineElements = useMemo(() => {
+    return lines.map((lineHtml, i) => {
+      const displayLineNumber = i + 1;
+      const originalLineNumber = lineMapping.get(displayLineNumber);
+      const hasError = lintErrors.some((e) => e.line === originalLineNumber);
+      const canFold = originalLineNumber ? canFoldLine(originalLineNumber) : false;
+      const isFolded = originalLineNumber ? isLineFolded(originalLineNumber) : false;
+      const showFoldIndicator = !!(originalLineNumber && isFolded);
+      const showErrorIndicator = !!hasError;
+      const showBreakpoint = originalLineNumber ? hasBreakpoint(originalLineNumber) : false;
+      
+      return (
+        <div
+          key={`line-${displayLineNumber}-${editorId}`}
+          data-line-number={displayLineNumber}
+          data-original-line={originalLineNumber}
+          className={`codeLine${hasError ? " errorHighlight" : ""}${isFolded ? " foldedLine" : ""}`}
+          style={{ fontSize: `${fontSize}px`, lineHeight: `${lineHeight}px` }}
         >
-          <span style={{ 
-            fontSize: `${fontSize}px`,
-            minWidth: `${Math.max(20, fontSize * 1.5)}px`,
-            textAlign: "right"
-          }}>
-            {originalLineNumber || displayLineNumber}
-          </span>
-          {canFold ? (
-            <span
-              className="foldChevron"
-              onClick={(e) => {
-                e.stopPropagation();
-                originalLineNumber && toggleFold(originalLineNumber);
-              }}
-              aria-label={isFolded ? "Expand" : "Collapse"}
-              title={isFolded ? "Expand" : "Collapse"}
-              style={{ fontSize: `${Math.max(10, fontSize * 0.9)}px` }}
-            >
-              <FontAwesomeIcon 
-                icon={isFolded ? faChevronRight : faChevronDown} 
-                style={{ fontSize: `${Math.max(10, fontSize * 0.9)}px` }}
-              />
+          {isFolded && <div className="foldedGuide" style={{ height: `${lineHeight}px` }} />}
+          <div 
+            className={`lineNumberMarginWrapper${showBreakpoint ? " hasBreakpoint" : ""}`}
+            onClick={() => originalLineNumber && toggleBreakpoint(originalLineNumber)}
+            style={{ 
+              cursor: originalLineNumber ? "pointer" : "default",
+              fontSize: `${fontSize}px`,
+              lineHeight: `${lineHeight}px`,
+              display: "flex",
+              alignItems: "center",
+              gap: `${Math.max(2, fontSize * 0.15)}px`,
+              paddingLeft: `${Math.max(2, fontSize * 0.1)}px`,
+              paddingRight: `${Math.max(2, fontSize * 0.1)}px`
+            }}
+          >
+            <span style={{ 
+              fontSize: `${fontSize}px`,
+              minWidth: `${Math.max(20, fontSize * 1.5)}px`,
+              textAlign: "right"
+            }}>
+              {originalLineNumber || displayLineNumber}
             </span>
-          ) : (
-            <span className="chevronSpacer" style={{ fontSize: `${fontSize}px` }} />
-          )}
-          <span className="indicatorCluster" style={{ fontSize: `${Math.max(8, fontSize * 0.6)}px` }}>
-            {(showErrorIndicator && !showFoldIndicator) && <span title="Lint error" aria-label="Lint error" className="errorIndicatorDot" />}
-            {showFoldIndicator && <span title="Folded block" aria-label="Folded block" className="foldIndicatorDot" />}
-            
-          </span>
+            {canFold ? (
+              <span
+                className="foldChevron"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  originalLineNumber && toggleFold(originalLineNumber);
+                }}
+                aria-label={isFolded ? "Expand" : "Collapse"}
+                title={isFolded ? "Expand" : "Collapse"}
+                style={{ fontSize: `${Math.max(10, fontSize * 0.9)}px` }}
+              >
+                <FontAwesomeIcon 
+                  icon={isFolded ? faChevronRight : faChevronDown} 
+                  style={{ fontSize: `${Math.max(10, fontSize * 0.9)}px` }}
+                />
+              </span>
+            ) : (
+              <span className="chevronSpacer" style={{ fontSize: `${fontSize}px` }} />
+            )}
+            <span className="indicatorCluster" style={{ fontSize: `${Math.max(8, fontSize * 0.6)}px` }}>
+              {(showErrorIndicator && !showFoldIndicator) && <span title="Lint error" aria-label="Lint error" className="errorIndicatorDot" />}
+              {showFoldIndicator && <span title="Folded block" aria-label="Folded block" className="foldIndicatorDot" />}
+              
+            </span>
+          </div>
+          <div 
+            className="lineEditorWrapper" 
+            dangerouslySetInnerHTML={{ __html: lineHtml + "\n" }}
+            style={{ paddingLeft: `${fontSize * 0.5}px` }}
+          />
         </div>
-        <div 
-          className="lineEditorWrapper" 
-          dangerouslySetInnerHTML={{ __html: lineHtml + "\n" }}
-          style={{ paddingLeft: `${fontSize * 0.5}px` }}
-        />
-      </div>
-    );
-  });
+      );
+    });
+  }, [lines, lineMapping, lintErrors, canFoldLine, isLineFolded, hasBreakpoint, fontSize, lineHeight, editorId, toggleBreakpoint, toggleFold]);
 
   useImperativeHandle(ref, () => ({
     selectAll() { doSelectAll(); },
