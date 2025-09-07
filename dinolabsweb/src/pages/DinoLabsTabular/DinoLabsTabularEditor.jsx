@@ -12,54 +12,40 @@ import {
   faCut, faCopy, faPaste, faArrowPointer, faSearch, faSortAlphaDown, faSortAlphaUp,
   faSortNumericDown, faSortNumericUp, faTableCells, faTrash, faCalculator, faCheckCircle
 } from "@fortawesome/free-solid-svg-icons";
-
-const MAX_ROWS = 10000;
-const MAX_COLS = 5000;
+const MAX_ADD_AT_ONCE = 10000;
 const DEFAULT_ROW_HEIGHT = 24;
 const DEFAULT_COL_WIDTH = 120;
 const SAVE_BANNER_TIMEOUT_MS = 3000;
-
 const isMacPlatform = () => navigator.platform.toUpperCase().includes("MAC");
 const isCellInput = el => el?.classList?.contains("dinolabsTableCellInput");
 const clampNum = (v, lo, hi) => Math.max(lo, Math.min(v, hi));
 const toKey = (r, c) => `${r},${c}`;
 const fromKey = k => k.split(",").map(Number);
 const stopAll = e => { e.preventDefault(); e.stopPropagation(); e.stopImmediatePropagation?.(); };
-
 function getColumnLabel(colIndex) {
   let label = "", n = colIndex + 1;
   while (n > 0) { n--; label = String.fromCharCode(65 + (n % 26)) + label; n = Math.floor(n / 26); }
   return label;
 }
-
 const a1FromRC = (r, c) => `${getColumnLabel(c)}${r + 1}`;
-
 function colFromLabel(lbl) { let n = 0; for (let i = 0; i < lbl.length; i++) n = n * 26 + (lbl.charCodeAt(i) - 64); return n - 1; }
-
 function rcFromA1(ref) { const m = /^([A-Z]+)(\d+)$/.exec(ref.toUpperCase()); if (!m) return null; const col = colFromLabel(m[1]); const row = parseInt(m[2], 10) - 1; if (row < 0 || col < 0) return null; return { row, col }; }
-
 function parseBind(str) { if (!str) return null; const parts = String(str).trim().toLowerCase().split("+").map(p => p.trim()); const spec = { key: null, shift: false }; for (const p of parts) { if (p === "shift") spec.shift = true; else if (p) spec.key = p; } return spec.key ? spec : null; }
-
 function matchBind(e, spec, isMac) { if (!spec) return false; const cmdOrCtrl = isMac ? e.metaKey : e.ctrlKey; return !!cmdOrCtrl && (!!spec.shift === !!e.shiftKey) && e.key.toLowerCase() === spec.key; }
-
 function normalizeBinds(keyBinds) {
   const d = { search: "f", save: "s", selectAll: "a", cut: "x", copy: "c", paste: "v", undo: "z", redo: null };
   const m = { ...d, ...(keyBinds || {}) };
   const one = k => [parseBind(m[k])].filter(Boolean);
   return { search: one("search"), save: one("save"), selectAll: one("selectAll"), cut: one("cut"), copy: one("copy"), paste: one("paste"), undo: one("undo"), redo: m.redo ? one("redo") : [parseBind("y"), parseBind("shift+z")].filter(Boolean) };
 }
-
 function idxFromCumulative(cumulative, pos) { if (pos <= 0) return 0; const total = cumulative[cumulative.length - 1]; if (pos >= total) return cumulative.length - 2; let lo = 0, hi = cumulative.length - 1; while (lo < hi) { const mid = (lo + hi) >> 1; cumulative[mid] <= pos ? (lo = mid + 1) : (hi = mid); } return Math.max(0, lo - 1); }
-
 function idxFromCumulativeExtend(cumulative, pos, defaultSize) { if (pos <= 0) return 0; const total = cumulative[cumulative.length - 1]; if (pos < total) return idxFromCumulative(cumulative, pos); const extra = Math.ceil((pos - total) / defaultSize); return cumulative.length - 2 + Math.max(0, extra); }
-
 function clampPosition(rect, width = 240, height = 280, offset = 6) {
   let top = rect.bottom + offset, left = rect.left;
   if (left + width > window.innerWidth - 8) left = Math.max(8, window.innerWidth - width - 8);
   if (top + height > window.innerHeight - 8) top = Math.max(8, rect.top - height - offset);
   return { top, left };
 }
-
 function tokenizeFormula(src) {
   const s = src.replace(/^\s*=/, "");
   const tokens = [];
@@ -86,9 +72,7 @@ function tokenizeFormula(src) {
   }
   return tokens;
 }
-
 function makeRefToken(colLabel, rowNumber) { const rc = rcFromA1(`${colLabel}${rowNumber}`); if (!rc) return { t: "err", v: "#REF!" }; return { t: "ref", v: rc }; }
-
 function toRPN(tokens) {
   const out = [], ops = [], funcArgCount = [];
   const prec = { "^": 4, "*": 3, "/": 3, "+": 2, "-": 2 }, rightAssoc = { "^": true };
@@ -109,9 +93,7 @@ function toRPN(tokens) {
   while (ops.length) { const op = ops.pop(); if (op.t === "(") { out.push({ t: "err", v: "#ERROR" }); continue; } out.push(op); }
   return out;
 }
-
 function flattenToNumbers(arg) { if (Array.isArray(arg)) return arg.flat(Infinity).map(v => Number(v) || 0); return [Number(arg) || 0]; }
-
 function evalRPN(rpn, getCell) {
   const st = [];
   function toNum(v) { const n = Number(v); return Number.isFinite(n) ? n : 0; }
@@ -200,7 +182,6 @@ function evalRPN(rpn, getCell) {
   }
   return st.length ? st[0] : 0;
 }
-
 function evaluateFormulaString(src, getCell) {
   try {
     const rpn = toRPN(tokenizeFormula(src));
@@ -208,7 +189,6 @@ function evaluateFormulaString(src, getCell) {
     return (typeof val === "number" && Number.isFinite(val)) ? String(val) : (Array.isArray(val) ? String(val[0] ?? 0) : String(val ?? ""));
   } catch { return "#ERROR"; }
 }
-
 function computeTable(tableData) {
   const cache = new Map(), visiting = new Set();
   function evaluateCell(key) {
@@ -228,7 +208,6 @@ function computeTable(tableData) {
   }
   const out = {}; for (const k of Object.keys(tableData)) out[k] = evaluateCell(k); return out;
 }
-
 function extractFirstRefOrRange(formula) {
   if (typeof formula !== "string" || !formula.trim().startsWith("=")) return null;
   const s = formula.trim().slice(1).toUpperCase();
@@ -243,7 +222,6 @@ function extractFirstRefOrRange(formula) {
   }
   return null;
 }
-
 function isExpectingFunctionRange(value, caret) {
   if (typeof value !== "string" || !value.trim().startsWith("=")) return false;
   const upToCaret = value.slice(0, caret ?? value.length);
@@ -251,13 +229,11 @@ function isExpectingFunctionRange(value, caret) {
   const closes = (upToCaret.match(/\)/g) || []).length;
   return opens > closes;
 }
-
 export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStatusChange, onSave, onEdit }) {
   const [tableData, setTableData] = useState({});
   const tableDataRef = useRef(tableData);
   const [error, setError] = useState(null);
   const hasLoadedFile = useRef(false);
-  const [truncationInfo, setTruncationInfo] = useState(null);
   const [loading, setLoading] = useState(true);
   const [numRows, setNumRows] = useState(1000);
   const [numCols, setNumCols] = useState(100);
@@ -324,9 +300,7 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
   const [formulaBarValue, setFormulaBarValue] = useState("");
   const [summaryCollapsed, setSummaryCollapsed] = useState(true);
   const [qualityCollapsed, setQualityCollapsed] = useState(true);
-
   const computedTableData = useMemo(() => computeTable(tableData), [tableData]);
-
   const currentFormulaBarContent = useMemo(() => {
     if (activeCell.row !== null && activeCell.col !== null) {
       return cellEditingValue;
@@ -336,22 +310,18 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
     }
     return "";
   }, [activeCell.row, activeCell.col, cellEditingValue, selection, tableData]);
-
   useEffect(() => {
     if (document.activeElement !== formulaBarRef.current) {
       setFormulaBarValue(currentFormulaBarContent);
     }
   }, [currentFormulaBarContent]);
-
   const saveBannerText =
     saveStatus === "saving" ? "Saving..." :
       saveStatus === "saved" ? "Save successful!" :
         saveStatus === "no-handle" ? "No file handle available." :
           saveStatus === "failed" ? "Save failed!" :
             "";
-
   useEffect(() => { tableDataRef.current = tableData; }, [tableData]);
-
   const activateCell = useCallback((row, col) => {
     setSelection(null);
     setActiveCell({ row, col });
@@ -360,7 +330,6 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
     setFormulaBarValue(v);
     cellHistoryRef.current = { key: toKey(row, col), undo: [v], redo: [], suppress: false };
   }, []);
-
   const commitActiveCellIfNeeded = useCallback(() => {
     const { row, col } = activeCell;
     if (row === null || col === null) return;
@@ -382,7 +351,6 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
     setActiveCell({ row: null, col: null });
     setFormulaBarValue("");
   }, [activeCell, cellEditingValue, onEdit, onSaveStatusChange]);
-
   const withTableMutation = useCallback((mutator) => {
     commitActiveCellIfNeeded();
     const base = tableDataRef.current;
@@ -395,7 +363,6 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
     onSaveStatusChange?.("Unsaved Changes");
     onEdit?.({ fullCode: generateCSV(base) }, { fullCode: generateCSV(next) });
   }, [commitActiveCellIfNeeded, onEdit, onSaveStatusChange]);
-
   const clearUIHighlightsAndStates = useCallback(() => {
     commitActiveCellIfNeeded();
     setSelection(null);
@@ -404,9 +371,7 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
     setShowSearchPanel(false);
     setFormulaBarValue("");
   }, [commitActiveCellIfNeeded]);
-
   const ensureInBounds = useCallback((row, col, effRows, effCols) => ({ row: clampNum(row, 0, effRows - 1), col: clampNum(col, 0, effCols - 1) }), []);
-
   function generateCSV(data) {
     let maxRow = 0, maxCol = 0;
     Object.keys(data).forEach(k => { const [r, c] = fromKey(k); if (r > maxRow) maxRow = r; if (c > maxCol) maxCol = c; });
@@ -423,7 +388,6 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
     }
     return lines.slice(0, lastNonEmptyRow + 1).join("\r\n");
   }
-
   const applyTableData = useCallback((next) => {
     const prevCSV = generateCSV(tableDataRef.current);
     const nextCSV = generateCSV(next);
@@ -432,7 +396,6 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
     setTableData(next);
     onSaveStatusChange?.("Unsaved Changes");
   }, [onEdit, onSaveStatusChange]);
-
   useEffect(() => {
     if (activeCell.row === null && selection && selection.top === selection.bottom && selection.left === selection.right) {
       const value = tableDataRef.current[toKey(selection.top, selection.left)] || "";
@@ -445,22 +408,15 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
       }
     }
   }, [selection, activeCell.row, tableData]);
-
   useEffect(() => { setSelectionEpoch(e => e + 1); }, [selection?.top, selection?.left, selection?.bottom, selection?.right]);
-
   const minNeededCols = useMemo(() => autoSizerDims.width ? Math.ceil(autoSizerDims.width / DEFAULT_COL_WIDTH) + 5 : 20, [autoSizerDims.width]);
   const minNeededRows = useMemo(() => autoSizerDims.height ? Math.ceil(autoSizerDims.height / DEFAULT_ROW_HEIGHT) + 10 : 50, [autoSizerDims.height]);
   const effectiveRows = useMemo(() => Math.max(numRows, minNeededRows), [numRows, minNeededRows]);
   const effectiveCols = useMemo(() => Math.max(numCols, minNeededCols), [numCols, minNeededCols]);
-
   useEffect(() => { setRowHeights(prev => { const out = prev.slice(0, effectiveRows); while (out.length < effectiveRows) out.push(DEFAULT_ROW_HEIGHT); return out; }); }, [effectiveRows]);
-
   useEffect(() => { setColWidths(prev => { const out = prev.slice(0, effectiveCols); while (out.length < effectiveCols) out.push(DEFAULT_COL_WIDTH); return out; }); }, [effectiveCols]);
-
   const rowHeightsCumulative = useMemo(() => { const cum = [0]; for (let i = 0; i < rowHeights.length; i++) cum.push(cum[i] + (rowHeights[i] || DEFAULT_ROW_HEIGHT)); return cum; }, [rowHeights]);
-
   const colWidthsCumulative = useMemo(() => { const cum = [0]; for (let i = 0; i < colWidths.length; i++) cum.push(cum[i] + (colWidths[i] || DEFAULT_COL_WIDTH)); return cum; }, [colWidths]);
-
   const filterOptions = useMemo(() => {
     const options = {};
     for (let c = 0; c < effectiveCols; c++) {
@@ -473,9 +429,7 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
     }
     return options;
   }, [tableData, effectiveCols]);
-
   const hasActiveFilter = useMemo(() => Object.values(columnFilters).some(arr => Array.isArray(arr) && arr.length > 0), [columnFilters]);
-
   const filteredRows = useMemo(() => {
     if (!hasActiveFilter) return Array.from({ length: effectiveRows }, (_, i) => i);
     const result = [];
@@ -491,17 +445,13 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
     }
     return result;
   }, [tableData, columnFilters, effectiveRows, hasActiveFilter]);
-
   const filteredRowHeightsCumulative = useMemo(() => {
     const cum = [0];
     for (let i = 0; i < filteredRows.length; i++) { const ar = filteredRows[i]; cum.push(cum[i] + (rowHeights[ar] || DEFAULT_ROW_HEIGHT)); }
     return cum;
   }, [filteredRows, rowHeights]);
-
   const visibleToActualRow = useCallback((i) => hasActiveFilter ? (filteredRows[i] ?? 0) : i, [hasActiveFilter, filteredRows]);
-
   const actualToVisibleIndex = useCallback((ar) => hasActiveFilter ? filteredRows.indexOf(ar) : ar, [hasActiveFilter, filteredRows]);
-
   const nextVisibleActualRow = useCallback((ar, delta) => {
     if (!hasActiveFilter) return clampNum(ar + delta, 0, effectiveRows - 1);
     const i = actualToVisibleIndex(ar);
@@ -509,7 +459,6 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
     const newI = clampNum(i + delta, 0, filteredRows.length - 1);
     return filteredRows[newI] ?? ar;
   }, [hasActiveFilter, filteredRows, effectiveRows, actualToVisibleIndex]);
-
   const forEachSelectedCell = useCallback((sel, fn) => {
     if (!sel) return;
     const rows = hasActiveFilter
@@ -522,27 +471,20 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
       : Array.from({ length: sel.bottom - sel.top + 1 }, (_, i) => sel.top + i);
     for (const r of rows) for (let c = sel.left; c <= sel.right; c++) fn(r, c);
   }, [hasActiveFilter, actualToVisibleIndex, filteredRows]);
-
   const getSelectedActualRowList = useCallback(sel => {
     const out = [];
     forEachSelectedCell(sel, (r, c) => { if (c === sel.left) out.push(r); });
     return Array.from(new Set(out));
   }, [forEachSelectedCell]);
-
-  const addRow = useCallback(() => { if (numRows < MAX_ROWS) setNumRows(n => n + 1); }, [numRows]);
-
-  const addColumn = useCallback(() => { if (numCols < MAX_COLS) setNumCols(n => n + 1); }, [numCols]);
-
+  const addRow = useCallback(() => { setNumRows(n => n + 1); }, []);
+  const addColumn = useCallback(() => { setNumCols(n => n + 1); }, []);
   const handleUndo = useCallback(() => {
     commitActiveCellIfNeeded();
     if (!undoStack.length) return;
-
     const currentState = { ...tableDataRef.current };
     const previousState = undoStack[undoStack.length - 1];
-
     setUndoStack(s => s.slice(0, -1));
     setRedoStack(r => [...r, currentState]);
-
     tableDataRef.current = previousState;
     setTableData(previousState);
     onSaveStatusChange?.("Unsaved Changes");
@@ -550,17 +492,13 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
       onEdit({ fullCode: generateCSV(currentState) }, { fullCode: generateCSV(previousState) });
     }
   }, [undoStack, commitActiveCellIfNeeded, onEdit, onSaveStatusChange]);
-
   const handleRedo = useCallback(() => {
     commitActiveCellIfNeeded();
     if (!redoStack.length) return;
-
     const currentState = { ...tableDataRef.current };
     const nextState = redoStack[redoStack.length - 1];
-
     setRedoStack(r => r.slice(0, -1));
     setUndoStack(s => [...s, currentState]);
-
     tableDataRef.current = nextState;
     setTableData(nextState);
     onSaveStatusChange?.("Unsaved Changes");
@@ -568,7 +506,6 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
       onEdit({ fullCode: generateCSV(currentState) }, { fullCode: generateCSV(nextState) });
     }
   }, [redoStack, commitActiveCellIfNeeded, onEdit, onSaveStatusChange]);
-
   const handleSelectAll = useCallback(() => {
     commitActiveCellIfNeeded();
     if (hasActiveFilter) {
@@ -578,7 +515,6 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
       setSelection({ top: 0, left: 0, bottom: effectiveRows - 1, right: effectiveCols - 1 });
     }
   }, [commitActiveCellIfNeeded, hasActiveFilter, filteredRows, effectiveCols, effectiveRows]);
-
   const handleCut = useCallback(() => {
     commitActiveCellIfNeeded();
     if (!selection) return;
@@ -587,7 +523,6 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
     setClipboardData(clip);
     withTableMutation(next => { forEachSelectedCell(selection, (r, c) => { delete next[toKey(r, c)]; }); });
   }, [selection, forEachSelectedCell, withTableMutation, commitActiveCellIfNeeded]);
-
   const handleCopy = useCallback(() => {
     commitActiveCellIfNeeded();
     if (!selection) return;
@@ -595,12 +530,10 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
     forEachSelectedCell(selection, (r, c) => { clip[toKey(r, c)] = tableDataRef.current[toKey(r, c)] || ""; });
     setClipboardData(clip);
   }, [selection, forEachSelectedCell, commitActiveCellIfNeeded]);
-
   const handleClearSelection = useCallback(() => {
     if (!selection) return;
     withTableMutation(next => { forEachSelectedCell(selection, (r, c) => { delete next[toKey(r, c)]; }); });
   }, [selection, withTableMutation, forEachSelectedCell]);
-
   const handlePaste = useCallback(async () => {
     commitActiveCellIfNeeded();
     if (!selection || !clipboardData) return;
@@ -630,14 +563,12 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
     setActiveCell({ row: null, col: null });
     document.activeElement?.blur?.();
   }, [selection, clipboardData, commitActiveCellIfNeeded, withTableMutation]);
-
   const sortTableByColumn = useCallback((command) => {
     const sel = selection || (hasActiveFilter && filteredRows.length
       ? { top: filteredRows[0], left: 0, bottom: filteredRows[filteredRows.length - 1], right: effectiveCols - 1 }
       : { top: 0, left: 0, bottom: effectiveRows - 1, right: effectiveCols - 1 });
     const sortCol = sel.left, startRow = sel.top, endRow = sel.bottom;
     const rowsToSort = []; for (let i = 0; i <= (endRow - startRow); i++) rowsToSort.push(startRow + i);
-
     rowsToSort.sort((a, b) => {
       const aVal = tableDataRef.current[toKey(a, sortCol)], bVal = tableDataRef.current[toKey(b, sortCol)];
       const aE = !aVal || aVal === "", bE = !bVal || bVal === "";
@@ -661,7 +592,6 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
     });
     setOpenMenu(null);
   }, [selection, hasActiveFilter, filteredRows, effectiveCols, effectiveRows, withTableMutation]);
-
   function highlightAll(term) {
     commitActiveCellIfNeeded();
     if (!term) { setSearchResults([]); setCurrentResultIndex(-1); return; }
@@ -676,10 +606,8 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
     });
     setSearchResults(results); setCurrentResultIndex(results.length ? 0 : -1);
   }
-
   const goToNext = () => { if (searchResults.length) setCurrentResultIndex(i => (i + 1) % searchResults.length); };
   const goToPrevious = () => { if (searchResults.length) setCurrentResultIndex(i => (i - 1 + searchResults.length) % searchResults.length); };
-
   function replaceCurrent() {
     commitActiveCellIfNeeded();
     if (currentResultIndex < 0 || currentResultIndex >= searchResults.length) return;
@@ -689,7 +617,6 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
     withTableMutation(next => { next[toKey(r.row, r.col)] = nv; });
     setTimeout(() => highlightAll(searchTerm), 0);
   }
-
   function replaceAll() {
     commitActiveCellIfNeeded();
     if (!searchResults.length) return;
@@ -702,15 +629,10 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
     });
     setTimeout(() => highlightAll(searchTerm), 0);
   }
-
   const getRowHeight = useCallback((index) => { const ar = hasActiveFilter ? filteredRows[index] : index; return ar !== undefined ? (rowHeights[ar] || DEFAULT_ROW_HEIGHT) : DEFAULT_ROW_HEIGHT; }, [hasActiveFilter, filteredRows, rowHeights]);
-
   const getColWidth = useCallback((index) => colWidths[index] || DEFAULT_COL_WIDTH, [colWidths]);
-
   const getVisibleRowIndexFromPosition = useCallback((y) => { if (hasActiveFilter) return idxFromCumulative(filteredRowHeightsCumulative, y); return idxFromCumulativeExtend(rowHeightsCumulative, y, DEFAULT_ROW_HEIGHT); }, [hasActiveFilter, filteredRowHeightsCumulative, rowHeightsCumulative]);
-
   const getColIndexFromPosition = useCallback((x) => { return idxFromCumulativeExtend(colWidthsCumulative, x, DEFAULT_COL_WIDTH); }, [colWidthsCumulative]);
-
   const buildRefTextForPick = useCallback((start, end) => {
     if (!start || !end) return "";
     const r1 = Math.min(start.row, end.row), r2 = Math.max(start.row, end.row);
@@ -742,7 +664,6 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
     );
     return parts.join(",");
   }, [hasActiveFilter, filteredRows, actualToVisibleIndex]);
-
   function insertRefIntoActiveInput(refText, { overrideInCurrentArgument = true } = {}) {
     const target = (document.activeElement === activeInputRef.current)
       ? activeInputRef.current
@@ -788,12 +709,10 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
       try { target.focus(); const caret = before.length + refText.length; target.setSelectionRange(caret, caret); } catch { }
     });
   }
-
   const isFormulaEditing = () => {
     const val = (document.activeElement === activeInputRef.current ? activeInputRef.current?.value : (document.activeElement === formulaBarRef.current ? formulaBarRef.current?.value : "")) || cellEditingValue || "";
     return !!val.trim().startsWith("=");
   };
-
   const currentFormulaPreview = useMemo(() => {
     let row = activeCell.row, col = activeCell.col, text = cellEditingValue;
     if (row === null || col === null) {
@@ -807,11 +726,9 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
     const r = extractFirstRefOrRange(text);
     return r;
   }, [activeCell.row, activeCell.col, cellEditingValue, selection]);
-
   const summaryStats = useMemo(() => {
     const data = [];
     const sourceSelection = selection || { top: 0, left: 0, bottom: effectiveRows - 1, right: effectiveCols - 1 };
-
     forEachSelectedCell(sourceSelection, (r, c) => {
       const val = computedTableData[toKey(r, c)] || tableDataRef.current[toKey(r, c)] || "";
       if (val.trim() !== "") {
@@ -842,17 +759,14 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
     const median = data.length % 2 === 0
       ? (sorted[data.length / 2 - 1] + sorted[data.length / 2]) / 2
       : sorted[Math.floor(data.length / 2)];
-
     const variance = data.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / data.length;
     const stdDev = Math.sqrt(variance);
-
     const min = Math.min(...data);
     const max = Math.max(...data);
     let totalCells = 0;
     let nullCount = 0;
     let naCount = 0;
     const allValues = [];
-
     forEachSelectedCell(sourceSelection, (r, c) => {
       totalCells++;
       const val = computedTableData[toKey(r, c)] || tableDataRef.current[toKey(r, c)] || "";
@@ -881,7 +795,6 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
       duplicateCount
     };
   }, [selection, computedTableData, tableDataRef, effectiveRows, effectiveCols, forEachSelectedCell]);
-
   function handleCellMouseDown(rowIndex, colIndex, e) {
     if (e.button !== 0) return;
     if ((document.activeElement === activeInputRef.current || document.activeElement === formulaBarRef.current) && isFormulaEditing()) {
@@ -928,7 +841,6 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
     setSelectionType("cell");
     setSelection({ top: rowIndex, left: colIndex, bottom: rowIndex, right: colIndex });
   }
-
   function handleColumnHeaderMouseDown(e, colIndex) {
     if ((document.activeElement === activeInputRef.current || document.activeElement === formulaBarRef.current) && isFormulaEditing()) {
       const target = document.activeElement;
@@ -953,7 +865,6 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
     setSelectionType("column");
     setSelection({ top: first, left: colIndex, bottom: last, right: colIndex });
   }
-
   function handleRowHeaderMouseDown(e, rowIndex) {
     if ((document.activeElement === activeInputRef.current || document.activeElement === formulaBarRef.current) && isFormulaEditing()) {
       const target = document.activeElement;
@@ -974,7 +885,6 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
     setSelectionType("row");
     setSelection({ top: rowIndex, left: 0, bottom: rowIndex, right: effectiveCols - 1 });
   }
-
   const onCellValueChange = e => {
     const v = e.target.value;
     setCellEditingValue(v);
@@ -985,7 +895,6 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
       if (last !== v) { h.undo.push(v); h.redo = []; }
     }
   };
-
   const handleCellBlur = e => {
     const maybeNext = e.relatedTarget || document.activeElement;
     if (maybeNext) {
@@ -997,32 +906,27 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
     }
     commitActiveCellIfNeeded();
   };
-
   const isCellInSelection = (r, c) => !!selection && r >= selection.top && r <= selection.bottom && c >= selection.left && c <= selection.right;
-
   function isCellHighlightedBySearch(r, c) {
     const found = searchResults.filter(res => res.row === r && res.col === c);
     if (!found.length) return false;
     const cur = currentResultIndex >= 0 && currentResultIndex < searchResults.length && searchResults[currentResultIndex].row === r && searchResults[currentResultIndex].col === c;
     return cur ? "current" : "matched";
   }
-
   function moveActiveCellHorizontally(offset) {
     if (activeCell.row === null || activeCell.col === null) return;
     let newCol = activeCell.col + offset;
-    if (newCol >= effectiveCols && offset > 0 && numCols < MAX_COLS) { addColumn(); newCol = effectiveCols; }
+    if (newCol >= effectiveCols && offset > 0) { addColumn(); newCol = effectiveCols; }
     newCol = clampNum(newCol, 0, effectiveCols - 1);
     activateCell(activeCell.row, newCol);
     setSelection({ top: activeCell.row, left: newCol, bottom: activeCell.row, right: newCol });
   }
-
   function moveActiveCellVertically(offset) {
     if (activeCell.row === null || activeCell.col === null) return;
     const newRow = nextVisibleActualRow(activeCell.row, offset);
     activateCell(newRow, activeCell.col);
     setSelection({ top: newRow, left: activeCell.col, bottom: newRow, right: activeCell.col });
   }
-
   useEffect(() => {
     if (hasLoadedFile.current) return; hasLoadedFile.current = true;
     async function loadFile() {
@@ -1038,23 +942,11 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
           const cells = line.split(","); if (cells.length > maxColsFound) maxColsFound = cells.length;
           cells.forEach((cell, c) => { if (cell.trim()) data[toKey(r, c)] = cell.trim(); });
         });
-        let finalRows = lines.length, finalCols = maxColsFound, tr = 0, tc = 0;
-        if (finalRows > MAX_ROWS) { tr = finalRows - MAX_ROWS; finalRows = MAX_ROWS; }
-        if (finalCols > MAX_COLS) { tc = finalCols - MAX_COLS; finalCols = MAX_COLS; }
-        let alertMessage = "";
-        if (tr > 0) alertMessage += `Row count exceeds limit. ${tr === 1 ? "1 row will be truncated. " : `${tr} rows will be truncated. `}`;
-        if (tc > 0) alertMessage += `Column count exceeds limit. ${tc === 1 ? "1 column will be truncated." : `${tc} columns will be truncated.`}`;
-        if (alertMessage) {
-          await showDialog({ title: "Data Truncation Alert", message: alertMessage });
-          setTruncationInfo({ rows: tr, cols: tc });
-          Object.keys(data).forEach(k => { const [r, c] = fromKey(k); if (r >= finalRows || c >= finalCols) delete data[k]; });
-        }
-        setTableData(data); setNumRows(finalRows); setNumCols(finalCols);
+        setTableData(data); setNumRows(lines.length); setNumCols(maxColsFound);
       } catch (error) { setError(error.message); } finally { setLoading(false); }
     }
     fileHandle ? loadFile() : setLoading(false);
   }, [fileHandle]);
-
   useEffect(() => {
     const isMac = isMacPlatform();
     function ensureSingleSelection() {
@@ -1111,7 +1003,6 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
     hasActiveFilter, filteredRows, nextVisibleActualRow, withTableMutation, handleUndo, handleRedo,
     handleCut, handleCopy, handlePaste, handleSelectAll, commitActiveCellIfNeeded, activateCell, ensureInBounds
   ]);
-
   useEffect(() => {
     function posRelativeToContainer(e) {
       const rect = gridContainerRef.current?.getBoundingClientRect();
@@ -1139,18 +1030,22 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
       if (selectionResize.active && gridContainerRef.current) {
         const { rx, ry } = posRelativeToContainer(e);
         const visibleRow = getVisibleRowIndexFromPosition(ry);
-        const newRowActual = visibleToActualRow(visibleRow);
-        const newCol = getColIndexFromPosition(rx);
+        let newRowActual = visibleToActualRow(visibleRow);
+        let newCol = getColIndexFromPosition(rx);
         const initial = selectionResize.initialSelection;
         let newBottom = Math.max(newRowActual, initial.top);
         let newRight = Math.max(newCol, initial.left);
-        if (!hasActiveFilter && newBottom >= numRows && numRows < MAX_ROWS) {
-          const add = newBottom - numRows + 1, added = Math.min(add, MAX_ROWS - numRows);
-          setNumRows(prev => prev + added); if (added < add) newBottom = numRows + added - 1;
+        if (!hasActiveFilter && newBottom >= numRows) {
+          const add = newBottom - numRows + 1;
+          const added = Math.min(add, MAX_ADD_AT_ONCE);
+          setNumRows(prev => prev + added);
+          if (added < add) newBottom = prev + added - 1;
         }
-        if (newRight >= numCols && numCols < MAX_COLS) {
-          const add = newRight - numCols + 1, added = Math.min(add, MAX_COLS - numCols);
-          setNumCols(prev => prev + added); if (added < add) newRight = numCols + added - 1;
+        if (newRight >= numCols) {
+          const add = newRight - numCols + 1;
+          const added = Math.min(add, MAX_ADD_AT_ONCE);
+          setNumCols(prev => prev + added);
+          if (added < add) newRight = prev + added - 1;
         }
         setSelection({ top: initial.top, left: initial.left, bottom: newBottom, right: newRight });
       }
@@ -1222,7 +1117,7 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
             const newTop = dragState.originalSelection.top + rowOffsetVisible;
             rowsDestActual = Array.from({ length: rowsOrig.length }, (_, i) => newTop + i);
             const maxNeeded = rowsDestActual[rowsDestActual.length - 1];
-            if (maxNeeded >= numRows && numRows < MAX_ROWS) { const add = maxNeeded - numRows + 1, added = Math.min(add, MAX_ROWS - numRows); setNumRows(n => n + added); }
+            if (maxNeeded >= numRows) { const add = maxNeeded - numRows + 1; const added = Math.min(add, MAX_ADD_AT_ONCE); setNumRows(n => n + added); }
           }
           const colOffset = targetCol - dragState.originalSelection.left - dragState.grabColOffset;
           const destLeft = Math.max(0, dragState.originalSelection.left + colOffset);
@@ -1264,7 +1159,6 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
                   delete next[toKey(r, c)];
                 }
               }
-
               const colsSpan = dragState.originalSelection.right - dragState.originalSelection.left + 1;
               const rowsCount = Math.min(rowsOrig.length, rowsDestActual.length);
               for (let i = 0; i < rowsCount; i++) {
@@ -1301,14 +1195,12 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
     hasActiveFilter, numRows, numCols, filteredRows, visibleToActualRow, actualToVisibleIndex,
     getVisibleRowIndexFromPosition, getColIndexFromPosition, withTableMutation, formulaPick, buildRefTextForPick, getSelectedActualRowList
   ]);
-
   useEffect(() => {
     if (isMoving) {
       setSelectionDrag({ active: false, startX: 0, startY: 0, offsetX: 0, offsetY: 0, originalSelection: null, block: null, grabRowOffset: 0, grabColOffset: 0, grabVisibleOffset: 0 });
       setIsMoving(false);
     }
   }, [isMoving]);
-
   useEffect(() => {
     function handleDocMouseDown(e) {
       const target = e.target;
@@ -1324,7 +1216,6 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
     document.addEventListener("mousedown", handleDocMouseDown, true);
     return () => document.removeEventListener("mousedown", handleDocMouseDown, true);
   }, [commitActiveCellIfNeeded]);
-
   const selectionBounds = useCallback((sel) => {
     if (!sel) return { top: 0, left: 0, width: 0, height: 0 };
     if (hasActiveFilter) {
@@ -1344,7 +1235,6 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
     const height = rowHeightsCumulative[sel.bottom + 1] - rowHeightsCumulative[sel.top];
     return { top, left, width, height };
   }, [hasActiveFilter, actualToVisibleIndex, filteredRowHeightsCumulative, rowHeightsCumulative, colWidthsCumulative]);
-
   function handleSelectionMouseDown(e) {
     if (e.target.classList.contains("dinolabsTableSelectionHandleBottomRight")) return;
     e.stopPropagation();
@@ -1370,18 +1260,17 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
     dragRef.current = { active: true, startX: grabScreenX, startY: grabScreenY, originalSelection: selection, block: snapshot, grabRowOffset, grabColOffset, grabVisibleOffset };
     const prev = document.createElement("div");
     prev.style.position = "absolute";
-    prev.style.zIndex = "5"; 
+    prev.style.zIndex = "5";
     prev.style.pointerEvents = "none";
     prev.style.border = "2px solid #007acc";
     prev.style.backgroundColor = "rgba(0,122,255,0.5)";
     const { top, left, width, height } = selectionBounds(selection);
-    const screenTop = top - scrollPos.current.top; 
+    const screenTop = top - scrollPos.current.top;
     const screenLeft = left - scrollPos.current.left;
     Object.assign(prev.style, { top: `${screenTop}px`, left: `${screenLeft}px`, width: `${width}px`, height: `${height}px` });
-    gridContainerRef.current.appendChild(prev); 
+    gridContainerRef.current.appendChild(prev);
     previewRef.current = prev;
   }
-
   function startSelectionResize(_, e) {
     e.preventDefault(); e.stopPropagation(); if (!selection) return;
     commitActiveCellIfNeeded(); setActiveCell({ row: null, col: null });
@@ -1389,7 +1278,6 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
     suppressNextOverlayClickRef.current = true;
     setSelectionResize({ active: true, handle: "bottom-right", startX: e.clientX, startY: e.clientY, initialSelection: { ...selection } });
   }
-
   function handleSelectionDoubleClick(e) {
     e.stopPropagation();
     if (!gridContainerRef.current) return;
@@ -1400,7 +1288,6 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
     const clickedCol = getColIndexFromPosition(rx);
     activateCell(clickedRowActual, clickedCol);
   }
-
   function handleSelectionClick(e) {
     e.stopPropagation();
     if (suppressNextOverlayClickRef.current || justFinishedSelecting) { suppressNextOverlayClickRef.current = false; return; }
@@ -1409,7 +1296,6 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
     if (isSingle) { setSelection(null); activateCell(selection.top, selection.left); }
     else { setSelection(null); }
   }
-
   useLayoutEffect(() => {
     if (selection && selectionOverlayRef.current) {
       const b = selectionBounds(selection);
@@ -1418,7 +1304,6 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
       Object.assign(selectionOverlayRef.current.style, { top: `${top}px`, left: `${left}px`, width: `${b.width}px`, height: `${b.height}px` });
     }
   }, [selection, selectionBounds, hasActiveFilter]);
-
   const itemData = useMemo(() => ({
     tableDataRef, activeCell, cellEditingValue, selection, searchResults, currentResultIndex,
     selectionDrag, filteredRows, hasActiveFilter, handleCellMouseDown, handleCellDoubleClick: activateCell,
@@ -1429,7 +1314,6 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
     tableDataRef, activeCell, cellEditingValue, selection, searchResults, currentResultIndex, selectionDrag,
     filteredRows, hasActiveFilter, keyBinds, selectionEpoch, computedTableData, commitActiveCellIfNeeded
   ]);
-
   const Cell = React.memo(function Cell({ columnIndex, rowIndex, style, data }) {
     const {
       tableDataRef, activeCell, cellEditingValue, handleCellMouseDown, handleCellDoubleClick,
@@ -1583,9 +1467,7 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
       </div>
     );
   });
-
   const cellRenderer = props => <Cell {...props} data={itemData} />;
-
   useEffect(() => {
     const onDocDown = (e) => {
       const inMenu = menuPortalRef.current && menuPortalRef.current.contains(e.target);
@@ -1605,7 +1487,6 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
       window.removeEventListener("resize", onResize);
     };
   }, []);
-
   const renderDropdownMenu = (menuName, items) => {
     if (openMenu !== menuName) return null;
     return createPortal(
@@ -1631,7 +1512,6 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
       document.body
     );
   };
-
   function openTopMenu(name, btnRef) {
     setOpenMenu(prev => {
       const next = prev === name ? null : name;
@@ -1639,18 +1519,15 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
       return next;
     });
   }
-
   function openFilterDropdown(e, colIndex) {
     e.stopPropagation();
     setFilterDropdownPos(clampPosition(e.currentTarget.getBoundingClientRect(), 260, 320, 6));
     setFilterSearch("");
     setOpenFilterCol(colIndex);
   }
-
   function applyColumnFilters(updater) {
     setColumnFilters(prev => { const next = updater(prev); setTimeout(clearUIHighlightsAndStates, 0); return next; });
   }
-
   function toggleFilterOption(colIndex, value) {
     applyColumnFilters(prev => {
       const cur = prev[colIndex] || [];
@@ -1661,17 +1538,13 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
       return out;
     });
   }
-
   function selectAllFilter(colIndex) {
     const opts = filterOptions[colIndex] || [];
     if (opts.length === 0) return;
     applyColumnFilters(prev => ({ ...prev, [colIndex]: [...opts] }));
   }
-
   function clearFilter(colIndex) { applyColumnFilters(prev => { const n = { ...prev }; delete n[colIndex]; return n; }); }
-
   function clearAllFilters() { setColumnFilters({}); clearUIHighlightsAndStates(); setOpenFilterCol(null); }
-
   const renderFilterDropdown = () => {
     if (openFilterCol === null) return null;
     const col = openFilterCol;
@@ -1726,7 +1599,6 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
       document.body
     );
   };
-
   useEffect(() => {
     function onDocMouseDown(e) {
       if (!ctxMenu.open) return;
@@ -1742,7 +1614,6 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
       window.removeEventListener("resize", closeOnWindowChange, true);
     };
   }, [ctxMenu.open]);
-
   const openContextMenu = useCallback((e, kind) => {
     e.preventDefault(); e.stopPropagation();
     const items = [];
@@ -1782,7 +1653,6 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
       setCtxMenu(m => ({ ...m, x, y }));
     });
   }, [selection, addRow, addColumn, handleCut, handleCopy, handlePaste, handleClearSelection, handleSelectAll, sortTableByColumn, commitActiveCellIfNeeded]);
-
   function handleSave() {
     if (!fileHandle) {
       setSaveStatus("no-handle");
@@ -1799,7 +1669,6 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
         setSaveStatus("saved");
         onSaveStatusChange?.("Save successful!");
         typeof onSave === "function" && onSave(csv);
-        if (truncationInfo?.rows > 0) await showDialog({ title: "File Truncated", message: `This file has been truncated by ${truncationInfo.rows} row${truncationInfo.rows === 1 ? "" : "s"}.` });
         setTimeout(() => { setSaveStatus("idle"); onSaveStatusChange?.(""); }, SAVE_BANNER_TIMEOUT_MS);
       } catch {
         setSaveStatus("failed"); onSaveStatusChange?.("Save failed!");
@@ -1807,7 +1676,6 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
       }
     })();
   }
-
   async function handleDownload() {
     setOpenMenu(null);
     const result = await showDialog({
@@ -1821,22 +1689,17 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
       const url = URL.createObjectURL(blob);
       const link = document.createElement("a");
       link.href = url; link.download = fileName + ".csv"; link.click(); URL.revokeObjectURL(url);
-      if (truncationInfo?.rows > 0) await showDialog({ title: "File Truncated", message: `This file has been truncated by ${truncationInfo.rows} row${truncationInfo.rows === 1 ? "" : "s"}.` });
     }
   }
-
   if (loading) return <div className="loading-wrapper">
     <div className="loading-circle" />
     <label className="loading-title">Dino Labs Web IDE</label>
   </div>;
-
   if (error) return <div className="loading-wrapper">
     <div className="loading-circle" />
     <label className="loading-title">Dino Labs Web IDE</label>
   </div>;
-
   const activeFilterCount = Object.values(columnFilters).reduce((acc, v) => acc + ((v && v.length) ? 1 : 0), 0);
-
   return (
     <div
       className="dinolabsTabularContentWrapper"
@@ -1942,7 +1805,6 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
           onChange={e => {
             const fn = e.target.value;
             if (!fn) return;
-
             if (activeCell.row !== null && activeCell.col !== null) {
               const target = formulaBarRef.current || activeInputRef.current;
               if (!target) return;
@@ -2019,8 +1881,7 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
           onMouseDown={e => { if (e.target.tagName !== "INPUT" && window.getSelection) window.getSelection().removeAllRanges(); }}
           onDragStart={e => { if (e.target.tagName !== "INPUT") e.preventDefault(); }}
         >
-          <div
-            className="dinolabsTableCornerHeader"
+          <div className="dinolabsTableCornerHeader"
             style={{ zIndex: 10 }}
             onMouseDown={e => {
               commitActiveCellIfNeeded();
@@ -2244,7 +2105,21 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
       </div>
       <div className="dinolabsTableSummaryStatsWrapper">
         <div className="dinolabsTableSummaryStatsSubWrapper">
-          <div className="dinolabsTableSummaryTitleWrapper" style={{ cursor: "pointer", color: "#c1c1c1",  "margin-bottom": summaryCollapsed ? 0 : ""}} onClick={() => setSummaryCollapsed(!summaryCollapsed)}>
+          <div className="dinolabsTableSummaryTitleWrapper" style={{ cursor: "pointer", color: "#c1c1c1", "margin-bottom": qualityCollapsed ? 0 : ""}} onClick={() => setQualityCollapsed(!qualityCollapsed)}>
+            <FontAwesomeIcon icon={qualityCollapsed ? faSquarePlus : faSquareMinus} />
+            <FontAwesomeIcon icon={faCheckCircle} style={{ color: "#10b981" }} />
+            <strong>Data Quality</strong>
+          </div>
+          {!qualityCollapsed && <div className="dinolabsTableSummaryStatList">
+            <div><strong>Null Count:</strong> {summaryStats.nullCount}</div>
+            <div><strong>N/A Count:</strong> {summaryStats.naCount}</div>
+            <div><strong>Missing:</strong> {summaryStats.missingPercent.toFixed(1)}%</div>
+            <div><strong>Unique Values:</strong> {summaryStats.uniqueValues}</div>
+            <div><strong>Duplicate Count:</strong> {summaryStats.duplicateCount}</div>
+          </div>}
+        </div>
+        <div className="dinolabsTableSummaryStatsSubWrapper">
+          <div className="dinolabsTableSummaryTitleWrapper" style={{ cursor: "pointer", color: "#c1c1c1", "margin-bottom": summaryCollapsed ? 0 : ""}} onClick={() => setSummaryCollapsed(!summaryCollapsed)}>
             <FontAwesomeIcon icon={summaryCollapsed ? faSquarePlus : faSquareMinus} />
             <FontAwesomeIcon icon={faCalculator} style={{ color: "#5c2be2" }} />
             <strong>Summary Statistics</strong>
@@ -2257,22 +2132,7 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
             <div><strong>Min:</strong> {summaryStats.min.toFixed(2)} <strong>Max:</strong> {summaryStats.max.toFixed(2)}</div>
           </div>}
         </div>
-
-
-        <div className="dinolabsTableSummaryStatsSubWrapper">
-          <div className="dinolabsTableSummaryTitleWrapper" style={{ cursor: "pointer", color: "#c1c1c1",  "margin-bottom": qualityCollapsed ? 0 : ""}} onClick={() => setQualityCollapsed(!qualityCollapsed)}>
-            <FontAwesomeIcon icon={qualityCollapsed ? faSquarePlus : faSquareMinus}  />
-            <FontAwesomeIcon icon={faCheckCircle} style={{ color: "#10b981" }} />
-            <strong>Data Quality</strong>
-          </div>
-          {!qualityCollapsed && <div className="dinolabsTableSummaryStatList">
-            <div><strong>Null Count:</strong> {summaryStats.nullCount}</div>
-            <div><strong>N/A Count:</strong> {summaryStats.naCount}</div>
-            <div><strong>Missing:</strong> {summaryStats.missingPercent.toFixed(1)}%</div>
-            <div><strong>Unique Values:</strong> {summaryStats.uniqueValues}</div>
-            <div><strong>Duplicate Count:</strong> {summaryStats.duplicateCount}</div>
-          </div>}
-        </div>
+       
       </div>
       {showSearchPanel && (
         <div
