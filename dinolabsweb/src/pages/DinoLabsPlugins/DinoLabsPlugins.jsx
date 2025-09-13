@@ -14,9 +14,9 @@ import {
   faImages,            
   faHighlighter       
 } from "@fortawesome/free-solid-svg-icons";
-import DinoLabsNav from "../../helpers/DinoLabsNav.jsx";
-import DinoLabsLoading from "../../helpers/DinoLabsLoading.jsx";
-import DinoLabsUnavailable from "../../helpers/DinoLabsUnavailable.jsx";
+import DinoLabsNav from "../../helpers/Nav.jsx";
+import DinoLabsLoading from "../../helpers/Loading.jsx";
+import DinoLabsUnavailable from "../../helpers/Unavailable.jsx";
 import useAuth from "../../UseAuth.jsx";
 import "../../styles/mainStyles/DinoLabsPlugins/DinoLabsPlugins.css";
 

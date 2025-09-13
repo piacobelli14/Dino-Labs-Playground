@@ -7,7 +7,7 @@ import {
   faTriangleExclamation,
   faArrowUpRightFromSquare
 } from "@fortawesome/free-solid-svg-icons";
-import DinoLabsNav from "../../../helpers/DinoLabsNav";
+import DinoLabsNav from "../../../helpers/Nav";
 import "../../../styles/mainStyles/DinoLabsPlugins/DinoLabsPluginsThesaurus/DinoLabsPluginsThesaurus.css";
 
 const MW_THES_BASE = "https://www.dictionaryapi.com/api/v3/references/thesaurus/json";

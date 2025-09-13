@@ -6,7 +6,7 @@ import {
   faEye, faEyeSlash, faLayerGroup, faMaximize, faUpload, faFileExport, faMagnifyingGlass,
   faCircleHalfStroke, faWandMagic, faPen, faHighlighter
 } from "@fortawesome/free-solid-svg-icons";
-import DinoLabsNav from "../../../helpers/DinoLabsNav";
+import DinoLabsNav from "../../../helpers/Nav";
 import "../../../styles/helperStyles/Slider.css";
 import "../../../styles/helperStyles/Checkbox.css";
 import "../../../styles/mainStyles/DinoLabsPlugins/DinoLabsPluginsVisualDiff/DinoLabsPluginsVisualDiff.css";

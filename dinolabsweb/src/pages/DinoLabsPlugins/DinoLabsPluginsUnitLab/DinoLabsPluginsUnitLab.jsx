@@ -13,7 +13,7 @@ import {
   faCode,
   faLink
 } from "@fortawesome/free-solid-svg-icons";
-import DinoLabsNav from "../../../helpers/DinoLabsNav";
+import DinoLabsNav from "../../../helpers/Nav";
 import "../../../styles/mainStyles/DinoLabsPlugins/DinoLabsPluginsUnitLab/DinoLabsPluginsUnitLab.css";
 
 const DV = (L=0,M=0,T=0,I=0,Th=0,N=0,J=0) => [L,M,T,I,Th,N,J];

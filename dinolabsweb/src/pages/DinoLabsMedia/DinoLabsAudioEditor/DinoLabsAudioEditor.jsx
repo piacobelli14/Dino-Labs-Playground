@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import "../../../styles/mainStyles/DinoLabsAudioEditor/DinoLabsAudioEditor.css";
 import "../../../styles/helperStyles/Slider.css";
 import "../../../styles/helperStyles/Checkbox.css";
-import { showDialog } from "../../../helpers/DinoLabsAlert.jsx";
+import { showDialog } from "../../../helpers/Alert.jsx";
 import Tippy from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";

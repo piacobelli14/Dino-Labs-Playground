@@ -19,8 +19,8 @@ import {
   faArrowsRotate
 } from "@fortawesome/free-solid-svg-icons";
 import Tippy from "@tippyjs/react";
-import DinoLabsNav from "../../../helpers/DinoLabsNav";
-import DinoLabsColorPicker from "../../../helpers/DinoLabsColorPicker.jsx";
+import DinoLabsNav from "../../../helpers/Nav";
+import DinoLabsColorPicker from "../../../helpers/ColorPicker.jsx";
 import "../../../styles/mainStyles/DinoLabsPlugins/DinoLabsPluginsColorTypeLab/DinoLabsPluginsColorTypeLab.css";
 import "../../../styles/helperStyles/Slider.css";
 

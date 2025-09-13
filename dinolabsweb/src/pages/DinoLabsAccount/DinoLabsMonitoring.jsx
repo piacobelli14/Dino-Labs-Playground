@@ -19,8 +19,8 @@ import {
   faSquarePollVertical,
   faHardDrive
 } from "@fortawesome/free-solid-svg-icons";
-import DinoLabsNav from "../../helpers/DinoLabsNav";
-import "../../styles/mainStyles/AccountStyles/DinoLabsMonitoring.css";
+import DinoLabsNav from "../../helpers/Nav";
+import "../../styles/mainStyles/DinoLabsAccount/DinoLabsMonitoring.css";
 
 const clamp01 = (x) => Math.max(0, Math.min(1, x));
 const pct = (x) => `${Math.round(clamp01(x) * 100)}%`;

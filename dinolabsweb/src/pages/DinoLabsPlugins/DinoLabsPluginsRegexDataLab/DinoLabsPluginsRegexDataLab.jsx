@@ -5,7 +5,7 @@ import {
   faStopwatch, faBug, faShield, faDiagramNext, faFileCode, faCopy, faFileExport,
   faCubes, faPlus, faTrash, faDownload, faEraser, faShuffle
 } from "@fortawesome/free-solid-svg-icons";
-import DinoLabsNav from "../../../helpers/DinoLabsNav";
+import DinoLabsNav from "../../../helpers/Nav";
 import "../../../styles/mainStyles/DinoLabsPlugins/DinoLabsPluginsRegexDataLab/DinoLabsPluginsRegexDataLab.css";
 
 const clamp = (x, a, b) => Math.max(a, Math.min(b, x));

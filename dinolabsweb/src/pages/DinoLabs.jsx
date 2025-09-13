@@ -23,11 +23,11 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { openDB } from "idb";
 import { fileTypeMap } from "./DinoLabsFileTypeMap.jsx";
-import DinoLabsNav from "../helpers/DinoLabsNav.jsx";
+import DinoLabsNav from "../helpers/Nav.jsx";
 import DinoLabsNoFileSelected from "./DinoLabsNoFileSelected.jsx";
-import DinoLabsLoading from "../helpers/DinoLabsLoading.jsx";
-import DinoLabsUnavailable from "../helpers/DinoLabsUnavailable.jsx";
-import { showDialog } from "../helpers/DinoLabsAlert.jsx";
+import DinoLabsLoading from "../helpers/Loading.jsx";
+import DinoLabsUnavailable from "../helpers/Unavailable.jsx";
+import { showDialog } from "../helpers/Alert.jsx";
 import useAuth from "../UseAuth.jsx";
 import DinoLabsMarkdown from "./DinoLabsCode/DinoLabsMarkdown.jsx";
 import DinoLabsTabularEditor from "./DinoLabsTabular/DinoLabsTabularEditor.jsx";

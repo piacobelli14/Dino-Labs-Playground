@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom"; 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft, faArrowRight, faPerson, faEyeSlash, faEye, faListUl, faMailBulk } from "@fortawesome/free-solid-svg-icons";
-import "../../styles/mainStyles/AuthenticationStyles/DinoLabsAuthRegister.css"
-import DinoLabsNav from "../../helpers/DinoLabsNav";
+import "../../styles/mainStyles/Authentication/AuthRegister.css"
+import DinoLabsNav from "../../helpers/Nav.jsx";
 import useIsTouchDevice from "../../TouchDevice.jsx";
 import { color } from "echarts";
 

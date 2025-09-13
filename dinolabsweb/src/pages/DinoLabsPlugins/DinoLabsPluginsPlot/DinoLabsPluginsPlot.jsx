@@ -1,8 +1,8 @@
 import React, { useState, useRef, useEffect, useCallback } from "react";
 import Tippy from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
-import DinoLabsNav from "../../../helpers/DinoLabsNav";
-import DinoLabsColorPicker from "../../../helpers/DinoLabsColorPicker.jsx";
+import DinoLabsNav from "../../../helpers/Nav";
+import DinoLabsColorPicker from "../../../helpers/ColorPicker.jsx";
 import "../../../styles/mainStyles/DinoLabsPlugins/DinoLabsPluginsPlot/DinoLabsPluginsPlot.css";
 import "../../../styles/helperStyles/Slider.css";
 

@@ -1,56 +1,59 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import Tippy from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
 
-import "../../styles/mainStyles/AccountStyles/DinoLabsAccount.css";
+import "../../styles/mainStyles/DinoLabsAccount/DinoLabsAccount.css";
 import "../../styles/helperStyles/Switch.css";
 import "../../styles/helperStyles/Checkbox.css";
 import "../../styles/helperStyles/Slider.css";
 import "../../styles/mainStyles/DinoLabsPlots.css";
 import "../../styles/helperStyles/LoadingSpinner.css";
 
-import { showDialog } from "../../helpers/DinoLabsAlert.jsx";
+import { showDialog } from "../../helpers/Alert.jsx";
 import useIsTouchDevice from "../../TouchDevice.jsx";
 import LinePlot from "../../helpers/PlottingHelpers/LineHelper.jsx";
 import useAuth from "../../UseAuth.jsx";
 
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
-  faA,
-  faArrowDown,
-  faArrowUp,
-  faCopy,
-  faExclamationTriangle,
-  faList,
-  faMagnifyingGlass,
-  faMagnifyingGlassPlus,
-  faSquare,
-  faTableColumns,
-  faXmark,
-  faCode,
-  faIdCard,
-  faEnvelope,
-  faMobileScreen,
-  faPersonDigging,
-  faBuilding,
-  faScroll,
-  faCity,
-  faUserTie,
-  faUpRightFromSquare,
-  faUserGear,
-  faAddressCard,
-  faUsers,
-  faLock,
-  faUsersGear,
-  faKeyboard,
-  faPallet,
-  faPalette,
-  faSquareXmark,
-  faRectangleXmark
+    faA,
+    faArrowDown,
+    faArrowUp,
+    faCopy,
+    faExclamationTriangle,
+    faList,
+    faMagnifyingGlass,
+    faMagnifyingGlassPlus,
+    faSquare,
+    faTableColumns,
+    faXmark,
+    faCode,
+    faIdCard,
+    faEnvelope,
+    faMobileScreen,
+    faPersonDigging,
+    faBuilding,
+    faScroll,
+    faCity,
+    faUserTie,
+    faUpRightFromSquare,
+    faUserGear,
+    faAddressCard,
+    faUsers,
+    faLock,
+    faUsersGear,
+    faKeyboard,
+    faPallet,
+    faPalette,
+    faSquareXmark,
+    faRectangleXmark,
+    faFloppyDisk,
+    faRotateLeft,
+    faImage
 } from "@fortawesome/free-solid-svg-icons";
 
-const DinoLabsAccount = ({ 
+const DinoLabsAccount = ({
     keyBinds,
     setKeyBinds,
     zoomLevel,
@@ -127,61 +130,50 @@ const DinoLabsAccount = ({
     };
 
     const themeOptions = [
-        {
-            name: "Default Theme",
-            value: "default",
-            colors: ["#C586C0", "#CE9178", "#B5CEA8"]
-        },
-        {
-            name: "Dark Theme", 
-            value: "dark",
-            colors: ["#a76fa0", "#a35955", "#8b9a75"]
-        },
-        {
-            name: "Light Theme",
-            value: "light", 
-            colors: ["#7B68EE", "#FFA07A", "#98FB98"]
-        }
+        { name: "Default Theme", value: "default", colors: ["#C586C0", "#CE9178", "#B5CEA8"] },
+        { name: "Dark Theme", value: "dark", colors: ["#a76fa0", "#a35955", "#8b9a75"] },
+        { name: "Light Theme", value: "light", colors: ["#7B68EE", "#FFA07A", "#98FB98"] }
     ];
 
     const navigationButtons = [
-        {
-            key: "personalInfo",
-            icon: faUserGear,
-            label: "Update My Personal Information"
-        },
-        {
-            key: "teamInfo",
-            icon: faUsersGear,
-            label: "Update My Team Information"
-        },
-        {
-            key: "settingsManagement",
-            icon: faCode,
-            label: "Edit My Dino Labs IDE Settings"
-        },
-        {
-            key: "shortcutManagement",
-            icon: faKeyboard,
-            label: "Configure My Keyboard Shortcuts"
-        },
-        {
-            key: "themeManagement",
-            icon: faPalette,
-            label: "Change My Editor Theme"
-        }
+        { key: "profileEditor", icon: faAddressCard, label: "Edit My Profile" },
+        { key: "personalInfo", icon: faUserGear, label: "Update My Personal Information" },
+        { key: "teamInfo", icon: faUsersGear, label: "Update My Team Information" },
+        { key: "settingsManagement", icon: faCode, label: "Edit My Dino Labs IDE Settings" },
+        { key: "shortcutManagement", icon: faKeyboard, label: "Configure My Keyboard Shortcuts" },
+        { key: "themeManagement", icon: faPalette, label: "Change My Editor Theme" }
     ];
+
+    const [editProfile, setEditProfile] = useState({
+        isEditing: false,
+        firstName: "",
+        lastName: "",
+        phone: "",
+        role: "",
+        imageUrl: "",
+        imageFile: null,
+        imagePreview: "",
+        saving: false
+    });
+
+    const [teamAccess, setTeamAccess] = useState({
+        joinCode: "",
+        joining: false,
+        creating: false,
+        teamName: "",
+        teamSlug: ""
+    });
 
     useEffect(() => {
         const fetchData = async () => {
             try {
                 await Promise.all([
-                   fetchUserInfo(userID, organizationID), 
+                    fetchUserInfo(userID, organizationID),
                     fetchPersonalUsageData(userID, organizationID)
                 ]);
                 setUiState(prev => ({ ...prev, isLoaded: true }));
             } catch (error) {
-                return; 
+                return;
             }
         };
 
@@ -213,6 +205,18 @@ const DinoLabsAccount = ({
             setUiState(prev => ({ ...prev, selectedState: "none" }));
         }
     }, [organizationID, userID]);
+
+    useEffect(() => {
+        setEditProfile(prev => ({
+            ...prev,
+            firstName: userInfo.firstName || "",
+            lastName: userInfo.lastName || "",
+            phone: userInfo.phone || "",
+            role: userInfo.role || "",
+            imageUrl: userInfo.image || "",
+            imagePreview: userInfo.image || ""
+        }));
+    }, [userInfo.firstName, userInfo.lastName, userInfo.phone, userInfo.role, userInfo.image]);
 
     const fetchUserInfo = async (userID, organizationID) => {
         try {
@@ -271,10 +275,10 @@ const DinoLabsAccount = ({
                 setKeyBinds(defaultKeyBinds);
             }
 
-            setZoomLevel(userData.userzoomlevel); 
-            setColorTheme(userData.usercolortheme); 
+            setZoomLevel(userData.userzoomlevel);
+            setColorTheme(userData.usercolortheme);
         } catch (error) {
-            return; 
+            return;
         }
     };
 
@@ -284,7 +288,7 @@ const DinoLabsAccount = ({
             if (!token) {
                 throw new Error("Token not found in localStorage");
             }
-    
+
             const response = await fetch(`${import.meta.env.VITE_API_AUTH_URL}/usage-info`, {
                 method: "POST",
                 headers: {
@@ -293,11 +297,11 @@ const DinoLabsAccount = ({
                 },
                 body: JSON.stringify({ userID, organizationID }),
             });
-    
+
             if (!response.ok) {
                 throw new Error(`Failed to fetch data: ${response.statusText}`);
             }
-    
+
             const data = await response.json();
             if (!data.personalUsageInfo || !Array.isArray(data.personalUsageInfo)) {
                 throw new Error("Unexpected data structure from the backend");
@@ -305,12 +309,12 @@ const DinoLabsAccount = ({
 
             setPersonalUsageByDay(
                 data.personalUsageInfo.map((item) => ({
-                    day: new Date(item.day), 
+                    day: new Date(item.day),
                     count: parseInt(item.usage_count, 0),
                 }))
             );
         } catch (error) {
-            return; 
+            return;
         }
     };
 
@@ -320,7 +324,7 @@ const DinoLabsAccount = ({
             if (!token) {
                 throw new Error("Token not found in localStorage");
             }
-    
+
             const response = await fetch(`${import.meta.env.VITE_API_AUTH_URL}/update-user-show-values`, {
                 method: "POST",
                 headers: {
@@ -329,18 +333,18 @@ const DinoLabsAccount = ({
                 },
                 body: JSON.stringify({ userID, organizationID, showColumn, showColumnValue }),
             });
-    
+
             if (!response.ok) {
                 throw new Error(`Failed to update show values: ${response.statusText}`);
             }
         } catch (error) {
-            return; 
+            return;
         }
     };
 
     const getKeyBindDisplayName = (action) => {
         return keyBindDisplayNames[action] || action;
-    };    
+    };
 
     const handleKeyBindChange = async (action, newKey) => {
         if (newKey.length !== 1) {
@@ -423,17 +427,219 @@ const DinoLabsAccount = ({
         updateShowColumnValue(userID, organizationID, key, value);
     };
 
+    const handleProfileField = (field, value) => {
+        setEditProfile(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleImageFile = (file) => {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            setEditProfile(prev => ({
+                ...prev,
+                imageFile: file,
+                imagePreview: e.target.result
+            }));
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const uploadProfileImage = async (file) => {
+        const token = localStorage.getItem("token");
+        const form = new FormData();
+        form.append("file", file);
+        form.append("userID", userID);
+        try {
+            const res = await fetch(`${import.meta.env.VITE_API_AUTH_URL}/upload-user-image`, {
+                method: "POST",
+                headers: {
+                    "Authorization": `Bearer ${token}`
+                },
+                body: form
+            });
+            if (!res.ok) throw new Error("Image upload failed");
+            const data = await res.json();
+            return data.url;
+        } catch (err) {
+            await showDialog({
+                title: "System Alert",
+                message: "Failed to upload image. Please try again.",
+                showCancel: false
+            });
+            throw err;
+        }
+    };
+
+    const updateUserProfile = async () => {
+        const token = localStorage.getItem("token");
+        const {
+            firstName, lastName, phone, role, imageFile, imageUrl
+        } = editProfile;
+
+        if (!firstName.trim() || !lastName.trim()) {
+            await showDialog({
+                title: "System Alert",
+                message: "First and last name are required.",
+                showCancel: false
+            });
+            return;
+        }
+
+        try {
+            setEditProfile(prev => ({ ...prev, saving: true }));
+
+            let finalImageUrl = imageUrl;
+            if (imageFile) {
+                finalImageUrl = await uploadProfileImage(imageFile);
+            }
+
+            const res = await fetch(`${import.meta.env.VITE_API_AUTH_URL}/update-user-profile`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    userID,
+                    organizationID,
+                    firstName: firstName.trim(),
+                    lastName: lastName.trim(),
+                    phone: phone.trim(),
+                    role: role.trim(),
+                    image: finalImageUrl
+                })
+            });
+
+            if (!res.ok) {
+                throw new Error("Failed to update profile");
+            }
+
+            setUserInfo(prev => ({
+                ...prev,
+                firstName: firstName.trim(),
+                lastName: lastName.trim(),
+                phone: phone.trim(),
+                role: role.trim(),
+                image: finalImageUrl
+            }));
+
+            setEditProfile(prev => ({
+                ...prev,
+                isEditing: false,
+                imageFile: null,
+                imageUrl: finalImageUrl,
+                saving: false
+            }));
+
+            await showDialog({
+                title: "Profile Updated",
+                message: "Your account information has been saved.",
+                showCancel: false
+            });
+        } catch (err) {
+            setEditProfile(prev => ({ ...prev, saving: false }));
+            await showDialog({
+                title: "System Alert",
+                message: "Failed to update profile. Please try again.",
+                showCancel: false
+            });
+        }
+    };
+
+    const resetProfileEdits = () => {
+        setEditProfile(prev => ({
+            ...prev,
+            isEditing: false,
+            firstName: userInfo.firstName || "",
+            lastName: userInfo.lastName || "",
+            phone: userInfo.phone || "",
+            role: userInfo.role || "",
+            imageUrl: userInfo.image || "",
+            imageFile: null,
+            imagePreview: userInfo.image || ""
+        }));
+    };
+
+    const setTeamField = (k, v) => setTeamAccess(prev => ({ ...prev, [k]: v }));
+
+    const joinTeam = async () => {
+        if (!teamAccess.joinCode.trim()) {
+            await showDialog({ title: "Join Team", message: "Enter a team code.", showCancel: false });
+            return;
+        }
+        try {
+            setTeamField("joining", true);
+            const token = localStorage.getItem("token");
+            const res = await fetch(`${import.meta.env.VITE_API_AUTH_URL}/join-team`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
+                },
+                body: JSON.stringify({
+                    userID,
+                    firstName: userInfo.firstName,
+                    lastName: userInfo.lastName,
+                    teamCode: teamAccess.joinCode.trim()
+                })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data?.message || "Failed to request access");
+            await showDialog({ title: "Join Team", message: data.message || "Access request sent.", showCancel: false });
+            setTeamField("joinCode", "");
+        } catch (e) {
+            await showDialog({ title: "Join Team", message: e.message || "Failed to request access.", showCancel: false });
+        } finally {
+            setTeamField("joining", false);
+        }
+    };
+
+    const createTeam = async () => {
+        const name = teamAccess.teamName.trim();
+        const slug = teamAccess.teamSlug.trim();
+        if (!name || !slug) {
+            await showDialog({ title: "Create Team", message: "Team name and slug are required.", showCancel: false });
+            return;
+        }
+        try {
+            setTeamField("creating", true);
+            const token = localStorage.getItem("token");
+            const res = await fetch(`${import.meta.env.VITE_API_AUTH_URL}/create-team`, {
+                method: "POST",
+                headers: {
+                    "Content-Type": "application/json",
+                    "Authorization": `Bearer ${token}`,
+                },
+                body: JSON.stringify({ userID, teamName: name, teamSlug: slug })
+            });
+            const data = await res.json();
+            if (!res.ok) throw new Error(data?.message || "Failed to create team");
+
+            await showDialog({
+                title: "Team Created",
+                message: `Team created. Your team code is ${data.orgid}. Reloading to update your session.`,
+                showCancel: false
+            });
+
+            window.location.reload();
+        } catch (e) {
+            await showDialog({ title: "Create Team", message: e.message || "Failed to create team.", showCancel: false });
+        } finally {
+            setTeamField("creating", false);
+        }
+    };
+
     const renderToggleButton = (label, checked, onChange, tooltipContent) => (
-        <button className="dinolabsSettingsButtonLine"> 
+        <button className="dinolabsSettingsButtonLine">
             <span>{label}</span>
             <span>
                 <Tippy content={tooltipContent} theme="tooltip-light">
                     <label className="consoleSwitch">
                         <input type="checkbox" checked={checked} onChange={onChange} />
                         <span className="consoleSlider round"></span>
-                    </label>    
+                    </label>
                 </Tippy>
-                <label className="dinolabsSettingsToggleLabel"> 
+                <label className="dinolabsSettingsToggleLabel">
                     {checked ? "Yes" : "No"}
                 </label>
             </span>
@@ -441,28 +647,26 @@ const DinoLabsAccount = ({
     );
 
     const renderPersonalInfo = () => (
-        <div className="dinolabsPersonalWrapper"> 
-            <img className="dinolabsAccountImage" src={userInfo.image} alt="User Avatar"/>
+        <div className="dinolabsPersonalWrapper">
+            <img className="dinolabsAccountImage" src={userInfo.image} alt="" />
             <div className="dinolabsAccountNameStack">
-                <label className="dinolabsAccountName"> 
-                    {userInfo.firstName} {userInfo.lastName}
-                </label>
-                <label className="dinolabsAccountSubName"> 
-                    <FontAwesomeIcon icon={faIdCard}/>
+                <label className="dinolabsAccountName">{userInfo.firstName} {userInfo.lastName}</label>
+                <label className="dinolabsAccountSubName">
+                    <FontAwesomeIcon icon={faIdCard} />
                     @{userID}
                 </label>
-                <label className="dinolabsAccountSubName"> 
-                    <FontAwesomeIcon icon={faEnvelope}/>
-                    {displayPreferences.displayEmail ? userInfo.email : "•".repeat(userInfo.email.length)}
+                <label className="dinolabsAccountSubName">
+                    <FontAwesomeIcon icon={faEnvelope} />
+                    {displayPreferences.displayEmail ? userInfo.email : "•".repeat(userInfo.email.length || 4)}
                 </label>
-                <label className="dinolabsAccountSubName"> 
-                    <FontAwesomeIcon icon={faMobileScreen}/>
-                    {displayPreferences.displayPhone ? userInfo.phone : "•".repeat(userInfo.phone.length)}
+                <label className="dinolabsAccountSubName">
+                    <FontAwesomeIcon icon={faMobileScreen} />
+                    {displayPreferences.displayPhone ? userInfo.phone : "•".repeat((userInfo.phone || "").length || 4)}
                 </label>
-                <label className="dinolabsAccountSubName"> 
-                    <FontAwesomeIcon icon={faCity}/>
-                    <strong>{organizationInfo.organizationName}</strong> 
-                    <span>(ID: {displayPreferences.displayTeamID ? organizationID : "•".repeat(organizationID.length)})</span>
+                <label className="dinolabsAccountSubName">
+                    <FontAwesomeIcon icon={faCity} />
+                    <strong>{organizationInfo.organizationName}</strong>
+                    <span>(ID: {displayPreferences.displayTeamID ? organizationID : "•".repeat((organizationID || "").length || 4)})</span>
                 </label>
             </div>
         </div>
@@ -471,24 +675,24 @@ const DinoLabsAccount = ({
     const renderOrganizationInfo = () => {
         if (organizationID !== "" && organizationID && organizationID !== userID) {
             return (
-                <div className="dinolabsPersonalWrapper" style={{ border: "none" }}> 
-                    <img className="dinolabsAccountImage" src={organizationInfo.organizationImage} alt="User Avatar"/>
+                <div className="dinolabsPersonalWrapper" style={{ border: "none" }}>
+                    <img className="dinolabsAccountImage" src={organizationInfo.organizationImage} alt="User Avatar" />
                     <div className="dinolabsAccountNameStack">
-                        <label className="dinolabsAccountSubName"> 
-                            <FontAwesomeIcon icon={faCity}/>
+                        <label className="dinolabsAccountSubName">
+                            <FontAwesomeIcon icon={faCity} />
                             <strong>{organizationInfo.organizationName.trim()}</strong>
                         </label>
-                        <label className="dinolabsAccountSubName"> 
-                            <FontAwesomeIcon icon={faIdCard}/>
-                            <span>{displayPreferences.displayTeamID ? organizationID : "•".repeat(organizationID.length)}</span>
+                        <label className="dinolabsAccountSubName">
+                            <FontAwesomeIcon icon={faIdCard} />
+                            <span>{displayPreferences.displayTeamID ? organizationID : "•".repeat((organizationID || "").length || 4)}</span>
                         </label>
-                        <label className="dinolabsAccountSubName"> 
-                            <FontAwesomeIcon icon={faEnvelope}/>
-                            <span>{displayPreferences.displayTeamEmail ? organizationInfo.organizationEmail : "•".repeat(organizationInfo.organizationEmail.length)}</span>
+                        <label className="dinolabsAccountSubName">
+                            <FontAwesomeIcon icon={faEnvelope} />
+                            <span>{displayPreferences.displayTeamEmail ? organizationInfo.organizationEmail : "•".repeat((organizationInfo.organizationEmail || "").length || 4)}</span>
                         </label>
-                        <label className="dinolabsAccountSubName"> 
-                            <FontAwesomeIcon icon={faMobileScreen}/>
-                            <span>{displayPreferences.displayTeamPhone ? organizationInfo.organizationPhone : "•".repeat(organizationInfo.organizationPhone.length)}</span>
+                        <label className="dinolabsAccountSubName">
+                            <FontAwesomeIcon icon={faMobileScreen} />
+                            <span>{displayPreferences.displayTeamPhone ? organizationInfo.organizationPhone : "•".repeat((organizationInfo.organizationPhone || "").length || 4)}</span>
                         </label>
                     </div>
                 </div>
@@ -496,11 +700,75 @@ const DinoLabsAccount = ({
         }
 
         return (
-            <div className="dinolabsPersonalWrapper" style={{justifyContent: "center", alignItems: "center"}}>
-                <label className="dinolabsIDEAccountOrgNotAvailable"> 
-                    <FontAwesomeIcon icon={faExclamationTriangle}/>
-                    <small>This user is not a part of a team.</small>
-                </label>  
+            <div className="dinolabsPersonalWrapperStack" style={{ alignItems: "stretch" }}>
+                {/*
+        <label className="dinolabsIDEAccountOrgNotAvailable" style={{ marginBottom: 12 }}> 
+          <FontAwesomeIcon icon={faExclamationTriangle}/>
+          <small>This user is not a part of a team.</small>
+        </label>
+        */}
+
+                <div className="dinolabsAccountEditFormSmall">
+                    <div className="dinolabsAccountEditHeader">
+                        <FontAwesomeIcon icon={faUsers} /> <span>Join an Existing Team</span>
+                    </div>
+                    <div className="dinolabsAccountEditRow">
+                        <label className="dinolabsAccountEditLabel">Team Code</label>
+                        <input
+                            className="dinolabsSettingsInput dinolabsAccountEditInput"
+                            type="text"
+                            value={teamAccess.joinCode}
+                            onChange={(e) => setTeamField("joinCode", e.target.value)}
+                            placeholder="Enter the 6-digit team code"
+                        />
+                    </div>
+                    <div className="dinolabsAccountEditActions">
+                        <button
+                            className="dinolabsSettingsActionButtonPrimary"
+                            onClick={joinTeam}
+                            disabled={teamAccess.joining}
+                        >
+                            <FontAwesomeIcon icon={faUsers} />
+                            <span>{teamAccess.joining ? "Requesting..." : "Request Access"}</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div className="dinolabsAccountEditFormSmall" style={{ marginTop: 16 }}>
+                    <div className="dinolabsAccountEditHeader">
+                        <FontAwesomeIcon icon={faBuilding} /> <span>Create a New Team</span>
+                    </div>
+                    <div className="dinolabsAccountEditRow">
+                        <label className="dinolabsAccountEditLabel">Team Name</label>
+                        <input
+                            className="dinolabsSettingsInput dinolabsAccountEditInput"
+                            type="text"
+                            value={teamAccess.teamName}
+                            onChange={(e) => setTeamField("teamName", e.target.value)}
+                            placeholder="Your team name"
+                        />
+                    </div>
+                    <div className="dinolabsAccountEditRow">
+                        <label className="dinolabsAccountEditLabel">Team Slug</label>
+                        <input
+                            className="dinolabsSettingsInput dinolabsAccountEditInput"
+                            type="text"
+                            value={teamAccess.teamSlug}
+                            onChange={(e) => setTeamField("teamSlug", e.target.value)}
+                            placeholder="your-team-slug"
+                        />
+                    </div>
+                    <div className="dinolabsAccountEditActions">
+                        <button
+                            className="dinolabsSettingsActionButtonPrimary"
+                            onClick={createTeam}
+                            disabled={teamAccess.creating}
+                        >
+                            <FontAwesomeIcon icon={faBuilding} />
+                            <span>{teamAccess.creating ? "Creating..." : "Create Team"}</span>
+                        </button>
+                    </div>
+                </div>
             </div>
         );
     };
@@ -508,17 +776,17 @@ const DinoLabsAccount = ({
     const renderNavigationButtons = () => (
         <div className="dinolabsAccountFunctionalityList">
             {navigationButtons.map(button => (
-                <button 
+                <button
                     key={button.key}
-                    className="dinolabsAccountFunctionalityButton" 
+                    className="dinolabsAccountFunctionalityButton"
                     onClick={() => handleStateChange(button.key)}
-                    style={{backgroundColor: uiState.selectedState === button.key ? "rgba(255,255,255,0.1)" : ""}}
-                > 
+                    style={{ backgroundColor: uiState.selectedState === button.key ? "rgba(255,255,255,0.1)" : "" }}
+                >
                     <span>
-                        <FontAwesomeIcon icon={button.icon}/>
+                        <FontAwesomeIcon icon={button.icon} />
                         <i>{button.label}</i>
                     </span>
-                    <FontAwesomeIcon icon={uiState.selectedState === button.key ? faSquareXmark : faUpRightFromSquare}/>
+                    <FontAwesomeIcon icon={uiState.selectedState === button.key ? faSquareXmark : faUpRightFromSquare} />
                 </button>
             ))}
         </div>
@@ -559,7 +827,7 @@ const DinoLabsAccount = ({
                 "Display my team's phone number.",
                 displayPreferences.displayTeamPhone,
                 () => updateDisplayPreference("showteamphone", !displayPreferences.displayTeamPhone),
-                "Toggle Team Phone Number Display"
+                "Toggle Team Phone Display"
             )}
             {renderToggleButton(
                 `Display my admin status at ${organizationInfo.organizationName}.`,
@@ -588,9 +856,9 @@ const DinoLabsAccount = ({
                             min="0.5"
                             max="3"
                             step="0.1"
-                            onChange={(e) => setZoomLevel(Number(e.target.value))} 
-                            onMouseUp={(e) => saveUserPreferences(userID, organizationID, Number(e.target.value), colorTheme)} 
-                            onTouchEnd={(e) => saveUserPreferences(userID, organizationID, Number(e.target.value), colorTheme)} 
+                            onChange={(e) => setZoomLevel(Number(e.target.value))}
+                            onMouseUp={(e) => saveUserPreferences(userID, organizationID, Number(e.target.value), colorTheme)}
+                            onTouchEnd={(e) => saveUserPreferences(userID, organizationID, Number(e.target.value), colorTheme)}
                             className="dinolabsSettingsSlider"
                         />
                     </div>
@@ -605,10 +873,10 @@ const DinoLabsAccount = ({
             {Object.entries(keyBinds).map(([action, key]) => (
                 <button key={action} className="dinolabsSettingsButtonLine">
                     <span>{getKeyBindDisplayName(action)}</span>
-                    <span> 
+                    <span>
                         <button className="dinolabsSettingsKeyIcon">⌘</button>
                         {uiState.isEditingKeyBinds === action ? (
-                            <select 
+                            <select
                                 className="dinolabsSettingsKeyIconSelect"
                                 value={key}
                                 onChange={(e) => {
@@ -622,10 +890,10 @@ const DinoLabsAccount = ({
                                 ))}
                             </select>
                         ) : (
-                            <button 
+                            <button
                                 className="dinolabsSettingsKeyIcon"
                                 onClick={() => setUiState(prev => ({ ...prev, isEditingKeyBinds: action }))}
-                            > 
+                            >
                                 {key}
                             </button>
                         )}
@@ -643,9 +911,9 @@ const DinoLabsAccount = ({
                         {theme.name}
                         <span className="dinolabsSettingsThemeIndicator">
                             {theme.colors.map((color, index) => (
-                                <span 
+                                <span
                                     key={index}
-                                    className="dinolabsSettingsThemeIndicatorDot" 
+                                    className="dinolabsSettingsThemeIndicatorDot"
                                     style={{ backgroundColor: color }}
                                 />
                             ))}
@@ -665,8 +933,101 @@ const DinoLabsAccount = ({
         </div>
     );
 
+    const renderProfileEditor = () => (
+        <div className="dinolabsAccountEditForm">
+            <div className="dinolabsAccountEditRow" style={{ "margin-top": 0 }}>
+                <label className="dinolabsAccountEditLabel">First Name</label>
+                <input
+                    className="dinolabsSettingsInput dinolabsAccountEditInput"
+                    type="text"
+                    value={editProfile.firstName}
+                    onChange={(e) => handleProfileField("firstName", e.target.value)}
+                    placeholder="First name"
+                />
+            </div>
+
+            <div className="dinolabsAccountEditRow">
+                <label className="dinolabsAccountEditLabel">Last Name</label>
+                <input
+                    className="dinolabsSettingsInput dinolabsAccountEditInput"
+                    type="text"
+                    value={editProfile.lastName}
+                    onChange={(e) => handleProfileField("lastName", e.target.value)}
+                    placeholder="Last name"
+                />
+            </div>
+
+            <div className="dinolabsAccountEditRow">
+                <label className="dinolabsAccountEditLabel">Phone</label>
+                <input
+                    className="dinolabsSettingsInput dinolabsAccountEditInput"
+                    type="text"
+                    value={editProfile.phone}
+                    onChange={(e) => handleProfileField("phone", e.target.value)}
+                    placeholder="(###) ###-####"
+                />
+            </div>
+
+            <div className="dinolabsAccountEditRow">
+                <label className="dinolabsAccountEditLabel">Role / Title</label>
+                <input
+                    className="dinolabsSettingsInput dinolabsAccountEditInput"
+                    type="text"
+                    value={editProfile.role}
+                    onChange={(e) => handleProfileField("role", e.target.value)}
+                    placeholder="Your role"
+                />
+            </div>
+
+            <div className="dinolabsAccountImageUploadControls">
+                <div className="dinolabsAccountImagePreviewStack">
+                    <img
+                        className="dinolabsAccountImagePreview"
+                        alt=""
+                        src={editProfile.imagePreview || userInfo.image}
+                    />
+                </div>
+                <div className="dinolabsAccountImageUploadStack">
+                    <label className="dinolabsAccountEditLabelBig">Profile Image</label>
+                    <label className="dinolabsSettingsFilePicker">
+                        <FontAwesomeIcon icon={faImage} />
+                        <span>Choose Image</span>
+                        <input
+                            type="file"
+                            accept="image/*"
+                            onChange={(e) => handleImageFile(e.target.files?.[0])}
+                        />
+                    </label>
+                    <small className="dinolabsAccountEditHelp">PNG/JPG, recommended square, ≤ 5MB.</small>
+                </div>
+            </div>
+
+            <div className="dinolabsAccountEditActions">
+                <button
+                    className="dinolabsSettingsActionButtonPrimary"
+                    onClick={updateUserProfile}
+                    disabled={editProfile.saving}
+                    title="Save changes"
+                >
+                    <FontAwesomeIcon icon={faFloppyDisk} />
+                    <span>{editProfile.saving ? "Saving..." : "Save"}</span>
+                </button>
+                <button
+                    className="dinolabsSettingsActionButtonSecondary"
+                    onClick={resetProfileEdits}
+                    disabled={editProfile.saving}
+                    title="Reset unsaved changes"
+                >
+                    <FontAwesomeIcon icon={faRotateLeft} />
+                    <span>Reset</span>
+                </button>
+            </div>
+        </div>
+    );
+
     const renderSettingsContent = () => {
         const settingsMap = {
+            profileEditor: renderProfileEditor,
             personalInfo: renderPersonalInfoSettings,
             teamInfo: renderTeamInfoSettings,
             settingsManagement: renderSettingsManagement,
@@ -689,27 +1050,27 @@ const DinoLabsAccount = ({
     const renderLoadingState = () => (
         <div className="dinolabsAccountWrapper">
             <div className="loading-wrapper">
-                <div className="loading-circle"/>
-                <label className="loading-title">Dino Labs Web IDE</label> 
+                <div className="loading-circle" />
+                <label className="loading-title">Dino Labs Web IDE</label>
             </div>
         </div>
     );
 
     const renderMainContent = () => (
         <div className="dinolabsAccountWrapper">
-            <div className="dinolabsAccountInformationContainer"> 
+            <div className="dinolabsAccountInformationContainer">
                 {renderPersonalInfo()}
                 {renderOrganizationInfo()}
-            </div> 
+            </div>
 
-            <div className="dinolabsAccountFunctionalityContainer"> 
-                <div className="dinolabsAccountFunctionalityCellLeading"> 
+            <div className="dinolabsAccountFunctionalityContainer">
+                <div className="dinolabsAccountFunctionalityCellLeading">
                     {renderNavigationButtons()}
-                </div> 
-                
-                <div className="dinolabsAccountFunctionalityCellTrailing"> 
+                </div>
+
+                <div className="dinolabsAccountFunctionalityCellTrailing">
                     {renderSettingsContent()}
-                </div> 
+                </div>
             </div>
         </div>
     );
@@ -721,4 +1082,4 @@ const DinoLabsAccount = ({
     );
 };
 
-export default DinoLabsAccount; 
+export default DinoLabsAccount;

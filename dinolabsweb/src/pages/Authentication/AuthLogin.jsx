@@ -11,10 +11,10 @@ import {
     faEnvelopeCircleCheck,
     faKey
 } from "@fortawesome/free-solid-svg-icons";
-import "../../styles/mainStyles/AuthenticationStyles/DinoLabsAuthLogin.css";
-import DinoLabsNav from "../../helpers/DinoLabsNav";
+import "../../styles/mainStyles/Authentication/AuthLogin.css";
+import DinoLabsNav from "../../helpers/Nav.jsx";
 import useIsTouchDevice from "../../TouchDevice.jsx";
-import useAuth from "../../UseAuth";
+import useAuth from "../../UseAuth.jsx";
 
 const Login = () => {
     const navigate = useNavigate();

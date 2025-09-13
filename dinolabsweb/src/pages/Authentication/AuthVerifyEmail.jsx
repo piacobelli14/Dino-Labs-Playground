@@ -1,5 +1,6 @@
 import { useEffect, useState, useRef } from "react";
-import { useLocation, useNavigate } from "react-router-dom";import "../../styles/mainStyles/AuthenticationStyles/DinoLabsAuthVerifyEmail.css"
+import { useLocation, useNavigate } from "react-router-dom";
+import "../../styles/mainStyles/Authentication/AuthVerifyEmail.css"
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faMailBulk } from "@fortawesome/free-solid-svg-icons";
 

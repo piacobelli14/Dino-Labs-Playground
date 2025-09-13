@@ -5,7 +5,7 @@ import AutoSizer from "react-virtualized-auto-sizer";
 import Tippy from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
 import "../../styles/mainStyles/DinoLabsTabularEditor/DinoLabsTabularEditor.css";
-import { showDialog } from "../../helpers/DinoLabsAlert.jsx";
+import { showDialog } from "../../helpers/Alert.jsx";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowRightFromBracket, faFilter, faSquareMinus, faSquarePlus, faSave, faDownload, faUndo, faRedo,

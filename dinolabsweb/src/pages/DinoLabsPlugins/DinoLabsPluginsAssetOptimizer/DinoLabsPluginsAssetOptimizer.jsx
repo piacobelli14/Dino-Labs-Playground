@@ -4,7 +4,7 @@ import {
   faBoxesStacked, faUpload, faWandMagicSparkles, faFileArchive, faDownload, faCopy,
   faGears, faCircleCheck, faCircleHalfStroke, faCamera, faFont
 } from "@fortawesome/free-solid-svg-icons";
-import DinoLabsNav from "../../../helpers/DinoLabsNav";
+import DinoLabsNav from "../../../helpers/Nav";
 import "../../../styles/mainStyles/DinoLabsPlugins/DinoLabsPluginsAssetOptimizer/DinoLabsPluginsAssetOptimizer.css";
 import "../../../styles/helperStyles/Slider.css";
 import "../../../styles/helperStyles/Checkbox.css";

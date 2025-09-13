@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import Tippy from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
-import DinoLabsNav from "../../../helpers/DinoLabsNav";
+import DinoLabsNav from "../../../helpers/Nav";
 import "../../../styles/mainStyles/DinoLabsPlugins/DinoLabsPluginsCalculator/DinoLabsPluginsCalculator.css";
 
 const DinoLabsPluginsCalculator = () => {

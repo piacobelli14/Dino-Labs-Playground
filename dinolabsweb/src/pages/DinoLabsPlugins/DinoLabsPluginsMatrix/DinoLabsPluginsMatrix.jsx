@@ -17,7 +17,7 @@ import {
   faRulerCombined,
   faVectorSquare
 } from "@fortawesome/free-solid-svg-icons";
-import DinoLabsNav from "../../../helpers/DinoLabsNav";
+import DinoLabsNav from "../../../helpers/Nav";
 import "../../../styles/mainStyles/DinoLabsPlugins/DinoLabsPluginsMatrix/DinoLabsPluginsMatrix.css";
 
 const clamp = (n, min, max) => Math.max(min, Math.min(max, n));

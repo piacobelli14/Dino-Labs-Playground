@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { createPortal } from "react-dom";
 import "../../styles/mainStyles/DinoLabsTextEditor/DinoLabsTextEditor.css";
-import { showDialog } from "../../helpers/DinoLabsAlert.jsx";
+import { showDialog } from "../../helpers/Alert.jsx";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faArrowRightFromBracket, faSave, faDownload, faUndo, faRedo,

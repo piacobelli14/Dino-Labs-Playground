@@ -2,10 +2,10 @@ import { BrowserRouter as Router, Route, Routes, Navigate } from "react-router-d
 import { useEffect, useState } from "react";
 import "./styles/App.css";
 import ProtectedRoute from "./ProtectedRoute";
-import Login from "./pages/DinoLabsAuthnetication/DinoLabsAuthLogin"; 
-import Register from "./pages/DinoLabsAuthnetication/DinoLabsAuthRegister"; 
-import Reset from "./pages/DinoLabsAuthnetication/DinoLabsAuthReset";
-import Verification from "./pages/DinoLabsAuthnetication/DinoLabsAuthVerifyEmail";
+import Login from "./pages/Authentication/AuthLogin"; 
+import Register from "./pages/Authentication/AuthRegister"; 
+import Reset from "./pages/Authentication/AuthReset";
+import Verification from "./pages/Authentication/AuthVerifyEmail";
 import DinoLabs from "./pages/DinoLabs"; 
 import DinoLabsMonitor from "./pages/DinoLabsAccount/DinoLabsMonitoring";
 import DinoLabsPlugins from "./pages/DinoLabsPlugins/DinoLabsPlugins";
