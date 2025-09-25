@@ -435,9 +435,11 @@ class OptimizedAPCDDeidentifier:
         placeholders = ', '.join(['%s'] * len(columns))
         insert_sql = f"INSERT INTO {OUTPUT_SCHEMA}.{table_name} ({', '.join(columns)}) VALUES ({placeholders})"
         
+        df_values = df.values
         data_tuples = []
-        for _, row in df.iterrows():
-            values = tuple(str(val) if pd.notna(val) else None for val in row)
+        
+        for i in range(len(df_values)):
+            values = tuple(str(val) if pd.notna(val) else None for val in df_values[i])
             data_tuples.append(values)
             
             if len(data_tuples) >= batch_size:
@@ -614,11 +616,14 @@ class OptimizedAPCDDeidentifier:
         
         if 'carrier_specific_unique_member_id' in result_df.columns and 'data_submitter_code' in result_df.columns:
             member_ids = []
-            for _, row in result_df.iterrows():
-                if pd.notna(row['carrier_specific_unique_member_id']):
+            member_id_values = result_df['carrier_specific_unique_member_id'].values
+            submitter_values = result_df['data_submitter_code'].values
+            
+            for i in range(len(member_id_values)):
+                if pd.notna(member_id_values[i]):
                     member_id = self.create_deidentified_id(
                         self.MEMBER_SECRET_KEY, 
-                        f"{row['carrier_specific_unique_member_id']}|{row['data_submitter_code']}"
+                        f"{member_id_values[i]}|{submitter_values[i]}"
                     )
                     member_ids.append(member_id)
                 else:
@@ -627,11 +632,14 @@ class OptimizedAPCDDeidentifier:
         
         if 'carrier_specific_unique_subscriber_id' in result_df.columns and 'data_submitter_code' in result_df.columns:
             subscriber_ids = []
-            for _, row in result_df.iterrows():
-                if pd.notna(row['carrier_specific_unique_subscriber_id']):
+            subscriber_id_values = result_df['carrier_specific_unique_subscriber_id'].values
+            submitter_values = result_df['data_submitter_code'].values
+            
+            for i in range(len(subscriber_id_values)):
+                if pd.notna(subscriber_id_values[i]):
                     subscriber_id = self.create_deidentified_id(
                         self.MEMBER_SECRET_KEY, 
-                        f"{row['carrier_specific_unique_subscriber_id']}|{row['data_submitter_code']}"
+                        f"{subscriber_id_values[i]}|{submitter_values[i]}"
                     )
                     subscriber_ids.append(subscriber_id)
                 else:
@@ -639,7 +647,7 @@ class OptimizedAPCDDeidentifier:
             result_df['DEID_SUBSCRIBER_ID'] = subscriber_ids
         
         if 'member_date_of_birth' in result_df.columns:
-            ages = self.vectorized_age_calculation(result_df['member_date_of_birth'].tolist())
+            ages = self.vectorized_age_calculation(result_df['member_date_of_birth'].values)
             age_groups = self.vectorized_age_to_group(ages)
             result_df['AGE_GROUP'] = age_groups
         
@@ -658,32 +666,32 @@ class OptimizedAPCDDeidentifier:
         
         zip_columns = [col for col in result_df.columns if 'zip' in col.lower() and 'code' in col.lower()]
         for col in zip_columns:
-            result_df[col] = self.vectorized_zip_processing(result_df[col].tolist())
+            result_df[col] = self.vectorized_zip_processing(result_df[col].values)
         
         fips_columns = [col for col in result_df.columns if 'fips' in col.lower()]
         for col in fips_columns:
-            result_df[col] = self.vectorized_county_processing(result_df[col].tolist())
+            result_df[col] = self.vectorized_county_processing(result_df[col].values)
         
         date_to_year_only_fields = [
             'member_pcp_effective_date', 'plan_effective_date', 'plan_term_date'
         ]
         for field in date_to_year_only_fields:
             if field in result_df.columns:
-                result_df[field] = self.vectorized_date_to_year_only(result_df[field].tolist())
+                result_df[field] = self.vectorized_date_to_year_only(result_df[field].values)
         
         date_to_yq_fields = [
             'smib_from_date', 'smib_to_date', 'data_period_start', 'data_period_end'
         ]
         for field in date_to_yq_fields:
             if field in result_df.columns:
-                result_df[field] = self.vectorized_date_to_year_quarter(result_df[field].tolist())
+                result_df[field] = self.vectorized_date_to_year_quarter(result_df[field].values)
         
         if 'start_year_of_submission' in result_df.columns:
-            result_df['eligibility_year'] = self.vectorized_date_to_year_only(result_df['start_year_of_submission'].tolist())
+            result_df['eligibility_year'] = self.vectorized_date_to_year_only(result_df['start_year_of_submission'].values)
             result_df = result_df.drop(columns=['start_year_of_submission'])
         
         if 'death_date' in result_df.columns:
-            deceased_flags = ['Y' if pd.notna(x) else 'N' for x in result_df['death_date'].tolist()]
+            deceased_flags = ['Y' if pd.notna(x) else 'N' for x in result_df['death_date'].values]
             result_df['deceased_indicator'] = deceased_flags
             result_df = result_df.drop(columns=['death_date'])
         
@@ -693,12 +701,15 @@ class OptimizedAPCDDeidentifier:
         result_df = df.copy()
         
         provider_ids = []
-        for _, row in result_df.iterrows():
+        npi_values = result_df.get('provider_npi', pd.Series([None] * len(result_df))).values
+        payor_id_values = result_df.get('payor_assigned_provider_id', pd.Series([None] * len(result_df))).values
+        
+        for i in range(len(result_df)):
             id_components = []
-            if pd.notna(row.get('provider_npi')):
-                id_components.append(str(row['provider_npi']))
-            elif pd.notna(row.get('payor_assigned_provider_id')):
-                id_components.append(str(row['payor_assigned_provider_id']))
+            if pd.notna(npi_values[i]):
+                id_components.append(str(npi_values[i]))
+            elif pd.notna(payor_id_values[i]):
+                id_components.append(str(payor_id_values[i]))
             
             if id_components:
                 provider_id = self.create_deidentified_id(self.PROVIDER_SECRET_KEY, '|'.join(id_components))
@@ -721,11 +732,11 @@ class OptimizedAPCDDeidentifier:
         
         zip_columns = [col for col in result_df.columns if 'zip' in col.lower() and 'code' in col.lower()]
         for col in zip_columns:
-            result_df[col] = self.vectorized_zip_processing(result_df[col].tolist())
+            result_df[col] = self.vectorized_zip_processing(result_df[col].values)
         
         fips_columns = [col for col in result_df.columns if 'fips' in col.lower()]
         for col in fips_columns:
-            result_df[col] = self.vectorized_county_processing(result_df[col].tolist())
+            result_df[col] = self.vectorized_county_processing(result_df[col].values)
         
         return result_df
     
@@ -739,20 +750,21 @@ class OptimizedAPCDDeidentifier:
         
         for col in dx_cols:
             if col in result_df.columns:
-                sensitive_flags = self.check_sensitive_diagnosis_vectorized(result_df[col].tolist())
+                codes = result_df[col].values
+                sensitive_flags = self.check_sensitive_diagnosis_vectorized(codes)
                 for idx, is_sensitive in enumerate(sensitive_flags):
                     if is_sensitive:
                         mask_demographics[idx] = True
                 
-                rare_flags = [code in self.rare_dx_codes for code in result_df[col].tolist()]
+                rare_flags = [code in self.rare_dx_codes for code in codes]
                 for idx, is_rare in enumerate(rare_flags):
                     if is_rare:
                         mask_demographics[idx] = True
-                        if pd.notna(result_df.iloc[idx][col]):
-                            result_df.iloc[idx, result_df.columns.get_loc(col)] = str(result_df.iloc[idx][col])[:3]
+                        if pd.notna(codes[idx]):
+                            result_df.iloc[idx, result_df.columns.get_loc(col)] = str(codes[idx])[:3]
                 
-                for idx in range(len(result_df)):
-                    code = result_df.iloc[idx][col]
+                for idx in range(len(codes)):
+                    code = codes[idx]
                     if pd.notna(code):
                         code_str = str(code).upper()[:3]
                         for generalized, codes_list in self.generalization_codes.items():
@@ -765,24 +777,26 @@ class OptimizedAPCDDeidentifier:
         
         for col in cpt_cols:
             if col in result_df.columns:
-                rare_flags = [code in self.rare_cpt_codes for code in result_df[col].tolist()]
+                codes = result_df[col].values
+                rare_flags = [code in self.rare_cpt_codes for code in codes]
                 for idx, is_rare in enumerate(rare_flags):
                     if is_rare:
                         mask_demographics[idx] = True
         
         if 'drug_code' in result_df.columns:
-            rare_flags = [code in self.rare_ndc_codes for code in result_df['drug_code'].tolist()]
+            drug_codes = result_df['drug_code'].values
+            rare_flags = [code in self.rare_ndc_codes for code in drug_codes]
             for idx, is_rare in enumerate(rare_flags):
                 if is_rare:
                     mask_demographics[idx] = True
         
         zip_columns = [col for col in result_df.columns if 'zip' in col.lower() and 'code' in col.lower()]
         for col in zip_columns:
-            result_df[col] = self.vectorized_zip_processing(result_df[col].tolist())
+            result_df[col] = self.vectorized_zip_processing(result_df[col].values)
         
         fips_columns = [col for col in result_df.columns if 'fips' in col.lower()]
         for col in fips_columns:
-            result_df[col] = self.vectorized_county_processing(result_df[col].tolist())
+            result_df[col] = self.vectorized_county_processing(result_df[col].values)
         
         for idx, should_mask in enumerate(mask_demographics):
             if should_mask:
@@ -799,11 +813,15 @@ class OptimizedAPCDDeidentifier:
         
         if 'payor_claim_control_number' in result_df.columns:
             claim_ids = []
-            for _, row in result_df.iterrows():
-                if pd.notna(row['payor_claim_control_number']):
+            claim_values = result_df['payor_claim_control_number'].values
+            cross_ref_values = result_df.get('cross_reference_claims_id', pd.Series([None] * len(result_df))).values
+            submitter_values = result_df.get('data_submitter_code', pd.Series([None] * len(result_df))).values
+            
+            for i in range(len(claim_values)):
+                if pd.notna(claim_values[i]):
                     claim_id = self.create_deidentified_id(
                         self.CLAIM_SECRET_KEY, 
-                        f"{row['payor_claim_control_number']}|{row.get('cross_reference_claims_id', '')}|{row.get('data_submitter_code', '')}"
+                        f"{claim_values[i]}|{cross_ref_values[i] if pd.notna(cross_ref_values[i]) else ''}|{submitter_values[i] if pd.notna(submitter_values[i]) else ''}"
                     )
                     claim_ids.append(claim_id)
                 else:
@@ -812,11 +830,14 @@ class OptimizedAPCDDeidentifier:
         
         if 'carrier_specific_unique_member_id' in result_df.columns:
             member_ids = []
-            for _, row in result_df.iterrows():
-                if pd.notna(row['carrier_specific_unique_member_id']):
+            member_id_values = result_df['carrier_specific_unique_member_id'].values
+            submitter_values = result_df.get('data_submitter_code', pd.Series([None] * len(result_df))).values
+            
+            for i in range(len(member_id_values)):
+                if pd.notna(member_id_values[i]):
                     member_id = self.create_deidentified_id(
                         self.MEMBER_SECRET_KEY, 
-                        f"{row['carrier_specific_unique_member_id']}|{row.get('data_submitter_code', '')}"
+                        f"{member_id_values[i]}|{submitter_values[i] if pd.notna(submitter_values[i]) else ''}"
                     )
                     member_ids.append(member_id)
                 else:
@@ -825,11 +846,14 @@ class OptimizedAPCDDeidentifier:
         
         if 'carrier_specific_unique_subscriber_id' in result_df.columns:
             subscriber_ids = []
-            for _, row in result_df.iterrows():
-                if pd.notna(row['carrier_specific_unique_subscriber_id']):
+            subscriber_id_values = result_df['carrier_specific_unique_subscriber_id'].values
+            submitter_values = result_df.get('data_submitter_code', pd.Series([None] * len(result_df))).values
+            
+            for i in range(len(subscriber_id_values)):
+                if pd.notna(subscriber_id_values[i]):
                     subscriber_id = self.create_deidentified_id(
                         self.MEMBER_SECRET_KEY, 
-                        f"{row['carrier_specific_unique_subscriber_id']}|{row.get('data_submitter_code', '')}"
+                        f"{subscriber_id_values[i]}|{submitter_values[i] if pd.notna(submitter_values[i]) else ''}"
                     )
                     subscriber_ids.append(subscriber_id)
                 else:
@@ -846,7 +870,8 @@ class OptimizedAPCDDeidentifier:
         for npi_field, deid_field in provider_fields.items():
             if npi_field in result_df.columns:
                 provider_ids = []
-                for npi in result_df[npi_field].tolist():
+                npi_values = result_df[npi_field].values
+                for npi in npi_values:
                     if pd.notna(npi):
                         provider_id = self.create_deidentified_id(self.PROVIDER_SECRET_KEY, str(npi))
                         provider_ids.append(provider_id)
@@ -856,11 +881,12 @@ class OptimizedAPCDDeidentifier:
         
         if age_lookup and 'DEID_MEMBER_ID' in result_df.columns:
             age_groups = []
-            for member_id in result_df['DEID_MEMBER_ID'].tolist():
+            member_id_values = result_df['DEID_MEMBER_ID'].values
+            for member_id in member_id_values:
                 age_groups.append(age_lookup.get(member_id))
             result_df['AGE_GROUP'] = age_groups
         elif 'member_date_of_birth' in result_df.columns:
-            ages = self.vectorized_age_calculation(result_df['member_date_of_birth'].tolist())
+            ages = self.vectorized_age_calculation(result_df['member_date_of_birth'].values)
             age_groups = self.vectorized_age_to_group(ages)
             result_df['AGE_GROUP'] = age_groups
         
@@ -886,7 +912,7 @@ class OptimizedAPCDDeidentifier:
         
         for field in date_fields:
             if field in result_df.columns:
-                result_df[field] = self.vectorized_date_to_year_quarter(result_df[field].tolist())
+                result_df[field] = self.vectorized_date_to_year_quarter(result_df[field].values)
         
         print(f"  Records with masked demographics: {sum(mask_demographics):,}")
         
