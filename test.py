@@ -12,7 +12,6 @@ import warnings
 warnings.filterwarnings('ignore')
 
 import psycopg2
-from psycopg2.extras import execute_values
 
 password = 'PAiacobelli14-!-'
 host = 'spgpcdplv001'
@@ -48,7 +47,7 @@ class APCDMasterDeidentifier:
     def __init__(self, generate_new_keys=True, con=None, use_sqlite=False):
         self.con = con
         self.use_sqlite = use_sqlite
-        self.RARITY_THRESHOLD_K = 10
+        self.RARITY_THRESHOLD_K = 10  
         
         if generate_new_keys:
             print("Generating new cryptographically secure keys...")
@@ -80,19 +79,20 @@ class APCDMasterDeidentifier:
         }
         
         self.define_sensitive_codes()
-        self._create_lookup_tables()
     
     def define_sensitive_codes(self):
         self.high_sensitivity_codes = {
-            'HIV_AIDS': ['B20', 'B21', 'B22', 'B23', 'B24'],
-            'SUBSTANCE': ['F10', 'F11', 'F12', 'F13', 'F14', 'F15', 'F16', 'F17', 'F18', 'F19']
+            'HIV_AIDS': ['B20', 'B21', 'B22', 'B23', 'B24'],  
+            'SUBSTANCE': ['F10', 'F11', 'F12', 'F13', 'F14',   
+                         'F15', 'F16', 'F17', 'F18', 'F19']
         }
         
-        self.newborn_codes = ['Z38', 'Z332']
+        self.newborn_codes = ['Z38', 'Z332']  
         self.abuse_codes = ['T74', 'T76']
         
         self.generalization_codes = {
-            'A50-A64': ['A50', 'A51', 'A52', 'A53', 'A54', 'A55', 'A56', 'A57', 'A58', 'A59', 'A60', 'A61', 'A62', 'A63', 'A64'],
+            'A50-A64': ['A50', 'A51', 'A52', 'A53', 'A54', 'A55', 'A56', 
+                       'A57', 'A58', 'A59', 'A60', 'A61', 'A62', 'A63', 'A64'],
             'F20': ['F20'],
             'F31': ['F31'],
             'T74': ['T74'],
@@ -100,17 +100,6 @@ class APCDMasterDeidentifier:
             'G10': ['G10'],
             'E84': ['E84']
         }
-
-    def _create_lookup_tables(self):
-        self.sensitive_codes_set = set()
-        for codes in self.high_sensitivity_codes.values():
-            self.sensitive_codes_set.update(codes)
-        self.sensitive_codes_set.update(self.abuse_codes)
-        
-        self.generalization_lookup = {}
-        for generalized, codes_list in self.generalization_codes.items():
-            for code in codes_list:
-                self.generalization_lookup[code] = generalized
     
     def save_keys_to_file(self):
         keys = {
@@ -184,103 +173,123 @@ class APCDMasterDeidentifier:
     
     def load_county_population_data(self):
         county_data = {
-            '48201': 1716239,
-            '48029': 2688247,
-            '48113': 1395269,
-            '48439': 944279,
-            '48453': 1290446,
-            '48085': 394453,
-            '48121': 485445,
-            '48157': 620961,
-            '48215': 354452,
-            '48339': 432022,
+            '48201': 1716239,  
+            '48029': 2688247,  
+            '48113': 1395269,  
+            '48439': 944279,   
+            '48453': 1290446,  
+            '48085': 394453,   
+            '48121': 485445,   
+            '48157': 620961,   
+            '48215': 354452,   
+            '48339': 432022,   
             '48011': 1904,
             '48033': 8466,
             '48045': 3353,
         }
         return county_data
     
-    def create_deidentified_id_vectorized(self, secret_key: str, series: pd.Series) -> pd.Series:
+    def create_deidentified_id_vectorized(self, secret_key: str, input_series: pd.Series) -> pd.Series:
         key_bytes = secret_key.encode('utf-8')
+        result = []
         
-        def hash_single(input_string):
+        for input_string in input_series:
             if pd.isna(input_string):
-                return None
-            input_bytes = str(input_string).encode('utf-8')
-            hmac_object = hmac.new(key_bytes, msg=input_bytes, digestmod=hashlib.sha256)
-            binary_digest = hmac_object.digest()
-            result = base64.urlsafe_b64encode(binary_digest).decode('utf-8')
-            result = ''.join(c for c in result if c.isalnum())[:16]
-            return result
+                result.append(None)
+            else:
+                input_bytes = str(input_string).encode('utf-8')
+                hmac_object = hmac.new(key_bytes, msg=input_bytes, digestmod=hashlib.sha256)
+                binary_digest = hmac_object.digest()
+                encoded = base64.urlsafe_b64encode(binary_digest).decode('utf-8')
+                cleaned = ''.join(c for c in encoded if c.isalnum())[:16]
+                result.append(cleaned)
         
-        return series.apply(hash_single)
+        return pd.Series(result, index=input_series.index)
     
-    def date_to_year_quarter_vectorized(self, series):
-        def convert_date(date_value):
+    def date_to_year_quarter_vectorized(self, date_series):
+        result = []
+        for date_value in date_series:
             if pd.isna(date_value):
-                return None
-            
-            try:
-                if isinstance(date_value, (int, float)):
-                    date_str = str(int(date_value))
-                    if len(date_str) == 8:
-                        date_value = pd.to_datetime(date_str, format='%Y%m%d')
-                    else:
-                        return None
-                else:
-                    date_value = pd.to_datetime(date_value)
-                
-                quarter = (date_value.month - 1) // 3 + 1
-                return f"{date_value.year}Q{quarter}"
-            except:
-                return None
+                result.append(None)
+                continue
+
+            if isinstance(date_value, (str, int, float)): 
+                try: 
+                    if isinstance(date_value, (int, float)): 
+                        date_str = str(int(date_value))
+                        if len(date_str) == 8: 
+                            date_value = pd.to_datetime(date_str, format='%Y%m%d')
+                        else: 
+                            result.append(None)
+                            continue
+                    else: 
+                        date_value = pd.to_datetime(date_value)
+                except: 
+                    result.append(None)
+                    continue
+
+            quarter = (date_value.month - 1) // 3 + 1
+            result.append(f"{date_value.year}Q{quarter}")
         
-        return series.apply(convert_date)
+        return pd.Series(result)
     
-    def date_to_year_only_vectorized(self, series):
-        def convert_date(date_value):
+    def date_to_year_only_vectorized(self, date_series):
+        result = []
+        for date_value in date_series:
             if pd.isna(date_value):
-                return None
-            
-            try:
-                if isinstance(date_value, (int, float)):
-                    date_str = str(int(date_value))
-                    if len(date_str) == 8:
-                        date_value = pd.to_datetime(date_str, format='%Y%m%d')
-                    else:
-                        return None
-                else:
-                    date_value = pd.to_datetime(date_value)
-                
-                return str(date_value.year)
-            except:
-                return None
+                result.append(None)
+                continue
+
+            if isinstance(date_value, (str, int, float)): 
+                try: 
+                    if isinstance(date_value, (int, float)): 
+                        date_str = str(int(date_value))
+                        if len(date_str) == 8: 
+                            date_value = pd.to_datetime(date_str, format='%Y%m%d')
+                        else: 
+                            result.append(None)
+                            continue
+                    else: 
+                        date_value = pd.to_datetime(date_value)
+                except: 
+                    result.append(None)
+                    continue
+                    
+            result.append(str(date_value.year))
         
-        return series.apply(convert_date)
+        return pd.Series(result)
     
-    def truncate_zip_to_3digits_vectorized(self, series):
-        def process_zip(zip_code):
+    def truncate_zip_to_3digits_vectorized(self, zip_series):
+        result = []
+        for zip_code in zip_series:
             if pd.isna(zip_code):
-                return "000"
+                result.append("000")
+                continue
+                
             zip_str = str(zip_code).strip()
             if len(zip_str) < 3:
-                return "000"
+                result.append("000")
+                continue
+                
             zip_3 = zip_str[:3]
             
             if self.population_data:
                 matching_zips = [z for z in self.population_data.keys() if z.startswith(zip_3)]
                 total_pop = sum(self.population_data.get(z, 0) for z in matching_zips)
                 if total_pop < 20000:
-                    return "000"
+                    result.append("000")
+                    continue
             
-            return zip_3
+            result.append(zip_3)
         
-        return series.apply(process_zip)
+        return pd.Series(result, index=zip_series.index)
     
-    def process_county_fips_vectorized(self, series):
-        def process_fips(fips_code):
+    def process_county_fips_vectorized(self, fips_series):
+        result = []
+        for fips_code in fips_series:
             if pd.isna(fips_code):
-                return "000"
+                result.append("000")
+                continue
             
             fips_str = str(int(fips_code)) if isinstance(fips_code, float) else str(fips_code)
             
@@ -291,47 +300,102 @@ class APCDMasterDeidentifier:
             
             if fips_str in self.county_population_data:
                 if self.county_population_data[fips_str] < 20000:
-                    return "000"
-                return fips_str
+                    result.append("000")
+                    continue
+                result.append(fips_str)
+                continue
             
-            return fips_str
+            result.append(fips_str)
         
-        return series.apply(process_fips)
+        return pd.Series(result, index=fips_series.index)
     
-    def calculate_age_from_dob_vectorized(self, series, reference_date=None):
+    def apply_geographic_masking(self, df):
+        zip_columns = [col for col in df.columns if 'zip' in col.lower() and 'code' in col.lower()]
+        for col in zip_columns:
+            df[col] = self.truncate_zip_to_3digits_vectorized(df[col])
+        
+        fips_columns = [col for col in df.columns if 'fips' in col.lower()]
+        for col in fips_columns:
+            df[col] = self.process_county_fips_vectorized(df[col])
+        
+        for zip_col in zip_columns:
+            if zip_col in df.columns:
+                mask_000_zips = df[zip_col] == '000'
+                for fips_col in fips_columns:
+                    if fips_col in df.columns:
+                        df.loc[mask_000_zips, fips_col] = '000'
+        
+        county_columns = [col for col in df.columns if 'county' in col.lower() and 'name' in col.lower()]
+        for col in county_columns:
+            if any('fips' in fips_col.lower() for fips_col in df.columns):
+                fips_col = next((fips_col for fips_col in df.columns if 'fips' in fips_col.lower()), None)
+                if fips_col:
+                    df[col] = df.apply(lambda row: self.process_county_name(row[fips_col], row[col]), axis=1)
+            else:
+                df[col] = df[col].apply(lambda x: "small_county" if pd.notna(x) else x)
+        
+        return df
+    
+    def process_county_name(self, fips_code, county_name):
+        if pd.isna(fips_code):
+            return "small_county"
+        
+        fips_str = str(int(fips_code)) if isinstance(fips_code, float) else str(fips_code)
+        
+        if len(fips_str) <= 3:
+            fips_str = '48' + fips_str.zfill(3)
+        elif len(fips_str) == 4:
+            fips_str = '4' + fips_str
+        
+        if fips_str in self.county_population_data:
+            if self.county_population_data[fips_str] < 20000:
+                return "small_county"
+        
+        return county_name
+    
+    def calculate_age_from_dob_vectorized(self, dob_series, reference_date=None):
         if reference_date is None:
             reference_date = datetime.now()
+        elif isinstance(reference_date, (int, str)): 
+            try: 
+                reference_date = pd.to_datetime(reference_date)
+            except: 
+                reference_date = pd.to_datetime(reference_date)
         
-        def calc_age(dob):
+        ages = []
+        for dob in dob_series:
             if pd.isna(dob):
-                return None
+                ages.append(None)
+                continue
             
-            try:
-                if isinstance(dob, (str, int)):
-                    if isinstance(dob, int):
+            if isinstance(dob, (str, int)):
+                try:
+                    if isinstance(dob, int): 
                         dob_str = str(dob)
-                        if len(dob_str) == 8:
+                        if len(dob_str) == 8: 
                             dob = pd.to_datetime(dob_str, format='%Y%m%d')
                         else:
-                            return None
-                    else:
+                            ages.append(None)
+                            continue
+                    else: 
                         dob = pd.to_datetime(dob)
-                
-                age = reference_date.year - dob.year
-                if (reference_date.month, reference_date.day) < (dob.month, dob.day):
-                    age -= 1
-                
-                if age > 90:
-                    age = 90
-                
-                return age
-            except:
-                return None
+                except:
+                    ages.append(None)
+                    continue
+            
+            age = reference_date.year - dob.year
+            if (reference_date.month, reference_date.day) < (dob.month, dob.day):
+                age -= 1
+            
+            if age > 90:
+                age = 90
+            
+            ages.append(age)
         
-        return series.apply(calc_age)
+        return pd.Series(ages, index=dob_series.index)
     
-    def age_to_group_vectorized(self, series, is_hiv_drug_population=False):
-        def convert_age(age):
+    def age_to_group_vectorized(self, age_series, is_hiv_drug_population=False):
+        def map_age_to_group(age):
             if pd.isna(age):
                 return None
             
@@ -367,7 +431,29 @@ class APCDMasterDeidentifier:
                 elif age <= 99: return 21
                 else: return 22
         
-        return series.apply(convert_age)
+        return age_series.apply(map_age_to_group)
+    
+    def check_sensitive_diagnosis_vectorized(self, code_series):
+        sensitive_mask = pd.Series([False] * len(code_series), index=code_series.index)
+        sensitivity_types = pd.Series([None] * len(code_series), index=code_series.index)
+        
+        for idx, code in code_series.items():
+            if pd.isna(code):
+                continue
+            
+            code_str = str(code).strip().upper().replace('.', '')
+            
+            if code_str[:3] in self.high_sensitivity_codes['HIV_AIDS']:
+                sensitive_mask.loc[idx] = True
+                sensitivity_types.loc[idx] = 'HIGH_SENSITIVITY'
+            elif code_str[:3] in self.high_sensitivity_codes['SUBSTANCE']:
+                sensitive_mask.loc[idx] = True
+                sensitivity_types.loc[idx] = 'HIGH_SENSITIVITY'
+            elif code_str[:3] in self.abuse_codes:
+                sensitive_mask.loc[idx] = True
+                sensitivity_types.loc[idx] = 'ABUSE'
+        
+        return sensitive_mask, sensitivity_types
     
     def load_eligibility_data(self):
         print("Loading eligibility data...")
@@ -376,7 +462,7 @@ class APCDMasterDeidentifier:
         else:
             eligibility_table = f"{INPUT_SCHEMA}.{INPUT_ELIGIBILITY_TABLE}"
             query = f"SELECT * FROM {eligibility_table}"
-        
+
         return pd.read_sql_query(query, self.con)
     
     def load_provider_data(self):
@@ -386,7 +472,7 @@ class APCDMasterDeidentifier:
         else:
             provider_table = f"{INPUT_SCHEMA}.{INPUT_PROVIDER_TABLE}"
             query = f"SELECT * FROM {provider_table}"
-        
+
         return pd.read_sql_query(query, self.con)
     
     def load_medical_data(self):
@@ -396,7 +482,7 @@ class APCDMasterDeidentifier:
         else:
             medical_table = f"{INPUT_SCHEMA}.{INPUT_MEDICAL_TABLE}"
             query = f"SELECT * FROM {medical_table}"
-        
+
         return pd.read_sql_query(query, self.con)
     
     def apply_eligibility_deidentification(self, df):
@@ -404,12 +490,12 @@ class APCDMasterDeidentifier:
         result_df = df.copy()
         
         if 'carrier_specific_unique_member_id' in result_df.columns and 'data_submitter_code' in result_df.columns:
-            combined_series = result_df['carrier_specific_unique_member_id'].astype(str) + '|' + result_df['data_submitter_code'].astype(str)
-            result_df['DEID_MEMBER_ID'] = self.create_deidentified_id_vectorized(self.MEMBER_SECRET_KEY, combined_series)
+            combined_ids = result_df['carrier_specific_unique_member_id'].fillna('') + '|' + result_df['data_submitter_code'].fillna('')
+            result_df['DEID_MEMBER_ID'] = self.create_deidentified_id_vectorized(self.MEMBER_SECRET_KEY, combined_ids)
         
         if 'carrier_specific_unique_subscriber_id' in result_df.columns and 'data_submitter_code' in result_df.columns:
-            combined_series = result_df['carrier_specific_unique_subscriber_id'].astype(str) + '|' + result_df['data_submitter_code'].astype(str)
-            result_df['DEID_SUBSCRIBER_ID'] = self.create_deidentified_id_vectorized(self.MEMBER_SECRET_KEY, combined_series)
+            combined_ids = result_df['carrier_specific_unique_subscriber_id'].fillna('') + '|' + result_df['data_submitter_code'].fillna('')
+            result_df['DEID_SUBSCRIBER_ID'] = self.create_deidentified_id_vectorized(self.MEMBER_SECRET_KEY, combined_ids)
         
         if 'member_date_of_birth' in result_df.columns:
             ages = self.calculate_age_from_dob_vectorized(result_df['member_date_of_birth'])
@@ -428,20 +514,18 @@ class APCDMasterDeidentifier:
         ]
         result_df = result_df.drop(columns=[col for col in fields_to_remove if col in result_df.columns])
         
-        zip_columns = [col for col in result_df.columns if 'zip' in col.lower() and 'code' in col.lower()]
-        for col in zip_columns:
-            result_df[col] = self.truncate_zip_to_3digits_vectorized(result_df[col])
+        result_df = self.apply_geographic_masking(result_df)
         
-        fips_columns = [col for col in result_df.columns if 'fips' in col.lower()]
-        for col in fips_columns:
-            result_df[col] = self.process_county_fips_vectorized(result_df[col])
-        
-        date_to_year_only_fields = ['member_pcp_effective_date', 'plan_effective_date', 'plan_term_date']
+        date_to_year_only_fields = [
+            'member_pcp_effective_date', 'plan_effective_date', 'plan_term_date'
+        ]
         for field in date_to_year_only_fields:
             if field in result_df.columns:
                 result_df[field] = self.date_to_year_only_vectorized(result_df[field])
         
-        date_to_yq_fields = ['smib_from_date', 'smib_to_date', 'data_period_start', 'data_period_end']
+        date_to_yq_fields = [
+            'smib_from_date', 'smib_to_date', 'data_period_start', 'data_period_end'
+        ]
         for field in date_to_yq_fields:
             if field in result_df.columns:
                 result_df[field] = self.date_to_year_quarter_vectorized(result_df[field])
@@ -451,7 +535,7 @@ class APCDMasterDeidentifier:
             result_df = result_df.drop(columns=['start_year_of_submission'])
         
         if 'death_date' in result_df.columns:
-            result_df['deceased_indicator'] = result_df['death_date'].notna().map({True: 'Y', False: 'N'})
+            result_df['deceased_indicator'] = result_df['death_date'].apply(lambda x: 'Y' if pd.notna(x) else 'N')
             result_df = result_df.drop(columns=['death_date'])
         
         return result_df
@@ -460,23 +544,11 @@ class APCDMasterDeidentifier:
         print("Applying provider deidentification...")
         result_df = df.copy()
         
-        def create_provider_id_series(df):
-            provider_ids = []
-            for _, row in df.iterrows():
-                id_components = []
-                if pd.notna(row.get('provider_npi')):
-                    id_components.append(str(row['provider_npi']))
-                elif pd.notna(row.get('payor_assigned_provider_id')):
-                    id_components.append(str(row['payor_assigned_provider_id']))
-                
-                if id_components:
-                    provider_ids.append('|'.join(id_components))
-                else:
-                    provider_ids.append(None)
-            
-            return pd.Series(provider_ids)
+        provider_id_series = result_df['provider_npi'].fillna('').astype(str)
+        mask = result_df['provider_npi'].isna()
+        alt_ids = result_df['payor_assigned_provider_id'].fillna('').astype(str)
+        provider_id_series = provider_id_series.mask(mask, alt_ids)
         
-        provider_id_series = create_provider_id_series(result_df)
         result_df['DEID_PROVIDER_ID'] = self.create_deidentified_id_vectorized(self.PROVIDER_SECRET_KEY, provider_id_series)
         
         fields_to_remove = [
@@ -490,13 +562,7 @@ class APCDMasterDeidentifier:
         ]
         result_df = result_df.drop(columns=[col for col in fields_to_remove if col in result_df.columns])
         
-        zip_columns = [col for col in result_df.columns if 'zip' in col.lower() and 'code' in col.lower()]
-        for col in zip_columns:
-            result_df[col] = self.truncate_zip_to_3digits_vectorized(result_df[col])
-        
-        fips_columns = [col for col in result_df.columns if 'fips' in col.lower()]
-        for col in fips_columns:
-            result_df[col] = self.process_county_fips_vectorized(result_df[col])
+        result_df = self.apply_geographic_masking(result_df)
         
         return result_df
     
@@ -511,46 +577,40 @@ class APCDMasterDeidentifier:
         
         print(f"Found diagnosis columns: {dx_cols}")
         
-        all_dx_values = []
-        dx_positions = []
-        
+        all_dx_data = []
         for col in dx_cols:
             if col in result_df.columns:
-                col_values = result_df[col].dropna()
-                all_dx_values.extend(col_values.tolist())
-                dx_positions.extend([(idx, col) for idx in col_values.index])
+                all_dx_data.extend(result_df[col].dropna().tolist())
         
-        if all_dx_values:
-            dx_series = pd.Series(all_dx_values)
-            dx_freq = dx_series.value_counts()
+        if all_dx_data:
+            dx_freq = pd.Series(all_dx_data).value_counts()
             rare_dx_codes = set(dx_freq[dx_freq < self.RARITY_THRESHOLD_K].index)
             
-            print(f"Total diagnosis codes: {len(all_dx_values)}")
+            print(f"Total diagnosis codes: {len(all_dx_data)}")
             print(f"Unique diagnosis codes: {len(dx_freq)}")
             print(f"Rare diagnosis codes (< {self.RARITY_THRESHOLD_K}): {len(rare_dx_codes)}")
+            
+            if len(rare_dx_codes) > 0:
+                print(f"Sample rare diagnosis codes: {list(rare_dx_codes)[:10]}")
             
             masked_sensitive = 0
             masked_rare_dx = 0
             
             for col in dx_cols:
                 if col in result_df.columns:
-                    col_data = result_df[col].dropna()
+                    sensitive_mask, _ = self.check_sensitive_diagnosis_vectorized(result_df[col])
+                    mask_demographics |= sensitive_mask
+                    masked_sensitive += sensitive_mask.sum()
                     
-                    sensitive_mask = col_data.str[:3].isin(self.sensitive_codes_set)
-                    if sensitive_mask.any():
-                        mask_demographics.loc[sensitive_mask[sensitive_mask].index] = True
-                        masked_sensitive += sensitive_mask.sum()
+                    rare_mask = result_df[col].isin(rare_dx_codes)
+                    mask_demographics |= rare_mask
+                    masked_rare_dx += rare_mask.sum()
                     
-                    rare_mask = col_data.isin(rare_dx_codes)
-                    if rare_mask.any():
-                        mask_demographics.loc[rare_mask[rare_mask].index] = True
-                        result_df.loc[rare_mask[rare_mask].index, col] = col_data[rare_mask].str[:3]
-                        masked_rare_dx += rare_mask.sum()
+                    result_df.loc[rare_mask, col] = result_df.loc[rare_mask, col].str[:3]
                     
-                    for code, generalized in self.generalization_lookup.items():
-                        code_mask = col_data.str[:3] == code
-                        if code_mask.any():
-                            result_df.loc[code_mask[code_mask].index, col] = generalized
+                    for generalized, codes_list in self.generalization_codes.items():
+                        code_mask = result_df[col].str.upper().str[:3].isin(codes_list)
+                        result_df.loc[code_mask, col] = generalized
             
             print(f"Records with sensitive diagnoses: {masked_sensitive}")
             print(f"Records with rare diagnoses: {masked_rare_dx}")
@@ -564,27 +624,24 @@ class APCDMasterDeidentifier:
         
         masked_rare_cpt = 0
         if cpt_cols:
-            all_cpt_values = []
+            all_cpt_data = []
             for col in cpt_cols:
                 if col in result_df.columns:
-                    all_cpt_values.extend(result_df[col].dropna().tolist())
+                    all_cpt_data.extend(result_df[col].dropna().tolist())
             
-            if all_cpt_values:
-                cpt_series = pd.Series(all_cpt_values)
-                cpt_freq = cpt_series.value_counts()
+            if all_cpt_data:
+                cpt_freq = pd.Series(all_cpt_data).value_counts()
                 rare_cpt_codes = set(cpt_freq[cpt_freq < self.RARITY_THRESHOLD_K].index)
                 
-                print(f"Total procedure codes: {len(all_cpt_values)}")
+                print(f"Total procedure codes: {len(all_cpt_data)}")
                 print(f"Unique procedure codes: {len(cpt_freq)}")
                 print(f"Rare procedure codes (< {self.RARITY_THRESHOLD_K}): {len(rare_cpt_codes)}")
                 
                 for col in cpt_cols:
                     if col in result_df.columns:
-                        col_data = result_df[col].dropna()
-                        rare_mask = col_data.isin(rare_cpt_codes)
-                        if rare_mask.any():
-                            mask_demographics.loc[rare_mask[rare_mask].index] = True
-                            masked_rare_cpt += rare_mask.sum()
+                        rare_mask = result_df[col].isin(rare_cpt_codes)
+                        mask_demographics |= rare_mask
+                        masked_rare_cpt += rare_mask.sum()
                 
                 print(f"Records with rare procedures: {masked_rare_cpt}")
             else:
@@ -601,10 +658,9 @@ class APCDMasterDeidentifier:
                 print(f"Unique drug codes: {len(ndc_freq)}")
                 print(f"Rare drug codes (< {self.RARITY_THRESHOLD_K}): {len(rare_ndc_codes)}")
                 
-                rare_mask = drug_codes.isin(rare_ndc_codes)
-                if rare_mask.any():
-                    mask_demographics.loc[rare_mask[rare_mask].index] = True
-                    masked_rare_ndc = rare_mask.sum()
+                rare_mask = result_df['drug_code'].isin(rare_ndc_codes)
+                mask_demographics |= rare_mask
+                masked_rare_ndc = rare_mask.sum()
                 
                 print(f"Records with rare drugs: {masked_rare_ndc}")
             else:
@@ -618,11 +674,7 @@ class APCDMasterDeidentifier:
         zip_columns = [col for col in result_df.columns if 'zip' in col.lower() and 'code' in col.lower()]
         fips_columns = [col for col in result_df.columns if 'fips' in col.lower()]
         
-        for col in zip_columns:
-            result_df[col] = self.truncate_zip_to_3digits_vectorized(result_df[col])
-        
-        for col in fips_columns:
-            result_df[col] = self.process_county_fips_vectorized(result_df[col])
+        result_df = self.apply_geographic_masking(result_df)
         
         if total_masked > 0:
             for col in zip_columns:
@@ -637,20 +689,20 @@ class APCDMasterDeidentifier:
                 result_df.loc[mask_demographics, 'member_sex'] = np.nan
         
         if 'payor_claim_control_number' in result_df.columns:
-            claim_series = (result_df['payor_claim_control_number'].astype(str) + '|' + 
-                           result_df.get('cross_reference_claims_id', '').astype(str) + '|' + 
-                           result_df.get('data_submitter_code', '').astype(str))
-            result_df['DEID_CLAIM_ID'] = self.create_deidentified_id_vectorized(self.CLAIM_SECRET_KEY, claim_series)
+            combined_ids = (
+                result_df['payor_claim_control_number'].fillna('') + '|' + 
+                result_df.get('cross_reference_claims_id', '').fillna('') + '|' + 
+                result_df.get('data_submitter_code', '').fillna('')
+            )
+            result_df['DEID_CLAIM_ID'] = self.create_deidentified_id_vectorized(self.CLAIM_SECRET_KEY, combined_ids)
         
         if 'carrier_specific_unique_member_id' in result_df.columns:
-            member_series = (result_df['carrier_specific_unique_member_id'].astype(str) + '|' + 
-                           result_df.get('data_submitter_code', '').astype(str))
-            result_df['DEID_MEMBER_ID'] = self.create_deidentified_id_vectorized(self.MEMBER_SECRET_KEY, member_series)
+            combined_ids = result_df['carrier_specific_unique_member_id'].fillna('') + '|' + result_df.get('data_submitter_code', '').fillna('')
+            result_df['DEID_MEMBER_ID'] = self.create_deidentified_id_vectorized(self.MEMBER_SECRET_KEY, combined_ids)
         
         if 'carrier_specific_unique_subscriber_id' in result_df.columns:
-            subscriber_series = (result_df['carrier_specific_unique_subscriber_id'].astype(str) + '|' + 
-                               result_df.get('data_submitter_code', '').astype(str))
-            result_df['DEID_SUBSCRIBER_ID'] = self.create_deidentified_id_vectorized(self.MEMBER_SECRET_KEY, subscriber_series)
+            combined_ids = result_df['carrier_specific_unique_subscriber_id'].fillna('') + '|' + result_df.get('data_submitter_code', '').fillna('')
+            result_df['DEID_SUBSCRIBER_ID'] = self.create_deidentified_id_vectorized(self.MEMBER_SECRET_KEY, combined_ids)
         
         provider_fields = {
             'rendering_provider_npi': 'DEID_RENDERING_PROVIDER_ID',
@@ -707,6 +759,8 @@ class APCDMasterDeidentifier:
         ]
         result_df = result_df.drop(columns=[col for col in fields_to_remove if col in result_df.columns])
         
+        result_df = self.apply_geographic_masking(result_df)
+        
         date_fields = ['paid_date', 'admission_date', 'discharge_date',
                       'date_of_service_from', 'date_of_service_thru',
                       'data_period_start', 'data_period_end']
@@ -718,27 +772,6 @@ class APCDMasterDeidentifier:
         print(f"  - Records with masked demographics: {mask_demographics.sum():,}")
         
         return result_df
-
-    def bulk_insert_to_db(self, df, table_name):
-        cursor = self.con.cursor()
-        full_table = f"{OUTPUT_SCHEMA}.{table_name}"
-        
-        cursor.execute(f"DROP TABLE IF EXISTS {full_table}")
-        
-        columns = []
-        for col in df.columns:
-            columns.append(f"{col} TEXT")
-        create_sql = f"CREATE TABLE {full_table} ({', '.join(columns)})"
-        cursor.execute(create_sql)
-        
-        data_tuples = [tuple(str(val) if pd.notna(val) else None for val in row) for row in df.values]
-        
-        placeholders = ', '.join(['%s'] * len(df.columns))
-        insert_sql = f"INSERT INTO {full_table} ({', '.join(df.columns)}) VALUES ({placeholders})"
-        
-        execute_values(cursor, insert_sql, data_tuples, page_size=1000)
-        
-        cursor.close()
 
 
 def validate_deidentification(eligibility_df, provider_df, medical_df):
@@ -851,6 +884,19 @@ def validate_deidentification(eligibility_df, provider_df, medical_df):
     return len(issues) == 0
 
 
+def bulk_insert_dataframe(cursor, table_name, df):
+    if df.empty:
+        return
+    
+    columns = df.columns.tolist()
+    values = [tuple(str(val) if pd.notna(val) else None for val in row) for row in df.values]
+    
+    placeholders = ', '.join(['%s'] * len(columns))
+    insert_sql = f"INSERT INTO {table_name} ({', '.join(columns)}) VALUES ({placeholders})"
+    
+    cursor.executemany(insert_sql, values)
+
+
 def main():
     print("\n" + "="*70)
     print("TX-APCD COMPLIANT DE-IDENTIFICATION SYSTEM")
@@ -859,7 +905,7 @@ def main():
     print("K=10 threshold for ICD-10, CPT, and NDC codes")
     print("")
     
-    use_sqlite = False
+    use_sqlite = False  
     
     deidentifier = APCDMasterDeidentifier(generate_new_keys=True, con=con, use_sqlite=use_sqlite)
     
@@ -889,10 +935,28 @@ def main():
         print("\n3. SAVING DE-IDENTIFIED DATA TO DATABASE")
         print("-"*40)
         
-        deidentifier.bulk_insert_to_db(eligibility_deid, DEID_ELIGIBILITY_TABLE)
-        deidentifier.bulk_insert_to_db(provider_deid, DEID_PROVIDER_TABLE)
-        deidentifier.bulk_insert_to_db(medical_deid, DEID_MEDICAL_TABLE)
+        cursor = con.cursor()
         
+        table_configs = [
+            (DEID_ELIGIBILITY_TABLE, eligibility_deid),
+            (DEID_PROVIDER_TABLE, provider_deid),
+            (DEID_MEDICAL_TABLE, medical_deid)
+        ]
+        
+        for table_name, df in table_configs:
+            full_table = f"{OUTPUT_SCHEMA}.{table_name}"
+            cursor.execute(f"DROP TABLE IF EXISTS {full_table}")
+
+            columns = []
+            for col in df.columns:
+                columns.append(f"{col} TEXT")
+            create_sql = f"CREATE TABLE {full_table} ({', '.join(columns)})"
+            cursor.execute(create_sql)
+
+            bulk_insert_dataframe(cursor, full_table, df)
+                    
+        cursor.close()
+
         print(f" Data saved to database")
         
         print("\n4. RUNNING VALIDATION CHECKS")
