@@ -429,9 +429,9 @@ class APCDMasterDeidentifier:
         return pd.DataFrame(data, columns=columns)
     
     def bulk_insert_to_postgres(self, df, schema, table_name):
-        full_table = f"{schema}.{table_name}"
         cursor = self.con.cursor()
         
+        full_table = f"{schema}.{table_name}"
         cursor.execute(f"DROP TABLE IF EXISTS {full_table}")
         
         columns = []
@@ -444,7 +444,8 @@ class APCDMasterDeidentifier:
         df.to_csv(output, sep='\t', header=False, index=False, na_rep='\\N')
         output.seek(0)
         
-        cursor.copy_from(output, full_table, columns=[f'"{col}"' for col in df.columns], sep='\t', null='\\N')
+        cursor.execute(f"SET search_path TO {schema}")
+        cursor.copy_from(output, table_name, columns=[f'"{col}"' for col in df.columns], sep='\t', null='\\N')
         cursor.close()
     
     def apply_eligibility_deidentification(self, df):
