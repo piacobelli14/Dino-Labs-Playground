@@ -391,7 +391,12 @@ class APCDMasterDeidentifier:
             eligibility_table = f"{INPUT_SCHEMA}.{INPUT_ELIGIBILITY_TABLE}"
             query = f"SELECT * FROM {eligibility_table}"
 
-        return pd.read_sql(query, self.con)
+        cursor = self.con.cursor()
+        cursor.execute(query)
+        columns = [desc[0] for desc in cursor.description]
+        data = cursor.fetchall()
+        cursor.close()
+        return pd.DataFrame(data, columns=columns)
     
     def load_provider_data(self):
         print("Loading provider data...")
@@ -401,7 +406,12 @@ class APCDMasterDeidentifier:
             provider_table = f"{INPUT_SCHEMA}.{INPUT_PROVIDER_TABLE}"
             query = f"SELECT * FROM {provider_table}"
 
-        return pd.read_sql(query, self.con)
+        cursor = self.con.cursor()
+        cursor.execute(query)
+        columns = [desc[0] for desc in cursor.description]
+        data = cursor.fetchall()
+        cursor.close()
+        return pd.DataFrame(data, columns=columns)
     
     def load_medical_data(self):
         print("Loading medical claims data...")
@@ -411,7 +421,12 @@ class APCDMasterDeidentifier:
             medical_table = f"{INPUT_SCHEMA}.{INPUT_MEDICAL_TABLE}"
             query = f"SELECT * FROM {medical_table}"
 
-        return pd.read_sql(query, self.con)
+        cursor = self.con.cursor()
+        cursor.execute(query)
+        columns = [desc[0] for desc in cursor.description]
+        data = cursor.fetchall()
+        cursor.close()
+        return pd.DataFrame(data, columns=columns)
     
     def bulk_insert_to_postgres(self, df, schema, table_name):
         full_table = f"{schema}.{table_name}"
