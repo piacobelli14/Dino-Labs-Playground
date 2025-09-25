@@ -337,17 +337,31 @@ class OptimizedAPCDDeidentifier:
         return result
     
     def vectorized_date_processing(self, dates, output_format='quarter'):
-        dates_array = pd.to_datetime(dates, errors='coerce', format='%Y%m%d')
+        def convert_single_date(date_value):
+            if pd.isna(date_value):
+                return None
+            try:
+                if isinstance(date_value, (int, float)):
+                    date_str = str(int(date_value))
+                    if len(date_str) == 8:
+                        date_value = pd.to_datetime(date_str, format='%Y%m%d')
+                    else:
+                        return None
+                else:
+                    date_value = pd.to_datetime(date_value, errors='coerce')
+                
+                if pd.isna(date_value):
+                    return None
+                    
+                if output_format == 'quarter':
+                    quarter = (date_value.month - 1) // 3 + 1
+                    return f"{date_value.year}Q{quarter}"
+                else:
+                    return str(date_value.year)
+            except:
+                return None
         
-        if output_format == 'quarter':
-            years = dates_array.dt.year
-            quarters = dates_array.dt.quarter
-            result = pd.Series([f"{y}Q{q}" if pd.notna(y) else None for y, q in zip(years, quarters)])
-        else:
-            result = dates_array.dt.year.astype('Int64').astype(str)
-            result = result.replace('nan', None)
-        
-        return result.values
+        return [convert_single_date(d) for d in dates]
     
     def vectorized_zip_processing(self, zip_codes):
         zip_series = pd.Series(zip_codes).astype(str).str[:3]
