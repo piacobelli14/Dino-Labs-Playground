@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft, faArrowRight, faEye, faEyeSlash, faPerson, faIdCard } from "@fortawesome/free-solid-svg-icons";
 import "../../styles/mainStyles/Authentication/AuthReset.css"
-import DinoLabsNav from "../../helpers/Nav.jsx";
+import DinoLabsNav from "../../helpers/Nav";
 import useIsTouchDevice from "../../TouchDevice.jsx";
 
 
@@ -49,7 +49,10 @@ const Reset = () => {
                 headers: {
                     "Content-Type": "application/json",
                 },
-                body: JSON.stringify({ email: resetEmail }),
+                body: JSON.stringify({ 
+                    email: resetEmail,
+                    software: "dinosat"
+                }),
             });
 
             if (response.status === 200) {
@@ -98,7 +101,11 @@ const Reset = () => {
                     headers: {
                         "Content-Type": "application/json",
                     },
-                    body: JSON.stringify({ newPassword, email: resetEmail }),
+                    body: JSON.stringify({ 
+                        newPassword, 
+                        email: resetEmail,
+                        software: "dinosat"
+                    }),
                 });
 
                 if (response.status === 200) {
@@ -112,7 +119,7 @@ const Reset = () => {
 
     return (
         <div className="resetPageWrapper">
-            <DinoLabsNav activePage="reset"/>
+            <DinoLabsNav activePage="sat"/>
             <div className="resetCellHeaderContainer" 
                 style={{ background: "linear-gradient(135deg, #15171C 0%, #322842 50%, #15171C 100%)" }}
             > 

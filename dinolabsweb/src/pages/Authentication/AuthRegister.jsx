@@ -3,7 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faArrowLeft, faArrowRight, faPerson, faEyeSlash, faEye, faListUl, faMailBulk } from "@fortawesome/free-solid-svg-icons";
 import "../../styles/mainStyles/Authentication/AuthRegister.css"
-import DinoLabsNav from "../../helpers/Nav.jsx";
+import DinoLabsNav from "../../helpers/Nav";
 import useIsTouchDevice from "../../TouchDevice.jsx";
 import { color } from "echarts";
 
@@ -65,7 +65,10 @@ const Register = () => {
                 const response = await fetch(`${import.meta.env.VITE_API_AUTH_URL}/validate-slug`, {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ slug: candidate }),
+                    body: JSON.stringify({ 
+                        slug: candidate,
+                        software: "dinosat"
+                    }),
                 });
                 if (response.status === 200) {
                     setSlug(candidate);
@@ -91,7 +94,10 @@ const Register = () => {
             const response = await fetch(`${import.meta.env.VITE_API_AUTH_URL}/validate-slug`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ slug }),
+                body: JSON.stringify({ 
+                    slug,
+                    software: "dinosat" 
+                }),
             });
             if (response.status === 200) {
                 setRegisterError("");
@@ -129,7 +135,13 @@ const Register = () => {
                     const response = await fetch(`${import.meta.env.VITE_API_AUTH_URL}/validate-new-user-info`, {
                         method: "POST",
                         headers: { "Content-Type": "application/json" },
-                        body: JSON.stringify({ email, username, slug, image: reader.result }),
+                        body: JSON.stringify({ 
+                            email, 
+                            username, 
+                            slug, 
+                            image: reader.result,
+                            software: "dinosat" 
+                        }),
                     });
                     if (response.status === 200) {
                         setRegisterError("");
@@ -216,6 +228,7 @@ const Register = () => {
                 phone,
                 image: reader.result,
                 slug, 
+                software: "dinosat"
             };
             
             try {
@@ -248,7 +261,10 @@ const Register = () => {
             const response = await fetch(`${import.meta.env.VITE_API_AUTH_URL}/resend-verification-email`, {
                 method: "POST",
                 headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ email }),
+                body: JSON.stringify({ 
+                    email,
+                    software: "dinosat"
+                }),
             });
             if (response.status === 200) {
                 setResendMessage("Verification email resent. Please check your inbox.");
@@ -269,7 +285,7 @@ const Register = () => {
         <div className="registerPageWrapper"
             style={{ background: "linear-gradient(135deg, #15171C 0%, #322842 50%, #15171C 100%)" }}
         >
-            <DinoLabsNav activePage="register"/>
+            <DinoLabsNav activePage="sat"/>
             <div className="registerCellHeaderContainer">
                 {!isTouchDevice && (
                     <video
@@ -296,10 +312,9 @@ const Register = () => {
                 
                     {isSuccess ? (
                         <div className={!isTouchDevice ? "registerBlock" : "registerBlockTouch"}>
-                            <img
-                                className="resetLogo"
-                                src="./DinoLabsLogo-White.png"
-                                alt=""
+                             <img className={!isTouchDevice ? "loginLogo" : "loginLogoTouch"}
+                                src="./DinoLabsLogo-White.png" 
+                                alt="" 
                             />
                             <div className="unverifiedEmailCell" style={{ position: "relative" }}>
                                 <FontAwesomeIcon
@@ -336,13 +351,7 @@ const Register = () => {
                     ) : (
                         <>
                             {isPersonal && (
-                               <div className={!isTouchDevice ? "registerBlock" : "registerBlockTouch"}>
-                                    <img
-                                        className={!isTouchDevice ? "registerLogo" : "registerLogoTouch"}
-                                        src="./StackForgeLogo-Letters.png"
-                                        alt=""
-                                    />
-
+                               <div className={!isTouchDevice ? "registerBlock" : "registerBlockTouch"} style={{"padding-top": "60px"}}>
                                     <div className="registerInputFlex">
                                         <div className="registerNameFlex" style={{"width": "100%", "height": "100%", "display": "flex", "justify-content": "space-between"}}> 
                                             <input className="registerNameInput"  placeholder={"First Name"} onChange={(e) => setFirstName(e.target.value)}/>
@@ -383,7 +392,10 @@ const Register = () => {
 
                             {isSlug && (
                                 <div className="registerBlock">
-                                    <img className="resetLogo" src="./StackForgeLogo-Letters.png" alt="" />
+                                    <img className={!isTouchDevice ? "loginLogo" : "loginLogoTouch"}
+                                        src="./DinoLabsLogo-White.png" 
+                                        alt="" 
+                                    />
                                     <div className="registerInputFlex">
                                         <input
                                             className="registerInput"
@@ -417,10 +429,9 @@ const Register = () => {
 
                             {isPassword && (
                                 <div className="registerBlock">
-                                    <img
-                                        className="resetLogo"
-                                        src="./StackForgeLogo-Letters.png"
-                                        alt=""
+                                    <img className={!isTouchDevice ? "loginLogo" : "loginLogoTouch"}
+                                        src="./DinoLabsLogo-White.png" 
+                                        alt="" 
                                     />
 
                                     <div className="passwordInputFlex"> 

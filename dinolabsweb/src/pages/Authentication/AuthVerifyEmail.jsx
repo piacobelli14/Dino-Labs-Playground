@@ -63,7 +63,10 @@ const VerifyEmail = () => {
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ email: resendEmail }),
+          body: JSON.stringify({ 
+            email: resendEmail, 
+            software: "dinosat" 
+          }),
         }
       );
       const data = await response.json();

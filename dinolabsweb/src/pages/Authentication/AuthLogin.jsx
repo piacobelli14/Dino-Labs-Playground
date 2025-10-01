@@ -12,7 +12,7 @@ import {
     faKey
 } from "@fortawesome/free-solid-svg-icons";
 import "../../styles/mainStyles/Authentication/AuthLogin.css";
-import DinoLabsNav from "../../helpers/Nav.jsx";
+import DinoLabsNav from "../../helpers/Nav";
 import useIsTouchDevice from "../../TouchDevice.jsx";
 import useAuth from "../../UseAuth.jsx";
 
@@ -39,6 +39,7 @@ const Login = () => {
                 body: JSON.stringify({
                     username: email,
                     password,
+                    software: "dinosat"
                 }),
             });
 
@@ -50,9 +51,9 @@ const Login = () => {
                 } else {
                     setToken(data.token);
                     if (data.isadmin === true) {
-                        navigate("/dinolabs");
+                        navigate("/satellite-tracker");
                     } else {
-                        navigate("/dinolabs");
+                        navigate("/satellite-tracker");
                     }
                 }
             } else if (response.status === 429) {
@@ -75,6 +76,7 @@ const Login = () => {
                 body: JSON.stringify({
                     username: email,
                     code: twofaCode,
+                    software: "dinosat"
                 }),
             });
 
@@ -107,7 +109,7 @@ const Login = () => {
             }}
         >
 
-            <DinoLabsNav activePage="login" />
+            <DinoLabsNav activePage="sat" />
             <div className="loginCellHeaderContainer">
                 {!isTouchDevice && (
                 <video
