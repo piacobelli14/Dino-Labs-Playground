@@ -51,9 +51,9 @@ const Login = () => {
                 } else {
                     setToken(data.token);
                     if (data.isadmin === true) {
-                        navigate("/satellite-tracker");
+                        navigate("/dinolabs");
                     } else {
-                        navigate("/satellite-tracker");
+                        navigate("/dinolabs");
                     }
                 }
             } else if (response.status === 429) {
