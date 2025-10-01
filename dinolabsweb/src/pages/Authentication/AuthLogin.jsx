@@ -39,7 +39,7 @@ const Login = () => {
                 body: JSON.stringify({
                     username: email,
                     password,
-                    software: "dinosat"
+                    software: "dinolabsplayground"
                 }),
             });
 
@@ -76,7 +76,7 @@ const Login = () => {
                 body: JSON.stringify({
                     username: email,
                     code: twofaCode,
-                    software: "dinosat"
+                    software: "dinolabsplayground"
                 }),
             });
 

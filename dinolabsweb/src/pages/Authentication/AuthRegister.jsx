@@ -67,7 +67,7 @@ const Register = () => {
                     headers: { "Content-Type": "application/json" },
                     body: JSON.stringify({ 
                         slug: candidate,
-                        software: "dinosat"
+                        software: "dinolabsplayground"
                     }),
                 });
                 if (response.status === 200) {
@@ -96,7 +96,7 @@ const Register = () => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ 
                     slug,
-                    software: "dinosat" 
+                    software: "dinolabsplayground" 
                 }),
             });
             if (response.status === 200) {
@@ -140,7 +140,7 @@ const Register = () => {
                             username, 
                             slug, 
                             image: reader.result,
-                            software: "dinosat" 
+                            software: "dinolabsplayground" 
                         }),
                     });
                     if (response.status === 200) {
@@ -228,7 +228,7 @@ const Register = () => {
                 phone,
                 image: reader.result,
                 slug, 
-                software: "dinosat"
+                software: "dinolabsplayground"
             };
             
             try {
@@ -263,7 +263,7 @@ const Register = () => {
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify({ 
                     email,
-                    software: "dinosat"
+                    software: "dinolabsplayground"
                 }),
             });
             if (response.status === 200) {

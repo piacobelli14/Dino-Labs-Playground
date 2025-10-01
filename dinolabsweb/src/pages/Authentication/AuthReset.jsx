@@ -51,7 +51,7 @@ const Reset = () => {
                 },
                 body: JSON.stringify({ 
                     email: resetEmail,
-                    software: "dinosat"
+                    software: "dinolabsplayground"
                 }),
             });
 
@@ -104,7 +104,7 @@ const Reset = () => {
                     body: JSON.stringify({ 
                         newPassword, 
                         email: resetEmail,
-                        software: "dinosat"
+                        software: "dinolabsplayground"
                     }),
                 });
 
