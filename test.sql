@@ -274,6 +274,42 @@ create table research_dev.pi_agg_yrmon_plan2_a_bkup as
 select * from research_dev.pi_agg_yrmon_plan2
 ; 
 
+-- Adjust medical_plan for Commercial based on fl_5agency
+
+drop table if exists temp_fl_5agency_combined;
+create temp table temp_fl_5agency_combined as
+WITH commercial_fl AS (
+    SELECT 
+        apcd_id,
+        yrmon,
+        array_agg(DISTINCT lower(fl_5agency)) AS agencies
+    FROM 
+        research_dev.pi_agg_yrmon_plan2
+    WHERE 
+        medical_plan = 'Commercial'
+    GROUP BY 
+        apcd_id, yrmon
+)
+SELECT 
+    apcd_id,
+    yrmon,
+    CASE 
+        WHEN 'ers' = ANY(agencies) AND 'trs' = ANY(agencies) THEN 'Com-erstrs'
+        WHEN 'ers' = ANY(agencies) THEN 'Com-ers'
+        WHEN 'trs' = ANY(agencies) THEN 'Com-trs'
+        ELSE 'Commercial'
+    END AS adjusted_medical_plan
+FROM commercial_fl;
+
+UPDATE research_dev.pi_agg_yrmon_plan2 p
+SET medical_plan = t.adjusted_medical_plan
+FROM temp_fl_5agency_combined t
+WHERE p.apcd_id = t.apcd_id 
+AND p.yrmon = t.yrmon 
+AND p.medical_plan = 'Commercial';
+
+drop table if exists temp_fl_5agency_combined;
+
 drop table if exists research_dev.pi_agg_yrmon_indicator_aggregates; 
 create table research_dev.pi_agg_yrmon_indicator_aggregates as 
 select 
@@ -369,6 +405,7 @@ WITH duplicate_groups AS (
     GROUP BY 
         apcd_id, yrmon
     HAVING COUNT(distinct medical_plan) > 1
+    AND NOT (BOOL_OR(medical_plan LIKE 'Medicare%') AND BOOL_OR(medical_plan = 'Medicaid'))
 ),
 plan_priority_cte AS (
     SELECT 
@@ -489,40 +526,6 @@ create table research_dev.pi_agg_yrmon_plan2_d_bkup as
 select * from research_dev.pi_agg_yrmon_plan2
 ; 
 
--- Adjust medical_plan for Commercial based on fl_5agency
-
-drop table if exists temp_fl_5agency_combined;
-WITH commercial_fl AS (
-    SELECT 
-        apcd_id,
-        yrmon,
-        array_agg(DISTINCT lower(fl_5agency)) AS agencies
-    FROM 
-        research_dev.pi_agg_yrmon_plan2
-    WHERE 
-        medical_plan = 'Commercial'
-    GROUP BY 
-        apcd_id, yrmon
-)
-SELECT 
-    apcd_id,
-    yrmon,
-    CASE 
-        WHEN 'ers' = ANY(agencies) AND 'trs' = ANY(agencies) THEN 'Com-erstrs'
-        WHEN 'ers' = ANY(agencies) THEN 'Com-ers'
-        WHEN 'trs' = ANY(agencies) THEN 'Com-trs'
-        ELSE 'Commercial'
-    END AS adjusted_medical_plan
-INTO temp temp_fl_5agency_combined
-FROM commercial_fl;
-
-UPDATE research_dev.pi_agg_yrmon_plan2 p
-SET medical_plan = t.adjusted_medical_plan
-FROM temp_fl_5agency_combined t
-WHERE p.apcd_id = t.apcd_id 
-AND p.yrmon = t.yrmon 
-AND p.medical_plan = 'Commercial';
-
 drop table if exists research_dev.pi_agg_yrmon_temp; 
 create table research_dev.pi_agg_yrmon_temp as 
 select * from research_dev.pi_agg_yrmon; 
@@ -635,9 +638,9 @@ select
 	max(medical_plan) as medical_plan, 
 	max(medical_plan_design) as medical_plan_design, 
 	max(other_plan) as other_plan, 
-    insured_group_or_policy_number
+    max(insured_group_or_policy_number) as insured_group_or_policy_number
 from research_dev.pi_agg_yrmon_plan3_update
-group by apcd_id, yrmon, insured_group_or_policy_number
+group by apcd_id, yrmon
 ; 
 
 update research_dev.pi_agg_yrmon_plan_update_temp_merged_1 set other_plan = 'Unknown' where other_plan = 'NA(BLANK)'
@@ -662,7 +665,7 @@ select column_name from information_schema.columns
 where table_schema = 'research_di' and table_name = 'agg_yrmon_plan'
 and column_name not in (
 	select column_name from information_schema.columns
-	where table_schema = 'research_dev' and table_name = 'pi_agg_yrmon_pan_update_temp_merged'
+	where table_schema = 'research_dev' and table_name = 'pi_agg_yrmon_plan_update_temp_merged_1'
 );
 
 select count(distinct apcd_id) from research_di.agg_enrl_yrmon;
