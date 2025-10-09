@@ -1,22 +1,29 @@
 ----------------------------------------------------------------------------------------------------------------------
 ----- Revised Plan Table Generation Script with Conditional Duplicate Handling
 ----------------------------------------------------------------------------------------------------------------------
-drop table if exists research_dev.pi_agg_yrmon;
-create table research_dev.pi_agg_yrmon as
-select x.*, y.data_submitter_code,
-y.metal_tier, y.high_deductible_plan_indicator,
-y.supplementary_medical_insurance_benefits, y.insured_group_or_policy_number, y.member_medicare_beneficiary_identifier
-from (
-select a.*, b.mem_id, b.payor_code
-from research_di.agg_enrl_yrmon a
-left join research_data.xz_mpi_crosswalk_functional b
-on a.apcd_id = b.apcd_id
-) x
-left join research_data.eligibility y
-    on x.mem_id = y.carrier_specific_unique_member_id
-    and x.payor_code = y.payor_code
-    and left(y.data_period_start::VARCHAR(8),6)::int4 = x.yrmon
-;
+drop table if exists research_dev.pi_agg_yrmon; 
+create table research_dev.pi_agg_yrmon as 
+select x.*, 
+       y.data_submitter_code, 
+       y.metal_tier, 
+       y.high_deductible_plan_indicator, 
+       y.supplementary_medical_insurance_benefits, 
+       y.insured_group_or_policy_number, 
+       y.member_medicare_beneficiary_identifier 
+from ( 
+  select a.*, 
+         b.mem_id, 
+         b.payor_code 
+  from research_di.agg_enrl_yrmon a 
+  left join research_data.xz_mpi_crosswalk_functional b 
+  on a.apcd_id = b.apcd_id 
+) x 
+left join research_data.eligibility y 
+on x.mem_id = y.carrier_specific_unique_member_id 
+and x.payor_code = y.payor_code 
+and floor(x.enrl_yrmon / 100) = y.eligibility_year 
+and mod(x.enrl_yrmon, 100) = cast(y.eligibility_month as int);
+
 drop table if exists research_dev.pi_agg_yrmon_plan1;
 create table research_dev.pi_agg_yrmon_plan1 as
 select
