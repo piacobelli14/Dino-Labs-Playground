@@ -15,6 +15,7 @@ on a.apcd_id = b.apcd_id
 left join research_data.eligibility y
     on x.mem_id = y.carrier_specific_unique_member_id
     and x.payor_code = y.payor_code
+    and left(y.data_period_start::VARCHAR(8),6)::int4 = x.yrmon
 ;
 drop table if exists research_dev.pi_agg_yrmon_plan1;
 create table research_dev.pi_agg_yrmon_plan1 as
