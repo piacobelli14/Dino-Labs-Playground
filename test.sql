@@ -12,10 +12,12 @@ xwalk_one AS (
   SELECT apcd_id, payor_code, mem_id
   FROM (
     SELECT
-      b.*,
+      b.apcd_id,
+      b.payor_code,
+      b.mem_id,
       ROW_NUMBER() OVER (
-        PARTITION BY b.apcd_id, b.payor_code
-        ORDER BY b.mem_id ASC NULLS LAST
+        PARTITION BY b.apcd_id
+        ORDER BY b.payor_code ASC NULLS LAST, b.mem_id ASC NULLS LAST
       ) AS rn
     FROM research_data.xz_mpi_crosswalk_functional b
   ) AS b_ranked
@@ -38,8 +40,8 @@ elig_one AS (
         PARTITION BY y.carrier_specific_unique_member_id, y.payor_code
         ORDER BY
           y.member_medicare_beneficiary_identifier ASC NULLS LAST,
-          y.insured_group_or_policy_number       ASC NULLS LAST,
-          y.data_submitter_code                  ASC NULLS LAST
+          y.insured_group_or_policy_number ASC NULLS LAST,
+          y.data_submitter_code ASC NULLS LAST
       ) AS rn
     FROM research_data.eligibility y
   ) AS e_ranked
@@ -47,6 +49,7 @@ elig_one AS (
 )
 SELECT
   a.*,
+  b.payor_code,
   e.data_submitter_code,
   e.metal_tier,
   e.high_deductible_plan_indicator,
@@ -55,11 +58,10 @@ SELECT
   e.member_medicare_beneficiary_identifier
 FROM base a
 LEFT JOIN xwalk_one b
-  ON a.apcd_id   = b.apcd_id
- AND a.payor_code = b.payor_code
+  ON a.apcd_id = b.apcd_id
 LEFT JOIN elig_one e
   ON e.carrier_specific_unique_member_id = b.mem_id
- AND e.payor_code = a.payor_code
+ AND e.payor_code = b.payor_code
 ;
 
 drop table if exists research_dev.pi_agg_yrmon_plan1;
