@@ -1,27 +1,28 @@
 ----------------------------------------------------------------------------------------------------------------------
 ----- Revised Plan Table Generation Script with Conditional Duplicate Handling
 ----------------------------------------------------------------------------------------------------------------------
-drop table if exists research_dev.pi_agg_yrmon;
+DROP TABLE IF EXISTS research_dev.pi_agg_yrmon;
 
-create table research_dev.pi_agg_yrmon as
-with base as (
-  select *
-  from research_di.agg_enrl_yrmon
+CREATE TABLE research_dev.pi_agg_yrmon AS
+WITH base AS (
+  SELECT *
+  FROM research_di.agg_enrl_yrmon
 ),
-xwalk_one as (
-  select apcd_id, mem_id, payor_code
-  from (
-    select b.*,
-           row_number() over (
-             partition by b.apcd_id
-             order by b.updated_at desc nulls last, b.created_at desc nulls last
-           ) as rn
-    from research_data.xz_mpi_crosswalk_functional b
-  )
-  where rn = 1
+xwalk_one AS (
+  SELECT apcd_id, mem_id, payor_code
+  FROM (
+    SELECT
+      b.*,
+      ROW_NUMBER() OVER (
+        PARTITION BY b.apcd_id
+        ORDER BY b.updated_at DESC NULLS LAST, b.created_at DESC NULLS LAST
+      ) AS rn
+    FROM research_data.xz_mpi_crosswalk_functional b
+  ) AS b_ranked
+  WHERE rn = 1
 ),
-elig_one as (
-  select
+elig_one AS (
+  SELECT
     carrier_specific_unique_member_id,
     payor_code,
     data_submitter_code,
@@ -30,20 +31,21 @@ elig_one as (
     supplementary_medical_insurance_benefits,
     insured_group_or_policy_number,
     member_medicare_beneficiary_identifier
-  from (
-    select y.*,
-           row_number() over (
-             partition by y.carrier_specific_unique_member_id, y.payor_code
-             order by
-               y.eligibility_end_date desc nulls first,
-               y.eligibility_start_date desc nulls last,
-               y.updated_at desc nulls last
-           ) as rn
-    from research_data.eligibility y
-  )
-  where rn = 1
+  FROM (
+    SELECT
+      y.*,
+      ROW_NUMBER() OVER (
+        PARTITION BY y.carrier_specific_unique_member_id, y.payor_code
+        ORDER BY
+          y.eligibility_end_date DESC NULLS FIRST,
+          y.eligibility_start_date DESC NULLS LAST,
+          y.updated_at DESC NULLS LAST
+      ) AS rn
+    FROM research_data.eligibility y
+  ) AS e_ranked
+  WHERE rn = 1
 )
-select
+SELECT
   a.*,
   e.data_submitter_code,
   e.metal_tier,
@@ -51,12 +53,12 @@ select
   e.supplementary_medical_insurance_benefits,
   e.insured_group_or_policy_number,
   e.member_medicare_beneficiary_identifier
-from base a
-left join xwalk_one b
-  on a.apcd_id = b.apcd_id
-left join elig_one e
-  on b.mem_id = e.carrier_specific_unique_member_id
- and b.payor_code = e.payor_code
+FROM base a
+LEFT JOIN xwalk_one b
+  ON a.apcd_id = b.apcd_id
+LEFT JOIN elig_one e
+  ON b.mem_id = e.carrier_specific_unique_member_id
+ AND b.payor_code = e.payor_code
 ;
 
 drop table if exists research_dev.pi_agg_yrmon_plan1;
