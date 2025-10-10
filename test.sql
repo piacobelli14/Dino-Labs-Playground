@@ -7,9 +7,9 @@ with ranked_plans as (
     select *,
     case
         when medical_plan like 'Com%' then 1
-        when medical_plan = 'Medicare FFS' and data_submitter_code = 'CHCDMDCR' then 2
-        when medical_plan = 'Medicare' and data_submitter_code = 'CHCDMDCR' then 3
-        when medical_plan = 'Medicare MA' and data_submitter_code = 'CHCDMDCR' then 4
+        when medical_plan = 'Medicare FFS' then 2
+        when medical_plan = 'Medicare' then 3
+        when medical_plan = 'Medicare MA' then 4
         when medical_plan = 'Medicare Secondary' then 5
         else 6
     end as plan_priority,
@@ -29,9 +29,9 @@ with ranked_plans as (
 ),
 prioritized as (
     select *,
-    -- Rank non-HHSC plans only
+    -- Rank non-Medicaid plans only
     case 
-        when data_submitter_code <> 'HHSC' then 
+        when medical_plan <> 'Medicaid' or medical_plan is null then 
             row_number() over (
                 partition by apcd_id, yrmon 
                 order by plan_priority, design_priority
@@ -64,12 +64,12 @@ aggregated as (
         max(pharmacy_plan) as pharmacy_plan,
         max(other_plan) as other_plan,
         max(insured_group_or_policy_number) as insured_group_or_policy_number,
-        -- Get the top non-HHSC plan
-        max(case when data_submitter_code <> 'HHSC' and rn = 1 then medical_plan else null end) as non_hhsc_plan,
-        max(case when data_submitter_code <> 'HHSC' and rn = 1 then medical_plan_design else null end) as non_hhsc_design,
-        -- Get the HHSC plan
-        max(case when data_submitter_code = 'HHSC' then medical_plan else null end) as hhsc_plan,
-        max(case when data_submitter_code = 'HHSC' then medical_plan_design else null end) as hhsc_design
+        -- Get the top non-Medicaid plan
+        max(case when (medical_plan <> 'Medicaid' or medical_plan is null) and rn = 1 then medical_plan else null end) as non_medicaid_plan,
+        max(case when (medical_plan <> 'Medicaid' or medical_plan is null) and rn = 1 then medical_plan_design else null end) as non_medicaid_design,
+        -- Get the Medicaid plan
+        max(case when medical_plan = 'Medicaid' then medical_plan else null end) as medicaid_plan,
+        max(case when medical_plan = 'Medicaid' then medical_plan_design else null end) as medicaid_design
     from prioritized
     group by apcd_id, yrmon
 )
@@ -94,23 +94,24 @@ select
     dental_plan,
     vision_plan,
     pharmacy_plan,
-    -- If both exist: non-HHSC is primary, HHSC is secondary
-    -- If only non-HHSC: it's primary
-    -- If only HHSC: it's primary
+    -- Primary: non-Medicaid if exists, otherwise Medicaid
     case
-        when non_hhsc_plan is not null then non_hhsc_plan
-        else hhsc_plan
+        when non_medicaid_plan is not null then non_medicaid_plan
+        else medicaid_plan
     end as medical_plan_primary,
+    -- Secondary: Medicaid ONLY if non-Medicaid also exists
     case
-        when non_hhsc_plan is not null and hhsc_plan is not null then hhsc_plan
+        when non_medicaid_plan is not null and medicaid_plan is not null then medicaid_plan
         else null
     end as medical_plan_secondary,
+    -- Primary design
     case
-        when non_hhsc_plan is not null then non_hhsc_design
-        else hhsc_design
+        when non_medicaid_plan is not null then non_medicaid_design
+        else medicaid_design
     end as medical_plan_design_primary,
+    -- Secondary design: Medicaid design ONLY if non-Medicaid also exists
     case
-        when non_hhsc_plan is not null and hhsc_plan is not null then hhsc_design
+        when non_medicaid_plan is not null and medicaid_plan is not null then medicaid_design
         else null
     end as medical_plan_design_secondary,
     other_plan,
