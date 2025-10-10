@@ -5,11 +5,16 @@ drop table if exists research_dev.pi_agg_yrmon_plan_update_temp_merged_1;
 create table research_dev.pi_agg_yrmon_plan_update_temp_merged_1 as
 with ranked_plans as (
     select *,
+    -- Recode Medicaid FFS design to Unknown
+    case 
+        when medical_plan = 'Medicaid' and medical_plan_design = 'FFS' then 'Unknown'
+        else medical_plan_design
+    end as corrected_design,
     case
-        when medical_plan like 'Com%' then 4
-        when medical_plan = 'Medicare FFS' then 1
+        when medical_plan like 'Com%' then 1
+        when medical_plan = 'Medicare FFS' then 2
         when medical_plan = 'Medicare' then 3
-        when medical_plan = 'Medicare MA' then 2
+        when medical_plan = 'Medicare MA' then 4
         when medical_plan = 'Medicare Secondary' then 5
         else 6
     end as plan_priority,
@@ -65,12 +70,12 @@ aggregated as (
         max(pharmacy_plan) as pharmacy_plan,
         max(other_plan) as other_plan,
         max(insured_group_or_policy_number) as insured_group_or_policy_number,
-        -- Get the top non-Medicaid plan
+        -- Get the top non-Medicaid plan (using corrected_design)
         max(case when medical_plan <> 'Medicaid' and rn = 1 then medical_plan else null end) as non_medicaid_plan,
-        max(case when medical_plan <> 'Medicaid' and rn = 1 then medical_plan_design else null end) as non_medicaid_design,
-        -- Get the Medicaid plan
+        max(case when medical_plan <> 'Medicaid' and rn = 1 then corrected_design else null end) as non_medicaid_design,
+        -- Get the Medicaid plan (using corrected_design)
         max(case when medical_plan = 'Medicaid' then medical_plan else null end) as medicaid_plan,
-        max(case when medical_plan = 'Medicaid' then medical_plan_design else null end) as medicaid_design,
+        max(case when medical_plan = 'Medicaid' then corrected_design else null end) as medicaid_design,
         -- Check if non-Medicaid plan is Medicare type
         max(case when medical_plan <> 'Medicaid' and rn = 1 and medical_plan in ('Medicare', 'Medicare FFS', 'Medicare MA', 'Medicare Secondary') then 1 else 0 end) as has_medicare
     from prioritized
@@ -115,7 +120,7 @@ select
             then medicaid_plan
         else null
     end as medical_plan_secondary,
-    -- Same logic for designs
+    -- Same logic for designs (now using corrected designs)
     case
         when supplementary_medical_insurance_benefits = 'Y' and medicaid_plan is not null and has_medicare = 1 
             then medicaid_design
