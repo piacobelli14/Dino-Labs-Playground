@@ -73,12 +73,18 @@ GROUP BY
     END
 ORDER BY yr ASC, count_per_plan_grouping DESC;
 
+
+
+
 drop table if exists research_dev.pi_agg_yrmon_plan_update_temp_merged_1;
 create table research_dev.pi_agg_yrmon_plan_update_temp_merged_1 as
 with ranked_plans as (
     select *,
-    -- Keep FFS as is for Medicaid plans
-    medical_plan_design as corrected_design,
+    -- Recode Medicaid Unknown to STAR
+    case 
+        when medical_plan = 'Medicaid' and medical_plan_design = 'Unknown' then 'STAR'
+        else medical_plan_design
+    end as corrected_design,
     case
         when medical_plan like 'Com%' then 1
         when medical_plan = 'Medicare FFS' then 2
