@@ -19,7 +19,7 @@
 .resetHeroBackgroundWrapper {
     position: relative; 
     width: 100%; 
-    height: calc(100% - 60px); 
+    height: 100%; 
     z-index: 0; 
     overflow: hidden; 
 }
@@ -99,8 +99,8 @@
     justify-content: flex-start;
     align-items: center;
     width: 100%;
-    max-height: calc(100% - 69px);  
-    min-height: calc(100% - 69px); 
+    max-height: calc(100% - 60px);  
+    min-height: calc(100% - 60px); 
     overflow: hidden; 
 }
 

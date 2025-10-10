@@ -511,10 +511,12 @@ const DinoLabs = () => {
   }, [globalSearchResults, collapsedFiles]);
   useEffect(() => { repositoryFilesRef.current = repositoryFiles; openedDirectoriesRef.current = openedDirectories; fsOpLoadingRef.current = fsOpLoading; panesRef.current = panes; }, [repositoryFiles, openedDirectories, fsOpLoading, panes]);
   useEffect(() => {
-    const handleResize = () => { setIsLoaded(false); setScreenSize(window.innerWidth); setTimeout(() => setIsLoaded(true), 300); };
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, []);
+  const handleResize = () => { 
+    setScreenSize(window.innerWidth); 
+  };
+  window.addEventListener("resize", handleResize);
+  return () => window.removeEventListener("resize", handleResize);
+}, []);
   useEffect(() => {
     if (!loading && token) {
       (async () => {

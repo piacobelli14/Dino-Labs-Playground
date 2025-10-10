@@ -280,7 +280,7 @@ const Register = () => {
             setResendLoading(false);
         }
     };
-
+    
     return (
         <div className="registerPageWrapper"
             style={{ background: "linear-gradient(135deg, #15171C 0%, #322842 50%, #15171C 100%)" }}

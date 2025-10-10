@@ -136,7 +136,6 @@ const DinoLabsAccount = ({
     ];
 
     const navigationButtons = [
-        { key: "profileEditor", icon: faAddressCard, label: "Edit My Profile" },
         { key: "personalInfo", icon: faUserGear, label: "Update My Personal Information" },
         { key: "teamInfo", icon: faUsersGear, label: "Update My Team Information" },
         { key: "settingsManagement", icon: faCode, label: "Edit My Dino Labs IDE Settings" },
@@ -701,74 +700,16 @@ const DinoLabsAccount = ({
 
         return (
             <div className="dinolabsPersonalWrapperStack" style={{ alignItems: "stretch" }}>
-                {/*
-        <label className="dinolabsIDEAccountOrgNotAvailable" style={{ marginBottom: 12 }}> 
-          <FontAwesomeIcon icon={faExclamationTriangle}/>
-          <small>This user is not a part of a team.</small>
-        </label>
-        */}
+                
+                    <label className="dinolabsIDEAccountOrgNotAvailable" style={{ marginBottom: 12 }}> 
+                    <FontAwesomeIcon icon={faExclamationTriangle}/>
+                    <small>This user is not a part of a team.</small>
+                    </label>
+                
 
-                <div className="dinolabsAccountEditFormSmall">
-                    <div className="dinolabsAccountEditHeader">
-                        <FontAwesomeIcon icon={faUsers} /> <span>Join an Existing Team</span>
-                    </div>
-                    <div className="dinolabsAccountEditRow">
-                        <label className="dinolabsAccountEditLabel">Team Code</label>
-                        <input
-                            className="dinolabsSettingsInput dinolabsAccountEditInput"
-                            type="text"
-                            value={teamAccess.joinCode}
-                            onChange={(e) => setTeamField("joinCode", e.target.value)}
-                            placeholder="Enter the 6-digit team code"
-                        />
-                    </div>
-                    <div className="dinolabsAccountEditActions">
-                        <button
-                            className="dinolabsSettingsActionButtonPrimary"
-                            onClick={joinTeam}
-                            disabled={teamAccess.joining}
-                        >
-                            <FontAwesomeIcon icon={faUsers} />
-                            <span>{teamAccess.joining ? "Requesting..." : "Request Access"}</span>
-                        </button>
-                    </div>
-                </div>
+                
 
-                <div className="dinolabsAccountEditFormSmall" style={{ marginTop: 16 }}>
-                    <div className="dinolabsAccountEditHeader">
-                        <FontAwesomeIcon icon={faBuilding} /> <span>Create a New Team</span>
-                    </div>
-                    <div className="dinolabsAccountEditRow">
-                        <label className="dinolabsAccountEditLabel">Team Name</label>
-                        <input
-                            className="dinolabsSettingsInput dinolabsAccountEditInput"
-                            type="text"
-                            value={teamAccess.teamName}
-                            onChange={(e) => setTeamField("teamName", e.target.value)}
-                            placeholder="Your team name"
-                        />
-                    </div>
-                    <div className="dinolabsAccountEditRow">
-                        <label className="dinolabsAccountEditLabel">Team Slug</label>
-                        <input
-                            className="dinolabsSettingsInput dinolabsAccountEditInput"
-                            type="text"
-                            value={teamAccess.teamSlug}
-                            onChange={(e) => setTeamField("teamSlug", e.target.value)}
-                            placeholder="your-team-slug"
-                        />
-                    </div>
-                    <div className="dinolabsAccountEditActions">
-                        <button
-                            className="dinolabsSettingsActionButtonPrimary"
-                            onClick={createTeam}
-                            disabled={teamAccess.creating}
-                        >
-                            <FontAwesomeIcon icon={faBuilding} />
-                            <span>{teamAccess.creating ? "Creating..." : "Create Team"}</span>
-                        </button>
-                    </div>
-                </div>
+               
             </div>
         );
     };

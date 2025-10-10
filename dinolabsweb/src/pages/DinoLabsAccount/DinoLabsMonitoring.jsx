@@ -2,12 +2,9 @@ import React, { useEffect, useMemo, useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faWifi,
-  faSignal,
   faBatteryHalf,
   faPlugCircleBolt,
   faDesktop,
-  faPalette,
-  faEye,
   faGlobe,
   faLock,
   faHeadphones,
@@ -16,8 +13,9 @@ import {
   faCloud,
   faClipboard,
   faBolt,
-  faSquarePollVertical,
-  faHardDrive
+  faHardDrive,
+  faDownload,
+  faRefresh
 } from "@fortawesome/free-solid-svg-icons";
 import DinoLabsNav from "../../helpers/Nav";
 import "../../styles/mainStyles/DinoLabsAccount/DinoLabsMonitoring.css";
@@ -40,16 +38,18 @@ const fmtBytes = (bytes) => {
 };
 const fmtMs = (ms) => (ms == null || !isFinite(ms)) ? "—" : `${Math.round(ms)} ms`;
 
-const UsageBar = ({ usage = 0, color = "#51cf66" }) => (
-  <div className="dinolabsMonitoringUsageWrap" aria-label={`Usage ${pct(usage)}`}>
-    <div className="dinolabsMonitoringUsageTrack" />
-    <div
-      className="dinolabsMonitoringUsageFill"
-      style={{ width: `${clamp01(usage) * 100}%`, background: color }}
-    />
+const UsageBar = ({ usage = 0, color = "#AD6ADD" }) => (
+  <div className="dinolabsMonitoringUsageWrapper">
+    <div className="dinolabsMonitoringUsageBar">
+      <div
+        className="dinolabsMonitoringUsageFill"
+        style={{ width: `${clamp01(usage) * 100}%`, backgroundColor: color }}
+      />
+    </div>
   </div>
 );
 
+// Custom hooks remain the same...
 const useUiLoadIndex = () => {
   const [load, setLoad] = useState(0);
   useEffect(() => {
@@ -167,29 +167,13 @@ const useNetwork = () => {
     };
   }, []);
 
-  const tryFetch = async (url) => {
-    const t0 = performance.now();
-    await fetch(url, { mode: "no-cors", cache: "no-store" });
-    return Math.round(performance.now() - t0);
-  };
-
   const runPing = async () => {
     try {
-      let ms;
-      try {
-        ms = await tryFetch("https://www.google.com/generate_204");
-      } catch {
-        ms = await tryFetch("https://cloudflare.com/cdn-cgi/trace");
-      }
-      setPing(ms);
+      const t0 = performance.now();
+      await fetch("https://www.google.com/generate_204", { mode: "no-cors", cache: "no-store" });
+      setPing(Math.round(performance.now() - t0));
     } catch {
-      try {
-        const t0 = performance.now();
-        await fetch(`/favicon.ico?_${Date.now()}`, { cache: "no-store" });
-        setPing(Math.round(performance.now() - t0));
-      } catch {
-        setPing(null);
-      }
+      setPing(null);
     }
   };
 
@@ -335,10 +319,7 @@ const usePerms = () => {
       "camera",
       "microphone",
       "clipboard-read",
-      "clipboard-write",
-      "midi",
-      "local-fonts",
-      "persistent-storage"
+      "clipboard-write"
     ];
     (async () => {
       if (!navigator.permissions?.query) return;
@@ -360,43 +341,13 @@ const usePerms = () => {
 
 const useEnv = () => {
   const ua = navigator.userAgent;
-  const dnt = navigator.doNotTrack || window.doNotTrack || navigator.msDoNotTrack;
   const lang = navigator.language;
-  const langs = navigator.languages || [];
   const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const intl = Intl.DateTimeFormat().resolvedOptions();
   const cores = navigator.hardwareConcurrency || null;
   const devMem = navigator.deviceMemory || null;
-  const touch = navigator.maxTouchPoints || 0;
-  const cookies = navigator.cookieEnabled;
   const secure = window.isSecureContext;
-  const coi = window.crossOriginIsolated || false;
-  const sab = typeof SharedArrayBuffer !== "undefined";
   const uaCH = navigator.userAgentData || null;
-  return { ua, uaCH, dnt, lang, langs, tz, intl, cores, devMem, touch, cookies, secure, coi, sab };
-};
-
-const usePwa = () => {
-  const [swInfo, setSwInfo] = useState({ controlling: false, regCount: 0 });
-  const [cacheKeys, setCacheKeys] = useState([]);
-  useEffect(() => {
-    (async () => {
-      try {
-        if (navigator.serviceWorker) {
-          const regs = await navigator.serviceWorker.getRegistrations();
-          setSwInfo({ controlling: !!navigator.serviceWorker.controller, regCount: regs.length });
-        }
-      } catch {}
-      try {
-        if (window.caches) {
-          const keys = await caches.keys();
-          setCacheKeys(keys);
-        }
-      } catch {}
-    })();
-  }, []);
-  const vis = document.visibilityState;
-  return { swInfo, cacheKeys, vis, hidden: document.hidden };
+  return { ua, uaCH, lang, tz, cores, devMem, secure };
 };
 
 const useSensors = () => {
@@ -437,7 +388,6 @@ const DinoLabsMonitor = () => {
   const med = useMedia();
   const store = useStorage();
   const perms = usePerms();
-  const pwa = usePwa();
   const sensors = useSensors();
   const uiLoad = useUiLoadIndex();
 
@@ -462,8 +412,6 @@ const DinoLabsMonitor = () => {
         media: { devices: med.devices, audio: med.ac },
         storage: store,
         permissions: perms,
-        pwa,
-        apis: { webgpu: !!navigator.gpu },
         heap
       },
       null,
@@ -486,468 +434,287 @@ const DinoLabsMonitor = () => {
   };
 
   return (
-    <div className="dinolabsMonitoringApp" data-scrollfix="force">
+    <div className="dinolabsPageWrapper">
       <DinoLabsNav activePage="monitor" />
-      <div className="dinolabsMonitoringContainer">
-        <div className="dinolabsMonitoringHeader">
-          <div className="dinolabsMonitoringHeaderTitle">DinoLabs System Monitor</div>
-          <div className="dinolabsMonitoringHeaderActions">
-            <button type="button" className="dinolabsMonitoringBtn dinolabsMonitoringBtnPrimary" onClick={exportReport}>
-              <FontAwesomeIcon icon={faClipboard} /> Export Report
-            </button>
-          </div>
-        </div>
-
-        <section className="dinolabsMonitoringCard">
-          <div className="dinolabsMonitoringCardHead">
-            <div className="dinolabsMonitoringCardTitle">
-              <FontAwesomeIcon icon={faGlobe} />
-              <span>Environment And Runtime</span>
-            </div>
-          </div>
-          <div className="dinolabsMonitoringGrid autoFit">
-            <div className="dinolabsMonitoringStatBlock">
-              <div className="dinolabsMonitoringLabel">User Agent And Platform</div>
-              <div className="dinolabsMonitoringRowWrap">
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">User Agent:</span>
-                  <span className="dinolabsMonitoringVal">{env.ua}</span>
-                </div>
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">Platform:</span>
-                  <span className="dinolabsMonitoringVal">
-                    {env.uaCH?.platform || navigator.platform || "—"}
-                  </span>
-                </div>
+      
+      <div className="dinolabsHeaderContainer">
+        <div className="dinolabsControlFlex">
+          <div className="dinolabsMonitoringLeadingPanel">
+            <div className="dinolabsMonitoringTopBar">
+              <div className="dinolabsMonitoringTitleSection">
+                <label className="dinolabsMonitoringTitle">System Monitor</label>
               </div>
-            </div>
-            <div className="dinolabsMonitoringStatBlock">
-              <div className="dinolabsMonitoringLabel">Locale</div>
-              <div className="dinolabsMonitoringRowWrap">
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">Language:</span>
-                  <span className="dinolabsMonitoringVal">{env.lang}</span>
-                </div>
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">Time Zone:</span>
-                  <span className="dinolabsMonitoringVal">{env.tz || "—"}</span>
-                </div>
-              </div>
-            </div>
-            <div className="dinolabsMonitoringStatBlock">
-              <div className="dinolabsMonitoringLabel">Security And Hardware</div>
-              <div className="dinolabsMonitoringRowWrap">
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">Secure Context:</span>
-                  <span className="dinolabsMonitoringVal dinolabsMonitoringStatus" data-state={env.secure ? "yes" : "no"}>
-                    {B(env.secure)}
-                  </span>
-                </div>
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">CPU Cores:</span>
-                  <span className="dinolabsMonitoringVal dinolabsMonitoringHighlight">
-                    {env.cores || "—"}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="dinolabsMonitoringCard">
-          <div className="dinolabsMonitoringCardHead">
-            <div className="dinolabsMonitoringCardTitle">
-              <FontAwesomeIcon icon={faDesktop} />
-              <span>Display And Visual</span>
-            </div>
-          </div>
-          <div className="dinolabsMonitoringGrid autoFit">
-            <div className="dinolabsMonitoringStatBlock">
-              <div className="dinolabsMonitoringLabel">
-                <FontAwesomeIcon icon={faPalette} /> Color And Preferences
-              </div>
-              <div className="dinolabsMonitoringRowWrap">
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">Color Gamut:</span>
-                  <span className="dinolabsMonitoringVal dinolabsMonitoringHighlight">{disp.gamut}</span>
-                </div>
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">Dark Mode:</span>
-                  <span className="dinolabsMonitoringVal dinolabsMonitoringStatus" data-state={disp.darkMode ? "yes" : "no"}>
-                    {B(disp.darkMode)}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="dinolabsMonitoringStatBlock">
-              <div className="dinolabsMonitoringLabel">
-                <FontAwesomeIcon icon={faEye} /> Geometry
-              </div>
-              <div className="dinolabsMonitoringRowWrap">
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">Viewport:</span>
-                  <span className="dinolabsMonitoringVal dinolabsMonitoringHighlight">
-                    {disp.vp.w}×{disp.vp.h} @ {disp.vp.dpr}x
-                  </span>
-                </div>
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">Orientation:</span>
-                  <span className="dinolabsMonitoringVal">{disp.orientation}</span>
-                </div>
-              </div>
-            </div>
-            <div className="dinolabsMonitoringStatBlock dinolabsMonitoringStatBlockMetric">
-              <div className="dinolabsMonitoringLabel">
-                <FontAwesomeIcon icon={faSquarePollVertical} /> UI Thread Load
-              </div>
-              <div className="dinolabsMonitoringBig dinolabsMonitoringMetric">{pct(uiLoad)}</div>
-              <UsageBar usage={uiLoad} color={uiLoad > 0.6 ? "#ff6b6b" : "#51cf66"} />
-            </div>
-          </div>
-        </section>
-
-        <section className="dinolabsMonitoringCard">
-          <div className="dinolabsMonitoringCardHead">
-            <div className="dinolabsMonitoringCardTitle">
-              <FontAwesomeIcon icon={faWifi} />
-              <span>Network Status</span>
-            </div>
-            <div className="dinolabsMonitoringCardActions">
-            </div>
-          </div>
-          <div className="dinolabsMonitoringGrid autoFit smallFit">
-            <div className="dinolabsMonitoringStatBlock">
-              <div className="dinolabsMonitoringLabel">Connection</div>
-              <div
-                className="dinolabsMonitoringBig dinolabsMonitoringConnectionStatus"
-                data-online={net.online}
-              >
-                {net.online ? "Online" : "Offline"}
-              </div>
-              <div className="dinolabsMonitoringRowWrap">
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">Effective Type:</span>
-                  <span className="dinolabsMonitoringVal dinolabsMonitoringHighlight">
-                    {net.conn?.effectiveType || "—"}
-                  </span>
-                </div>
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">Ping:</span>
-                  <span className="dinolabsMonitoringVal dinolabsMonitoringHighlight">
-                    {net.ping != null ? `${net.ping} ms` : "—"}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="dinolabsMonitoringStatBlock dinolabsMonitoringStatBlockMetric">
-              <div className="dinolabsMonitoringLabel">Throughput</div>
-              <div className="dinolabsMonitoringBig dinolabsMonitoringMetric">
-                {net.conn?.downlink ? `${net.conn.downlink} Mbps` : "—"}
-              </div>
-              <UsageBar usage={net.conn?.downlink ? clamp01(net.conn.downlink / 100) : 0} color="#339af0" />
-            </div>
-          </div>
-        </section>
-
-        <section className="dinolabsMonitoringCard">
-          <div className="dinolabsMonitoringCardHead">
-            <div className="dinolabsMonitoringCardTitle">
-              <FontAwesomeIcon icon={faBatteryHalf} />
-              <span>Power And Battery</span>
-            </div>
-          </div>
-          <div className="dinolabsMonitoringGrid autoFit smallFit">
-            <div className="dinolabsMonitoringStatBlock dinolabsMonitoringStatBlockMetric">
-              <div className="dinolabsMonitoringLabel">Battery Level</div>
-              <div className="dinolabsMonitoringBig dinolabsMonitoringBatteryLevel" data-charging={bat.charging}>
-                {bat.level == null ? "—" : `${Math.round(bat.level * 100)}%`}{" "}
-                {bat.charging ? (
-                  <span className="dinolabsMonitoringBatteryStatus">
-                    <FontAwesomeIcon icon={faPlugCircleBolt} />
-                  </span>
-                ) : (
-                  ""
-                )}
-              </div>
-              <UsageBar usage={bat.level ?? 0} color={bat.level != null && bat.level < 0.2 ? "#ff6b6b" : "#51cf66"} />
-            </div>
-            <div className="dinolabsMonitoringStatBlock">
-              <div className="dinolabsMonitoringLabel">Timing</div>
-              <div className="dinolabsMonitoringRowWrap">
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">Charge Time:</span>
-                  <span className="dinolabsMonitoringVal">
-                    {bat.chargingTime == null || !isFinite(bat.chargingTime) ? "—" : fmtMs(bat.chargingTime * 1000)}
-                  </span>
-                </div>
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">Discharge Time:</span>
-                  <span className="dinolabsMonitoringVal">
-                    {bat.dischargingTime == null || !isFinite(bat.dischargingTime) ? "—" : fmtMs(bat.dischargingTime * 1000)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="dinolabsMonitoringCard">
-          <div className="dinolabsMonitoringCardHead">
-            <div className="dinolabsMonitoringCardTitle">
-              <FontAwesomeIcon icon={faBolt} />
-              <span>Performance Metrics</span>
-            </div>
-          </div>
-          <div className="dinolabsMonitoringGrid autoFit">
-            <div className="dinolabsMonitoringStatBlock">
-              <div className="dinolabsMonitoringLabel">Navigation</div>
-              <div className="dinolabsMonitoringRowWrap">
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">TTFB:</span>
-                  <span className="dinolabsMonitoringVal dinolabsMonitoringHighlight">{fmtMs(perf.ttfb)}</span>
-                </div>
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">DOM Ready:</span>
-                  <span className="dinolabsMonitoringVal dinolabsMonitoringHighlight">{fmtMs(perf.dcl)}</span>
-                </div>
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">Load:</span>
-                  <span className="dinolabsMonitoringVal dinolabsMonitoringHighlight">{fmtMs(perf.load)}</span>
-                </div>
-              </div>
-            </div>
-            <div className="dinolabsMonitoringStatBlock">
-              <div className="dinolabsMonitoringLabel">Paint</div>
-              <div className="dinolabsMonitoringRowWrap">
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">FP:</span>
-                  <span className="dinolabsMonitoringVal dinolabsMonitoringHighlight">{fmtMs(perf.fp)}</span>
-                </div>
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">FCP:</span>
-                  <span className="dinolabsMonitoringVal dinolabsMonitoringHighlight">{fmtMs(perf.fcp)}</span>
-                </div>
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">LCP:</span>
-                  <span className="dinolabsMonitoringVal dinolabsMonitoringHighlight">{fmtMs(perf.lcp)}</span>
-                </div>
-              </div>
-            </div>
-            <div className="dinolabsMonitoringStatBlock">
-              <div className="dinolabsMonitoringLabel">Stability And Memory</div>
-              <div className="dinolabsMonitoringRowWrap">
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">CLS:</span>
-                  <span className="dinolabsMonitoringVal dinolabsMonitoringHighlight">
-                    {perf.cls != null ? perf.cls.toFixed(3) : "—"}
-                  </span>
-                </div>
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">FID:</span>
-                  <span className="dinolabsMonitoringVal dinolabsMonitoringHighlight">{fmtMs(perf.fid)}</span>
-                </div>
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">Heap Used:</span>
-                  <span className="dinolabsMonitoringVal">{heap ? fmtBytes(heap.used) : "—"}</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="dinolabsMonitoringCard">
-          <div className="dinolabsMonitoringCardHead">
-            <div className="dinolabsMonitoringCardTitle">
-              <FontAwesomeIcon icon={faCubes} />
-              <span>Graphics And Rendering</span>
-            </div>
-          </div>
-          <div className="dinolabsMonitoringGrid autoFit smallFit">
-            <div className="dinolabsMonitoringStatBlock">
-              <div className="dinolabsMonitoringLabel">WebGL</div>
-              <div className="dinolabsMonitoringRowWrap">
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">WebGL 2.0:</span>
-                  <span className="dinolabsMonitoringVal dinolabsMonitoringStatus" data-state={gfx.gl.gl2 ? "yes" : "no"}>
-                    {B(gfx.gl.gl2)}
-                  </span>
-                </div>
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">Renderer:</span>
-                  <span className="dinolabsMonitoringVal">{gfx.gl.renderer}</span>
-                </div>
-              </div>
-            </div>
-            <div className="dinolabsMonitoringStatBlock">
-              <div className="dinolabsMonitoringLabel">WebGPU</div>
-              <div className="dinolabsMonitoringRowWrap">
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">Available:</span>
-                  <span className="dinolabsMonitoringVal dinolabsMonitoringStatus" data-state={navigator.gpu ? "yes" : "no"}>
-                    {B(!!navigator.gpu)}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="dinolabsMonitoringCard">
-          <div className="dinolabsMonitoringCardHead">
-            <div className="dinolabsMonitoringCardTitle">
-              <FontAwesomeIcon icon={faHeadphones} />
-              <span>Media And Audio</span>
-            </div>
-          </div>
-          <div className="dinolabsMonitoringGrid autoFit">
-            <div className="dinolabsMonitoringStatBlock">
-              <div className="dinolabsMonitoringLabel">Devices</div>
-              <div className="dinolabsMonitoringRowWrap">
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">Cameras:</span>
-                  <span className="dinolabsMonitoringVal dinolabsMonitoringHighlight">
-                    {med.devices.filter((d) => d.kind === "videoinput").length}
-                  </span>
-                </div>
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">Microphones:</span>
-                  <span className="dinolabsMonitoringVal dinolabsMonitoringHighlight">
-                    {med.devices.filter((d) => d.kind === "audioinput").length}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="dinolabsMonitoringStatBlock">
-              <div className="dinolabsMonitoringLabel">Audio</div>
-              <div className="dinolabsMonitoringRowWrap">
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">Sample Rate:</span>
-                  <span className="dinolabsMonitoringVal dinolabsMonitoringHighlight">
-                    {med.ac.rate ? `${med.ac.rate} Hz` : "—"}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="dinolabsMonitoringStatBlock">
-              <div className="dinolabsMonitoringLabel">Gamepads</div>
-              <div className="dinolabsMonitoringRowWrap">
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">Connected:</span>
-                  <span className="dinolabsMonitoringVal">—</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="dinolabsMonitoringCard">
-          <div className="dinolabsMonitoringCardHead">
-            <div className="dinolabsMonitoringCardTitle">
-              <FontAwesomeIcon icon={faHardDrive} />
-              <span>Storage And Caching</span>
-            </div>
-          </div>
-          <div className="dinolabsMonitoringGrid autoFit smallFit">
-            <div className="dinolabsMonitoringStatBlock dinolabsMonitoringStatBlockMetric">
-              <div className="dinolabsMonitoringLabel">Storage Usage</div>
-              <div className="dinolabsMonitoringRowWrap">
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">Used:</span>
-                  <span className="dinolabsMonitoringVal dinolabsMonitoringHighlight">
-                    {fmtBytes(store.usage)}
-                  </span>
-                </div>
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">Available:</span>
-                  <span className="dinolabsMonitoringVal dinolabsMonitoringHighlight">
-                    {fmtBytes(store.quota)}
-                  </span>
-                </div>
-              </div>
-              <UsageBar
-                usage={storageUsage ?? 0}
-                color={storageUsage != null && storageUsage > 0.85 ? "#ff6b6b" : "#51cf66"}
-              />
-            </div>
-            <div className="dinolabsMonitoringStatBlock">
-              <div className="dinolabsMonitoringLabel">Cache Storage</div>
-              <div className="dinolabsMonitoringRowWrap">
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">Cache Count:</span>
-                  <span className="dinolabsMonitoringVal dinolabsMonitoringHighlight">
-                    {pwa.cacheKeys.length || 0}
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </section>
-
-        <section className="dinolabsMonitoringCard">
-          <div className="dinolabsMonitoringCardHead">
-            <div className="dinolabsMonitoringCardTitle">
-              <FontAwesomeIcon icon={faLock} />
-              <span>Permissions</span>
-            </div>
-          </div>
-          <div className="dinolabsMonitoringStatBlock">
-            <div className="dinolabsMonitoringRowWrap dinolabsMonitoringMono">
-              {Object.entries(perms).map(([k, v]) => (
-                <div key={k} className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">{k.replace(/-/g, " ")}:</span>
-                  <span className="dinolabsMonitoringVal dinolabsMonitoringPermission" data-permission={v}>
-                    {v}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        <section className="dinolabsMonitoringCard">
-          <div className="dinolabsMonitoringCardHead">
-            <div className="dinolabsMonitoringCardTitle">
-              <FontAwesomeIcon icon={faCloud} />
-              <span>PWA And Page</span>
-            </div>
-          </div>
-          <div className="dinolabsMonitoringGrid autoFit">
-            <div className="dinolabsMonitoringStatBlock">
-              <div className="dinolabsMonitoringLabel">Service Workers</div>
-              <div className="dinolabsMonitoringRowWrap">
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">Controlling:</span>
-                  <span className="dinolabsMonitoringVal dinolabsMonitoringStatus" data-state={pwa.swInfo.controlling ? "yes" : "no"}>
-                    {B(pwa.swInfo.controlling)}
-                  </span>
-                </div>
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">Registrations:</span>
-                  <span className="dinolabsMonitoringVal dinolabsMonitoringHighlight">{pwa.swInfo.regCount}</span>
-                </div>
-              </div>
-            </div>
-            <div className="dinolabsMonitoringStatBlock">
-              <div className="dinolabsMonitoringLabel">Visibility</div>
-              <div className="dinolabsMonitoringRowWrap">
-                <div className="dinolabsMonitoringRow">
-                  <span className="dinolabsMonitoringKey">State:</span>
-                  <span className="dinolabsMonitoringVal dinolabsMonitoringStatus" data-state={pwa.hidden ? "no" : "yes"}>
-                    {pwa.vis}
-                  </span>
-                </div>
-              </div>
-            </div>
-            <div className="dinolabsMonitoringStatBlock">
-              <div className="dinolabsMonitoringLabel">Sensors</div>
-              <div className="dinolabsMonitoringRowWrap">
-                <button type="button" className="dinolabsMonitoringBtn dinolabsMonitoringBtnSubtle" onClick={sensors.askGeo}>
-                  <FontAwesomeIcon icon={faEarthAmericas} /> Request Location
+              <div className="dinolabsMonitoringActionSection">
+                <button className="dinolabsMonitoringButton" onClick={exportReport}>
+                  <FontAwesomeIcon icon={faDownload} />
+                  Export
+                </button>
+                <button className="dinolabsMonitoringButton" onClick={net.runPing}>
+                  <FontAwesomeIcon icon={faRefresh} />
+                  Ping Test
                 </button>
               </div>
             </div>
+
+            <div className="dinolabsMonitoringContentStack">
+              
+              <div className="dinolabsMonitoringSection">
+                <div className="dinolabsMonitoringSectionHeader">
+                  <FontAwesomeIcon icon={faGlobe} />
+                  <span>Environment</span>
+                </div>
+                <div className="dinolabsMonitoringSectionContent">
+                  <div className="dinolabsMonitoringRow">
+                    <span className="dinolabsMonitoringKey">Platform:</span>
+                    <span className="dinolabsMonitoringValue">{env.uaCH?.platform || navigator.platform || "—"}</span>
+                  </div>
+                  <div className="dinolabsMonitoringRow">
+                    <span className="dinolabsMonitoringKey">Language:</span>
+                    <span className="dinolabsMonitoringValue">{env.lang}</span>
+                  </div>
+                  <div className="dinolabsMonitoringRow">
+                    <span className="dinolabsMonitoringKey">Time Zone:</span>
+                    <span className="dinolabsMonitoringValue">{env.tz || "—"}</span>
+                  </div>
+                  <div className="dinolabsMonitoringRow">
+                    <span className="dinolabsMonitoringKey">Secure Context:</span>
+                    <span className="dinolabsMonitoringValue">{B(env.secure)}</span>
+                  </div>
+                  <div className="dinolabsMonitoringRow">
+                    <span className="dinolabsMonitoringKey">CPU Cores:</span>
+                    <span className="dinolabsMonitoringValue">{env.cores || "—"}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="dinolabsMonitoringSection">
+                <div className="dinolabsMonitoringSectionHeader">
+                  <FontAwesomeIcon icon={faDesktop} />
+                  <span>Display</span>
+                </div>
+                <div className="dinolabsMonitoringSectionContent">
+                  <div className="dinolabsMonitoringRow">
+                    <span className="dinolabsMonitoringKey">Viewport:</span>
+                    <span className="dinolabsMonitoringValue">{disp.vp.w}×{disp.vp.h} @ {disp.vp.dpr}x</span>
+                  </div>
+                  <div className="dinolabsMonitoringRow">
+                    <span className="dinolabsMonitoringKey">Screen:</span>
+                    <span className="dinolabsMonitoringValue">{disp.scr.w}×{disp.scr.h}</span>
+                  </div>
+                  <div className="dinolabsMonitoringRow">
+                    <span className="dinolabsMonitoringKey">Color Gamut:</span>
+                    <span className="dinolabsMonitoringValue">{disp.gamut}</span>
+                  </div>
+                  <div className="dinolabsMonitoringRow">
+                    <span className="dinolabsMonitoringKey">Dark Mode:</span>
+                    <span className="dinolabsMonitoringValue">{B(disp.darkMode)}</span>
+                  </div>
+                  <div className="dinolabsMonitoringRow">
+                    <span className="dinolabsMonitoringKey">UI Load:</span>
+                    <span className="dinolabsMonitoringValue">{pct(uiLoad)}</span>
+                  </div>
+                  <UsageBar usage={uiLoad} color={uiLoad > 0.6 ? "#D7BA7D" : "#AD6ADD"} />
+                </div>
+              </div>
+
+              <div className="dinolabsMonitoringSection">
+                <div className="dinolabsMonitoringSectionHeader">
+                  <FontAwesomeIcon icon={faWifi} />
+                  <span>Network</span>
+                </div>
+                <div className="dinolabsMonitoringSectionContent">
+                  <div className="dinolabsMonitoringRow">
+                    <span className="dinolabsMonitoringKey">Status:</span>
+                    <span className="dinolabsMonitoringValue">{net.online ? "Online" : "Offline"}</span>
+                  </div>
+                  <div className="dinolabsMonitoringRow">
+                    <span className="dinolabsMonitoringKey">Type:</span>
+                    <span className="dinolabsMonitoringValue">{net.conn?.effectiveType || "—"}</span>
+                  </div>
+                  <div className="dinolabsMonitoringRow">
+                    <span className="dinolabsMonitoringKey">Downlink:</span>
+                    <span className="dinolabsMonitoringValue">{net.conn?.downlink ? `${net.conn.downlink} Mbps` : "—"}</span>
+                  </div>
+                  <div className="dinolabsMonitoringRow">
+                    <span className="dinolabsMonitoringKey">Ping:</span>
+                    <span className="dinolabsMonitoringValue">{net.ping != null ? `${net.ping} ms` : "—"}</span>
+                  </div>
+                  <UsageBar usage={net.conn?.downlink ? clamp01(net.conn.downlink / 100) : 0} color="#AD6ADD" />
+                </div>
+              </div>
+
+              <div className="dinolabsMonitoringSection">
+                <div className="dinolabsMonitoringSectionHeader">
+                  <FontAwesomeIcon icon={faBatteryHalf} />
+                  <span>Battery</span>
+                </div>
+                <div className="dinolabsMonitoringSectionContent">
+                  <div className="dinolabsMonitoringRow">
+                    <span className="dinolabsMonitoringKey">Level:</span>
+                    <span className="dinolabsMonitoringValue">
+                      {bat.level == null ? "—" : `${Math.round(bat.level * 100)}%`}
+                      {bat.charging && <FontAwesomeIcon icon={faPlugCircleBolt} />}
+                    </span>
+                  </div>
+                  <div className="dinolabsMonitoringRow">
+                    <span className="dinolabsMonitoringKey">Charging:</span>
+                    <span className="dinolabsMonitoringValue">{B(bat.charging)}</span>
+                  </div>
+                  <UsageBar usage={bat.level ?? 0} color={bat.level != null && bat.level < 0.2 ? "#D7BA7D" : "#AD6ADD"} />
+                </div>
+              </div>
+
+              <div className="dinolabsMonitoringSection">
+                <div className="dinolabsMonitoringSectionHeader">
+                  <FontAwesomeIcon icon={faBolt} />
+                  <span>Performance</span>
+                </div>
+                <div className="dinolabsMonitoringSectionContent">
+                  <div className="dinolabsMonitoringRow">
+                    <span className="dinolabsMonitoringKey">TTFB:</span>
+                    <span className="dinolabsMonitoringValue">{fmtMs(perf.ttfb)}</span>
+                  </div>
+                  <div className="dinolabsMonitoringRow">
+                    <span className="dinolabsMonitoringKey">DOM Ready:</span>
+                    <span className="dinolabsMonitoringValue">{fmtMs(perf.dcl)}</span>
+                  </div>
+                  <div className="dinolabsMonitoringRow">
+                    <span className="dinolabsMonitoringKey">Load:</span>
+                    <span className="dinolabsMonitoringValue">{fmtMs(perf.load)}</span>
+                  </div>
+                  <div className="dinolabsMonitoringRow">
+                    <span className="dinolabsMonitoringKey">FCP:</span>
+                    <span className="dinolabsMonitoringValue">{fmtMs(perf.fcp)}</span>
+                  </div>
+                  <div className="dinolabsMonitoringRow">
+                    <span className="dinolabsMonitoringKey">LCP:</span>
+                    <span className="dinolabsMonitoringValue">{fmtMs(perf.lcp)}</span>
+                  </div>
+                  <div className="dinolabsMonitoringRow">
+                    <span className="dinolabsMonitoringKey">CLS:</span>
+                    <span className="dinolabsMonitoringValue">{perf.cls != null ? perf.cls.toFixed(3) : "—"}</span>
+                  </div>
+                  <div className="dinolabsMonitoringRow">
+                    <span className="dinolabsMonitoringKey">Heap Used:</span>
+                    <span className="dinolabsMonitoringValue">{heap ? fmtBytes(heap.used) : "—"}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="dinolabsMonitoringSection">
+                <div className="dinolabsMonitoringSectionHeader">
+                  <FontAwesomeIcon icon={faCubes} />
+                  <span>Graphics</span>
+                </div>
+                <div className="dinolabsMonitoringSectionContent">
+                  <div className="dinolabsMonitoringRow">
+                    <span className="dinolabsMonitoringKey">WebGL 2.0:</span>
+                    <span className="dinolabsMonitoringValue">{B(gfx.gl.gl2)}</span>
+                  </div>
+                  <div className="dinolabsMonitoringRow">
+                    <span className="dinolabsMonitoringKey">WebGPU:</span>
+                    <span className="dinolabsMonitoringValue">{B(!!navigator.gpu)}</span>
+                  </div>
+                  <div className="dinolabsMonitoringRow">
+                    <span className="dinolabsMonitoringKey">Renderer:</span>
+                    <span className="dinolabsMonitoringValue">{gfx.gl.renderer}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="dinolabsMonitoringSection">
+                <div className="dinolabsMonitoringSectionHeader">
+                  <FontAwesomeIcon icon={faHeadphones} />
+                  <span>Media</span>
+                </div>
+                <div className="dinolabsMonitoringSectionContent">
+                  <div className="dinolabsMonitoringRow">
+                    <span className="dinolabsMonitoringKey">Cameras:</span>
+                    <span className="dinolabsMonitoringValue">{med.devices.filter((d) => d.kind === "videoinput").length}</span>
+                  </div>
+                  <div className="dinolabsMonitoringRow">
+                    <span className="dinolabsMonitoringKey">Microphones:</span>
+                    <span className="dinolabsMonitoringValue">{med.devices.filter((d) => d.kind === "audioinput").length}</span>
+                  </div>
+                  <div className="dinolabsMonitoringRow">
+                    <span className="dinolabsMonitoringKey">Sample Rate:</span>
+                    <span className="dinolabsMonitoringValue">{med.ac.rate ? `${med.ac.rate} Hz` : "—"}</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="dinolabsMonitoringSection">
+                <div className="dinolabsMonitoringSectionHeader">
+                  <FontAwesomeIcon icon={faHardDrive} />
+                  <span>Storage</span>
+                </div>
+                <div className="dinolabsMonitoringSectionContent">
+                  <div className="dinolabsMonitoringRow">
+                    <span className="dinolabsMonitoringKey">Used:</span>
+                    <span className="dinolabsMonitoringValue">{fmtBytes(store.usage)}</span>
+                  </div>
+                  <div className="dinolabsMonitoringRow">
+                    <span className="dinolabsMonitoringKey">Available:</span>
+                    <span className="dinolabsMonitoringValue">{fmtBytes(store.quota)}</span>
+                  </div>
+                  <UsageBar
+                    usage={storageUsage ?? 0}
+                    color={storageUsage != null && storageUsage > 0.85 ? "#D7BA7D" : "#AD6ADD"}
+                  />
+                </div>
+              </div>
+
+              <div className="dinolabsMonitoringSection">
+                <div className="dinolabsMonitoringSectionHeader">
+                  <FontAwesomeIcon icon={faLock} />
+                  <span>Permissions</span>
+                </div>
+                <div className="dinolabsMonitoringSectionContent">
+                  {Object.entries(perms).map(([k, v]) => (
+                    <div key={k} className="dinolabsMonitoringRow">
+                      <span className="dinolabsMonitoringKey">{k.replace(/-/g, " ")}:</span>
+                      <span className="dinolabsMonitoringValue">{v}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              <div className="dinolabsMonitoringSection">
+                <div className="dinolabsMonitoringSectionHeader">
+                  <FontAwesomeIcon icon={faEarthAmericas} />
+                  <span>Location</span>
+                </div>
+                <div className="dinolabsMonitoringSectionContent">
+                  <div className="dinolabsMonitoringRow">
+                    <button className="dinolabsMonitoringButton" onClick={sensors.askGeo}>
+                      <FontAwesomeIcon icon={faEarthAmericas} />
+                      Request Location
+                    </button>
+                  </div>
+                  {sensors.geo.coords && (
+                    <>
+                      <div className="dinolabsMonitoringRow">
+                        <span className="dinolabsMonitoringKey">Latitude:</span>
+                        <span className="dinolabsMonitoringValue">{sensors.geo.coords.latitude.toFixed(6)}</span>
+                      </div>
+                      <div className="dinolabsMonitoringRow">
+                        <span className="dinolabsMonitoringKey">Longitude:</span>
+                        <span className="dinolabsMonitoringValue">{sensors.geo.coords.longitude.toFixed(6)}</span>
+                      </div>
+                    </>
+                  )}
+                  {sensors.geo.err && (
+                    <div className="dinolabsMonitoringRow">
+                      <span className="dinolabsMonitoringKey">Error:</span>
+                      <span className="dinolabsMonitoringValue">{sensors.geo.err}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+            </div>
           </div>
-        </section>
+        </div>
       </div>
     </div>
   );
