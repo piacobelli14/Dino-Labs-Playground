@@ -6,10 +6,10 @@ create table research_dev.pi_agg_yrmon_plan_update_temp_merged_1 as
 with ranked_plans as (
     select *,
     case
-        when medical_plan like 'Com%' then 1
-        when medical_plan = 'Medicare FFS' then 2
+        when medical_plan like 'Com%' then 4
+        when medical_plan = 'Medicare FFS' then 1
         when medical_plan = 'Medicare' then 3
-        when medical_plan = 'Medicare MA' then 4
+        when medical_plan = 'Medicare MA' then 2
         when medical_plan = 'Medicare Secondary' then 5
         else 6
     end as plan_priority,
@@ -55,6 +55,7 @@ aggregated as (
         max(metal_tier) as metal_tier,
         max(member_medicare_beneficiary_identifier) as member_medicare_beneficiary_identifier,
         max(high_deductible_plan_indicator) as high_deductible_plan_indicator,
+        max(supplementary_medical_insurance_benefits) as supplementary_medical_insurance_benefits,
         max(med_indicator) as med_indicator,
         max(secondary_med_indicator) as secondary_med_indicator,
         max(pharm_indicator) as pharm_indicator,
@@ -69,7 +70,9 @@ aggregated as (
         max(case when medical_plan <> 'Medicaid' and rn = 1 then medical_plan_design else null end) as non_medicaid_design,
         -- Get the Medicaid plan
         max(case when medical_plan = 'Medicaid' then medical_plan else null end) as medicaid_plan,
-        max(case when medical_plan = 'Medicaid' then medical_plan_design else null end) as medicaid_design
+        max(case when medical_plan = 'Medicaid' then medical_plan_design else null end) as medicaid_design,
+        -- Check if non-Medicaid plan is Medicare type
+        max(case when medical_plan <> 'Medicaid' and rn = 1 and medical_plan in ('Medicare', 'Medicare FFS', 'Medicare MA', 'Medicare Secondary') then 1 else 0 end) as has_medicare
     from prioritized
     group by apcd_id, yrmon
 )
@@ -94,22 +97,41 @@ select
     dental_plan,
     vision_plan,
     pharmacy_plan,
-    coalesce(non_medicaid_plan, medicaid_plan) as medical_plan_primary,
+    -- Logic for primary plan:
+    -- If dual enrolled (supplementary benefits) AND has both Medicaid and Medicare → Medicaid is primary
+    -- Otherwise → Non-Medicaid is primary (or Medicaid if alone)
     case
-        when non_medicaid_plan is not null and medicaid_plan is not null then medicaid_plan
+        when supplementary_medical_insurance_benefits = 'Y' and medicaid_plan is not null and has_medicare = 1 
+            then medicaid_plan
+        else coalesce(non_medicaid_plan, medicaid_plan)
+    end as medical_plan_primary,
+    -- Logic for secondary plan:
+    -- If dual enrolled AND has both Medicaid and Medicare → Medicare is secondary
+    -- Otherwise if non-Medicaid and Medicaid both exist → Medicaid is secondary
+    case
+        when supplementary_medical_insurance_benefits = 'Y' and medicaid_plan is not null and has_medicare = 1 
+            then non_medicaid_plan
+        when non_medicaid_plan is not null and medicaid_plan is not null 
+            then medicaid_plan
         else null
     end as medical_plan_secondary,
-    coalesce(non_medicaid_design, medicaid_design) as medical_plan_design_primary,
+    -- Same logic for designs
     case
-        when non_medicaid_plan is not null and medicaid_plan is not null then medicaid_design
+        when supplementary_medical_insurance_benefits = 'Y' and medicaid_plan is not null and has_medicare = 1 
+            then medicaid_design
+        else coalesce(non_medicaid_design, medicaid_design)
+    end as medical_plan_design_primary,
+    case
+        when supplementary_medical_insurance_benefits = 'Y' and medicaid_plan is not null and has_medicare = 1 
+            then non_medicaid_design
+        when non_medicaid_plan is not null and medicaid_plan is not null 
+            then medicaid_design
         else null
     end as medical_plan_design_secondary,
     other_plan,
     insured_group_or_policy_number
 from aggregated
 ;
-
-
 
 
 
