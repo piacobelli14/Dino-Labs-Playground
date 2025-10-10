@@ -1,6 +1,7 @@
 ----------------------------------------------------------------------------------------------------------------------
 ----- Revised Plan Table Generation Script with Conditional Duplicate Handling
 ----------------------------------------------------------------------------------------------------------------------
+
 DROP TABLE IF EXISTS research_dev.pi_agg_yrmon;
 
 CREATE TABLE research_dev.pi_agg_yrmon AS
@@ -117,6 +118,7 @@ from
     left join research_di.apcd_plan_list p
         on trim(upper(b.member_insurance_product_category_code)) = trim(upper(p.code))
 ;
+
 /*
 insert into research_dev.pi_agg_yrmon_plan1
 select a.apcd_id,
@@ -160,6 +162,8 @@ and e.data_period_start = b.data_period_start
 where (coalesce(e.medical_coverage_under_this_plan, 'N') <> 'Y')
 ;
 */
+
+
 update research_dev.pi_agg_yrmon_plan1
 set plan_type = 'Pharmacy', plan_design = 'Unknown'
 where (
@@ -263,6 +267,7 @@ select distinct
         then 'Pharmacy'
     end as pharmacy_plan,
     case
+        when mcd_medical_program is not null then 'Medicaid'
         when not (
             p.plan_type like 'Dental%' or
             p.plan_type like 'Vision%' or
@@ -274,6 +279,7 @@ select distinct
         then p.plan_type
     end as medical_plan,
     case
+     when mcd_medical_program is not null then mcd_medical_program
         when not (
             p.plan_type like 'Dental%' or
             p.plan_type like 'Vision%' or
@@ -283,7 +289,6 @@ select distinct
             p.plan_type like 'NA(BLANK)%'
         ) and mcd_medical_program is null
         then p.plan_design
-        when mcd_medical_program is not null then mcd_medical_program
     end as medical_plan_design,
     case
         when p.plan_type like 'Other%'
@@ -297,14 +302,18 @@ left join research_dev.pi_agg_yrmon y
     and p.data_submitter_code = y.data_submitter_code
     and p.payor_code = y.payor_code
 ;
+
 -- Backup
 drop table if exists research_dev.pi_agg_yrmon_plan2_a_bkup;
 create table research_dev.pi_agg_yrmon_plan2_a_bkup as
 select * from research_dev.pi_agg_yrmon_plan2
 ;
+
 -- Adjust medical_plan for Commercial based on fl_5agency
+
 drop table if exists temp_fl_5agency_combined;
-create temp table temp_fl_5agency_combined as
+drop table if exists research_dev.temp_fl_5agency_combined;
+create table research_dev.temp_fl_5agency_combined as
 WITH commercial_fl AS (
     SELECT
         apcd_id,
@@ -321,19 +330,26 @@ SELECT
     apcd_id,
     yrmon,
     CASE
-        WHEN 'ers' = ANY(agencies) AND 'trs' = ANY(agencies) THEN 'Com-erstrs'
-        WHEN 'ers' = ANY(agencies) THEN 'Com-ers'
-        WHEN 'trs' = ANY(agencies) THEN 'Com-trs'
+        WHEN 'ers' = ANY(agencies) AND 'trs' = ANY(agencies) THEN 'Com-ErsTrs'
+        WHEN 'ers' = ANY(agencies) THEN 'Com-Ers'
+        WHEN 'trs' = ANY(agencies) THEN 'Com-Trs'
         ELSE 'Commercial'
     END AS adjusted_medical_plan
 FROM commercial_fl;
+
 UPDATE research_dev.pi_agg_yrmon_plan2 p
 SET medical_plan = t.adjusted_medical_plan
 FROM temp_fl_5agency_combined t
 WHERE p.apcd_id = t.apcd_id
 AND p.yrmon = t.yrmon
 AND p.medical_plan = 'Commercial';
-drop table if exists temp_fl_5agency_combined;
+
+-- Backup
+drop table if exists research_dev.pi_agg_yrmon_plan2_g_bkup;
+create table research_dev.pi_agg_yrmon_plan2_g_bkup as
+select * from research_dev.pi_agg_yrmon_plan2
+;
+
 drop table if exists research_dev.pi_agg_yrmon_indicator_aggregates;
 create table research_dev.pi_agg_yrmon_indicator_aggregates as
 select
@@ -351,11 +367,13 @@ select
 from research_dev.pi_agg_yrmon_plan2
 group by apcd_id, yrmon, data_submitter_code, payor_code
 ;
+
 -- Backup
 drop table if exists research_dev.pi_agg_yrmon_indicator_aggregates_bkup;
 create table research_dev.pi_agg_yrmon_indicator_aggregates_bkup as
 select * from research_dev.pi_agg_yrmon_indicator_aggregates
 ;
+
 drop table if exists research_dev.pi_agg_yrmon_plan3;
 create table research_dev.pi_agg_yrmon_plan3 as
 select
@@ -378,11 +396,13 @@ from
 group by
     apcd_id, yrmon, data_submitter_code, payor_code
 ;
+
 -- Backup
 drop table if exists research_dev.pi_agg_yrmon_plan3_a_bkup;
 create table research_dev.pi_agg_yrmon_plan3_a_bkup as
 select * from research_dev.pi_agg_yrmon_plan3
 ;
+
 update research_dev.pi_agg_yrmon_plan2
 set
     dental_plan = p.dental_plan1,
@@ -404,135 +424,18 @@ where
     and research_dev.pi_agg_yrmon_plan2.payor_code = p.payor_code
     --and left(ym::text,4)='2019'
 ;
+
 -- Backup
 drop table if exists research_dev.pi_agg_yrmon_plan2_b_bkup;
 create table research_dev.pi_agg_yrmon_plan2_b_bkup as
 select * from research_dev.pi_agg_yrmon_plan2
 ;
--- Handle Duplicate Plan Types With Ranking
-WITH duplicate_groups AS (
-    SELECT
-        apcd_id,
-        yrmon
-    FROM
-        research_dev.pi_agg_yrmon_plan2
-    GROUP BY
-        apcd_id, yrmon
-    HAVING COUNT(distinct medical_plan) > 1
-    AND NOT BOOL_OR(medical_plan = 'Medicaid')
-),
-plan_priority_cte AS (
-    SELECT
-        p.apcd_id,
-        p.yrmon,
-        p.medical_plan,
-        p.medical_plan_design,
-        ROW_NUMBER() OVER (
-            PARTITION BY p.apcd_id, p.yrmon
-            ORDER BY
-                CASE
-                    WHEN p.medical_plan = 'Medicare FFS' and p.data_submitter_code = 'CHCDMDCR' THEN 3
-                    WHEN p.medical_plan = 'Medicare' and p.data_submitter_code = 'CHCDMDCR' THEN 2
-                    WHEN p.medical_plan = 'Medicare MA' and p.data_submitter_code = 'CHCDMDCR' THEN 4
-                    WHEN p.medical_plan like 'Com%' THEN 1
-                    ELSE 5
-                END,
-                CASE
-                    WHEN p.medical_plan_design = 'Part AB' then 1
-                    WHEN p.medical_plan_design = 'Part A' then 2
-                    WHEN p.medical_plan_design = 'Part B' then 3
-                    WHEN p.medical_plan_design = 'Primary' then 4
-                    WHEN p.medical_plan_design = 'Secondary' then 5
-                    WHEN p.medical_plan_design = 'PPO' THEN 6
-                    WHEN p.medical_plan_design = 'HMO' THEN 7
-                    WHEN p.medical_plan_design = 'Unknown' THEN 8
-                    WHEN p.medical_plan_design IS NOT NULL THEN 9
-                    ELSE 9
-                END
-        ) AS rn
-    FROM
-        research_dev.pi_agg_yrmon_plan2 p
-    INNER JOIN
-        duplicate_groups d
-        ON p.apcd_id = d.apcd_id
-        AND p.yrmon = d.yrmon
-)
-DELETE FROM research_dev.pi_agg_yrmon_plan2
-USING plan_priority_cte p
-WHERE
-    research_dev.pi_agg_yrmon_plan2.apcd_id = p.apcd_id
-    AND research_dev.pi_agg_yrmon_plan2.yrmon = p.yrmon
-    AND research_dev.pi_agg_yrmon_plan2.medical_plan = p.medical_plan
-    AND research_dev.pi_agg_yrmon_plan2.medical_plan_design = p.medical_plan_design
-    AND p.rn > 1
-;
--- Backup
-drop table if exists research_dev.pi_agg_yrmon_plan2_c_bkup;
-create table research_dev.pi_agg_yrmon_plan2_c_bkup as
-select * from research_dev.pi_agg_yrmon_plan2
-;
---- Handle Duplicate Plan Designs With Ranking
-WITH duplicate_design_groups AS (
-    SELECT
-        apcd_id,
-        yrmon,
-        data_submitter_code,
-        payor_code
-    FROM
-        research_dev.pi_agg_yrmon_plan2
-    WHERE
-        medical_plan IS NOT NULL
-    GROUP BY
-        apcd_id, yrmon, data_submitter_code, payor_code
-    HAVING COUNT(DISTINCT medical_plan_design) > 1
-),
-design_priority_cte AS (
-    SELECT
-        p.apcd_id,
-        p.yrmon,
-        p.data_submitter_code,
-        p.payor_code,
-        p.medical_plan_design,
-        ROW_NUMBER() OVER (
-            PARTITION BY p.apcd_id, p.yrmon
-            ORDER BY
-                CASE
-                    WHEN p.medical_plan_design = 'Part AB' then 1
-                    WHEN p.medical_plan_design = 'Part A' then 2
-                    WHEN p.medical_plan_design = 'Part B' then 3
-                    WHEN p.medical_plan_design = 'Primary' then 4
-                    WHEN p.medical_plan_design = 'Secondary' then 5
-                    WHEN p.medical_plan_design = 'PPO' THEN 6
-                    WHEN p.medical_plan_design = 'HMO' THEN 7
-                    WHEN p.medical_plan_design = 'Unknown' THEN 8
-                    WHEN p.medical_plan_design IS NOT NULL THEN 9
-                    ELSE 9
-                END
-        ) AS rn
-    FROM
-        research_dev.pi_agg_yrmon_plan2 p
-    INNER JOIN
-        duplicate_design_groups d
-        ON p.apcd_id = d.apcd_id
-        AND p.yrmon = d.yrmon
-        AND p.data_submitter_code = d.data_submitter_code
-        AND p.payor_code = d.payor_code
-)
-DELETE FROM research_dev.pi_agg_yrmon_plan2
-USING design_priority_cte dp
-WHERE
-    research_dev.pi_agg_yrmon_plan2.apcd_id = dp.apcd_id
-    AND research_dev.pi_agg_yrmon_plan2.yrmon = dp.yrmon
-    AND research_dev.pi_agg_yrmon_plan2.medical_plan_design = dp.medical_plan_design
-    AND research_dev.pi_agg_yrmon_plan2.data_submitter_code = dp.data_submitter_code
-    AND research_dev.pi_agg_yrmon_plan2.payor_code = dp.payor_code
-    AND dp.rn > 1
-;
--- Backup
+
 drop table if exists research_dev.pi_agg_yrmon_plan2_d_bkup;
 create table research_dev.pi_agg_yrmon_plan2_d_bkup as
 select * from research_dev.pi_agg_yrmon_plan2
 ;
+
 drop table if exists research_dev.pi_agg_yrmon_temp;
 create table research_dev.pi_agg_yrmon_temp as
 select * from research_dev.pi_agg_yrmon;
@@ -540,6 +443,8 @@ alter table research_dev.pi_agg_yrmon_temp drop column med_indicator;
 alter table research_dev.pi_agg_yrmon_temp drop column secondary_med_indicator;
 alter table research_dev.pi_agg_yrmon_temp drop column dental_indicator;
 alter table research_dev.pi_agg_yrmon_temp drop column pharm_indicator;
+
+
 drop table if exists research_dev.pi_agg_yrmon_plan3_2019; -- Run for all years.
 create table research_dev.pi_agg_yrmon_plan3_2019 as -- Run for all years.
 select distinct
@@ -575,6 +480,7 @@ from
         and x.payor_code = y.payor_code
     left join research_dev.zip_fips_crosswalk_full a on y.zip5 = a.zip
 where yr = 2019; -- Run for all years.
+
 drop table if exists research_dev.pi_agg_yrmon_plan3_update;
 create table research_dev.pi_agg_yrmon_plan3_update as (
     select * from research_dev.pi_agg_yrmon_plan3_2019
@@ -598,11 +504,13 @@ drop table if exists research_dev.pi_agg_yrmon_plan3_2022;
 drop table if exists research_dev.pi_agg_yrmon_plan3_2023;
 drop table if exists research_dev.pi_agg_yrmon_plan3_2024;
 drop table if exists research_dev.pi_agg_yrmon_plan3_2025;
+
 -- Backup
 drop table if exists research_dev.pi_agg_yrmon_plan3_update_bkup;
 create table research_dev.pi_agg_yrmon_plan3_update_bkup as
 select * from research_dev.pi_agg_yrmon_plan3_update
 ;
+
 update research_dev.pi_agg_yrmon_plan3_update
 set medical_plan = 'Medicare MA'
 where medical_plan = 'Commercial' and data_submitter_code = 'HCSC' and member_medicare_beneficiary_identifier is not null
@@ -611,16 +519,28 @@ update research_dev.pi_agg_yrmon_plan3_update
 set medical_plan = 'Medicare Secondary'
 where medical_plan = 'Medicare'
 ;
+
+
 drop table if exists research_dev.pi_agg_yrmon_plan_update_temp_merged_1;
 create table research_dev.pi_agg_yrmon_plan_update_temp_merged_1 as
-with ranked_plans as (
+with plan_groups as (
+    select 
+        *,
+        -- Flag if Medicaid exists in this apcd_id/yrmon group
+        max(case when data_submitter_code = 'HHSC' then 1 else 0 end) over (partition by apcd_id, yrmon) as has_medicaid,
+        -- Count non-Medicaid plans in the group
+        sum(case when data_submitter_code <> 'HHSC' then 1 else 0 end) over (partition by apcd_id, yrmon) as non_medicaid_count
+    from research_dev.pi_agg_yrmon_plan3_update
+),
+ranked_plans as (
     select *,
     case
-        when medical_plan = 'Medicare FFS' and data_submitter_code = 'CHCDMDCR' then 3
-        when medical_plan = 'Medicare' and data_submitter_code = 'CHCDMDCR' then 2
-        when medical_plan = 'Medicare MA' and data_submitter_code = 'CHCDMDCR' then 4
         when medical_plan like 'Com%' then 1
-        else 5
+        when medical_plan = 'Medicare FFS' and data_submitter_code = 'CHCDMDCR' then 2
+        when medical_plan = 'Medicare' and data_submitter_code = 'CHCDMDCR' then 3
+        when medical_plan = 'Medicare MA' and data_submitter_code = 'CHCDMDCR' then 4
+        when medical_plan = 'Medicare Secondary' then 5
+        else 6
     end as plan_priority,
     case
         when medical_plan_design = 'Part AB' then 1
@@ -632,54 +552,82 @@ with ranked_plans as (
         when medical_plan_design = 'HMO' then 7
         when medical_plan_design = 'Unknown' then 8
         when medical_plan_design is not null then 9
-        else 9
+        else 10
     end as design_priority
-    from research_dev.pi_agg_yrmon_plan3_update
+    from plan_groups
 ),
 prioritized as (
     select *,
-    row_number() over (partition by apcd_id, yrmon order by plan_priority, design_priority) as rn
+    -- Only rank non-HHSC plans for primary selection
+    case 
+        when data_submitter_code <> 'HHSC' then 
+            row_number() over (
+                partition by apcd_id, yrmon 
+                order by plan_priority, design_priority
+            )
+        else null
+    end as rn
     from ranked_plans
-    where data_submitter_code <> 'HHSC' or medical_plan is null
 )
 select
-apcd_id,
-max(yr) as yr,
-yrmon,
-max(dob) as dob,
-max(age) as age,
-max(gender) as gender,
-max(race_1) as race_1, max(race_2) as race_2, max(race_3) as race_3,
-max(hispanic_indicator) as hispanic_indicator, max(ethnicity_1) as ethnicity_1, max(ethnicity_2) as ethnicity_2,
-max(zip5) as zip5, max(fips) as fips,
+    apcd_id,
+    max(yr) as yr,
+    yrmon,
+    max(dob) as dob,
+    max(age) as age,
+    max(gender) as gender,
+    max(race_1) as race_1, max(race_2) as race_2, max(race_3) as race_3,
+    max(hispanic_indicator) as hispanic_indicator, max(ethnicity_1) as ethnicity_1, max(ethnicity_2) as ethnicity_2,
+    max(zip5) as zip5, max(fips) as fips,
     max(member_state) as member_state,
     max(metal_tier) as metal_tier,
-max(member_medicare_beneficiary_identifier) as member_medicare_beneficiary_identifier,
-max(high_deductible_plan_indicator) as high_deductible_plan_indicator,
-max(med_indicator) as med_indicator,
+    max(member_medicare_beneficiary_identifier) as member_medicare_beneficiary_identifier,
+    max(high_deductible_plan_indicator) as high_deductible_plan_indicator,
+    max(med_indicator) as med_indicator,
     max(secondary_med_indicator) as secondary_med_indicator,
-max(pharm_indicator) as pharm_indicator,
-max(dental_indicator) as dental_indicator,
-max(dental_plan) as dental_plan,
-max(vision_plan) as vision_plan,
-max(pharmacy_plan) as pharmacy_plan,
-coalesce(
-    max(case when data_submitter_code <> 'HHSC' and rn = 1 then medical_plan else null end),
-    max(medical_plan)
-) as medical_plan_primary,
-max(case when data_submitter_code = 'HHSC' then medical_plan else null end) as medical_plan_secondary,
-coalesce(
-    max(case when data_submitter_code <> 'HHSC' and rn = 1 then medical_plan_design else null end),
-    max(medical_plan_design)
-) as medical_plan_design_primary,
-max(case when data_submitter_code = 'HHSC' then medical_plan_design else null end) as medical_plan_design_secondary,
-max(other_plan) as other_plan,
+    max(pharm_indicator) as pharm_indicator,
+    max(dental_indicator) as dental_indicator,
+    max(dental_plan) as dental_plan,
+    max(vision_plan) as vision_plan,
+    max(pharmacy_plan) as pharmacy_plan,
+    -- Primary: If has non-HHSC plans, pick top-ranked non-HHSC; otherwise pick HHSC
+    coalesce(
+        max(case when data_submitter_code <> 'HHSC' and rn = 1 then medical_plan else null end),
+        max(case when data_submitter_code = 'HHSC' then medical_plan else null end)
+    ) as medical_plan_primary,
+    -- Secondary: Only populate if has_medicaid=1 AND has other plans (non_medicaid_count > 0)
+    max(case 
+        when has_medicaid = 1 and non_medicaid_count > 0 and data_submitter_code = 'HHSC' 
+        then medical_plan 
+        else null 
+    end) as medical_plan_secondary,
+    -- Primary design
+    coalesce(
+        max(case when data_submitter_code <> 'HHSC' and rn = 1 then medical_plan_design else null end),
+        max(case when data_submitter_code = 'HHSC' then medical_plan_design else null end)
+    ) as medical_plan_design_primary,
+    -- Secondary design: Only populate if has_medicaid=1 AND has other plans
+    max(case 
+        when has_medicaid = 1 and non_medicaid_count > 0 and data_submitter_code = 'HHSC' 
+        then medical_plan_design 
+        else null 
+    end) as medical_plan_design_secondary,
+    max(other_plan) as other_plan,
     max(insured_group_or_policy_number) as insured_group_or_policy_number
 from prioritized
 group by apcd_id, yrmon
 ;
+
 update research_dev.pi_agg_yrmon_plan_update_temp_merged_1 set other_plan = 'Unknown' where other_plan = 'NA(BLANK)'
 ;
+
+-- Quick QA
+select * from research_dev.pi_agg_yrmon_plan_update_temp_merged_1 ; 
+select count(*) from research_dev.pi_agg_yrmon_plan_update_temp_merged_1;
+select count(distinct apcd_id) from research_dev.pi_agg_yrmon_plan_update_temp_merged_1;
+select count(distinct apcd_id) from research_di.agg_enrl_yrmon;
+
+
 -- Final Table Creation
 drop table if exists research_di.agg_yrmon_plan cascade;
 create table research_di.agg_yrmon_plan as
@@ -689,13 +637,9 @@ create table research_di.agg_yrmon_plan_dp as
 select * from research_dev.pi_agg_yrmon_plan3;
 grant all on research_di.agg_yrmon_plan to apcd_research;
 grant all on research_di.agg_yrmon_plan_dp to apcd_research;
+
 -- Quick QA
-select column_name from information_schema.columns
-where table_schema = 'research_di' and table_name = 'agg_yrmon_plan'
-and column_name not in (
-select column_name from information_schema.columns
-where table_schema = 'research_dev' and table_name = 'pi_agg_yrmon_plan_update_temp_merged_1'
-);
+
 select count(distinct apcd_id) from research_di.agg_enrl_yrmon;
 select count(distinct apcd_id) from research_dev.pi_agg_yrmon_plan_update_temp_merged_1;
 select count(distinct apcd_id) from research_dev.pi_agg_yrmon_plan_update_temp_merged_1 where pharm_indicator = 'Y';
