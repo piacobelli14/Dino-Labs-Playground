@@ -7,7 +7,7 @@ WITH combined_plans AS (
         apcd_id
     FROM research_dev.pi_agg_yrmon_plan_update_temp_merged_1
     WHERE medical_plan_primary IS NOT NULL 
-        AND medical_plan_primary IN ('Medicaid', 'Com-Ers', 'Com-Trs')
+        AND medical_plan_primary IN ('Medicaid', 'Com-Ers', 'Com-Trs', 'Com-ErsTrs')
         AND medical_plan_design_primary NOT IN ('CHIP PERI', 'HTW', 'NorthStar', 'MMP')
     
     UNION ALL
@@ -20,8 +20,40 @@ WITH combined_plans AS (
         apcd_id
     FROM research_dev.pi_agg_yrmon_plan_update_temp_merged_1
     WHERE medical_plan_secondary IS NOT NULL 
-        AND medical_plan_secondary IN ('Medicaid', 'Com-Ers', 'Com-Trs')
+        AND medical_plan_secondary IN ('Medicaid', 'Com-Ers', 'Com-Trs', 'Com-ErsTrs')
         AND medical_plan_design_secondary NOT IN ('CHIP PERI', 'HTW', 'NorthStar', 'MMP')
+),
+expanded_plans AS (
+    -- Keep all non-ErsTrs plans as is
+    SELECT 
+        yr,
+        medical_plan,
+        medical_plan_design,
+        apcd_id
+    FROM combined_plans
+    WHERE medical_plan != 'Com-ErsTrs'
+    
+    UNION ALL
+    
+    -- Split Com-ErsTrs into Com-Ers
+    SELECT 
+        yr,
+        'Com-Ers' AS medical_plan,
+        medical_plan_design,
+        apcd_id
+    FROM combined_plans
+    WHERE medical_plan = 'Com-ErsTrs'
+    
+    UNION ALL
+    
+    -- Split Com-ErsTrs into Com-Trs
+    SELECT 
+        yr,
+        'Com-Trs' AS medical_plan,
+        medical_plan_design,
+        apcd_id
+    FROM combined_plans
+    WHERE medical_plan = 'Com-ErsTrs'
 )
 SELECT 
     yr,
@@ -31,7 +63,7 @@ SELECT
         ELSE medical_plan_design 
     END AS medical_plan_design,
     COUNT(DISTINCT apcd_id) AS count_per_plan_grouping
-FROM combined_plans
+FROM expanded_plans
 GROUP BY 
     yr, 
     medical_plan,
