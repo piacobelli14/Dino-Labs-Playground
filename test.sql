@@ -31,7 +31,7 @@ prioritized as (
     select *,
     -- Rank non-Medicaid plans only
     case 
-        when medical_plan <> 'Medicaid' or medical_plan is null then 
+        when medical_plan <> 'Medicaid' then 
             row_number() over (
                 partition by apcd_id, yrmon 
                 order by plan_priority, design_priority
@@ -65,8 +65,8 @@ aggregated as (
         max(other_plan) as other_plan,
         max(insured_group_or_policy_number) as insured_group_or_policy_number,
         -- Get the top non-Medicaid plan
-        max(case when (medical_plan <> 'Medicaid' or medical_plan is null) and rn = 1 then medical_plan else null end) as non_medicaid_plan,
-        max(case when (medical_plan <> 'Medicaid' or medical_plan is null) and rn = 1 then medical_plan_design else null end) as non_medicaid_design,
+        max(case when medical_plan <> 'Medicaid' and rn = 1 then medical_plan else null end) as non_medicaid_plan,
+        max(case when medical_plan <> 'Medicaid' and rn = 1 then medical_plan_design else null end) as non_medicaid_design,
         -- Get the Medicaid plan
         max(case when medical_plan = 'Medicaid' then medical_plan else null end) as medicaid_plan,
         max(case when medical_plan = 'Medicaid' then medical_plan_design else null end) as medicaid_design
@@ -94,22 +94,12 @@ select
     dental_plan,
     vision_plan,
     pharmacy_plan,
-    -- Primary: non-Medicaid if exists, otherwise Medicaid
-    case
-        when non_medicaid_plan is not null then non_medicaid_plan
-        else medicaid_plan
-    end as medical_plan_primary,
-    -- Secondary: Medicaid ONLY if non-Medicaid also exists
+    coalesce(non_medicaid_plan, medicaid_plan) as medical_plan_primary,
     case
         when non_medicaid_plan is not null and medicaid_plan is not null then medicaid_plan
         else null
     end as medical_plan_secondary,
-    -- Primary design
-    case
-        when non_medicaid_plan is not null then non_medicaid_design
-        else medicaid_design
-    end as medical_plan_design_primary,
-    -- Secondary design: Medicaid design ONLY if non-Medicaid also exists
+    coalesce(non_medicaid_design, medicaid_design) as medical_plan_design_primary,
     case
         when non_medicaid_plan is not null and medicaid_plan is not null then medicaid_design
         else null
@@ -118,8 +108,6 @@ select
     insured_group_or_policy_number
 from aggregated
 ;
-
-
 
 
 
