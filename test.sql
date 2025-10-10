@@ -1,6 +1,132 @@
 ----------------------------------------------------------------------------------------------------------------------
 ----- Revised Plan Table Generation Script with Conditional Duplicate Handling
 ----------------------------------------------------------------------------------------------------------------------
+drop table if exists research_dev.pi_agg_yrmon_plan_update_temp_merged_1;
+create table research_dev.pi_agg_yrmon_plan_update_temp_merged_1 as
+with ranked_plans as (
+    select *,
+    case
+        when medical_plan like 'Com%' then 1
+        when medical_plan = 'Medicare FFS' and data_submitter_code = 'CHCDMDCR' then 2
+        when medical_plan = 'Medicare' and data_submitter_code = 'CHCDMDCR' then 3
+        when medical_plan = 'Medicare MA' and data_submitter_code = 'CHCDMDCR' then 4
+        when medical_plan = 'Medicare Secondary' then 5
+        else 6
+    end as plan_priority,
+    case
+        when medical_plan_design = 'Part AB' then 1
+        when medical_plan_design = 'Part A' then 2
+        when medical_plan_design = 'Part B' then 3
+        when medical_plan_design = 'Primary' then 4
+        when medical_plan_design = 'Secondary' then 5
+        when medical_plan_design = 'PPO' then 6
+        when medical_plan_design = 'HMO' then 7
+        when medical_plan_design = 'Unknown' then 8
+        when medical_plan_design is not null then 9
+        else 10
+    end as design_priority
+    from research_dev.pi_agg_yrmon_plan3_update
+),
+prioritized as (
+    select *,
+    -- Rank non-HHSC plans only
+    case 
+        when data_submitter_code <> 'HHSC' then 
+            row_number() over (
+                partition by apcd_id, yrmon 
+                order by plan_priority, design_priority
+            )
+        else null
+    end as rn
+    from ranked_plans
+),
+aggregated as (
+    select
+        apcd_id,
+        max(yr) as yr,
+        yrmon,
+        max(dob) as dob,
+        max(age) as age,
+        max(gender) as gender,
+        max(race_1) as race_1, max(race_2) as race_2, max(race_3) as race_3,
+        max(hispanic_indicator) as hispanic_indicator, max(ethnicity_1) as ethnicity_1, max(ethnicity_2) as ethnicity_2,
+        max(zip5) as zip5, max(fips) as fips,
+        max(member_state) as member_state,
+        max(metal_tier) as metal_tier,
+        max(member_medicare_beneficiary_identifier) as member_medicare_beneficiary_identifier,
+        max(high_deductible_plan_indicator) as high_deductible_plan_indicator,
+        max(med_indicator) as med_indicator,
+        max(secondary_med_indicator) as secondary_med_indicator,
+        max(pharm_indicator) as pharm_indicator,
+        max(dental_indicator) as dental_indicator,
+        max(dental_plan) as dental_plan,
+        max(vision_plan) as vision_plan,
+        max(pharmacy_plan) as pharmacy_plan,
+        max(other_plan) as other_plan,
+        max(insured_group_or_policy_number) as insured_group_or_policy_number,
+        -- Get the top non-HHSC plan
+        max(case when data_submitter_code <> 'HHSC' and rn = 1 then medical_plan else null end) as non_hhsc_plan,
+        max(case when data_submitter_code <> 'HHSC' and rn = 1 then medical_plan_design else null end) as non_hhsc_design,
+        -- Get the HHSC plan
+        max(case when data_submitter_code = 'HHSC' then medical_plan else null end) as hhsc_plan,
+        max(case when data_submitter_code = 'HHSC' then medical_plan_design else null end) as hhsc_design
+    from prioritized
+    group by apcd_id, yrmon
+)
+select
+    apcd_id,
+    yr,
+    yrmon,
+    dob,
+    age,
+    gender,
+    race_1, race_2, race_3,
+    hispanic_indicator, ethnicity_1, ethnicity_2,
+    zip5, fips,
+    member_state,
+    metal_tier,
+    member_medicare_beneficiary_identifier,
+    high_deductible_plan_indicator,
+    med_indicator,
+    secondary_med_indicator,
+    pharm_indicator,
+    dental_indicator,
+    dental_plan,
+    vision_plan,
+    pharmacy_plan,
+    -- If both exist: non-HHSC is primary, HHSC is secondary
+    -- If only non-HHSC: it's primary
+    -- If only HHSC: it's primary
+    case
+        when non_hhsc_plan is not null then non_hhsc_plan
+        else hhsc_plan
+    end as medical_plan_primary,
+    case
+        when non_hhsc_plan is not null and hhsc_plan is not null then hhsc_plan
+        else null
+    end as medical_plan_secondary,
+    case
+        when non_hhsc_plan is not null then non_hhsc_design
+        else hhsc_design
+    end as medical_plan_design_primary,
+    case
+        when non_hhsc_plan is not null and hhsc_plan is not null then hhsc_design
+        else null
+    end as medical_plan_design_secondary,
+    other_plan,
+    insured_group_or_policy_number
+from aggregated
+;
+
+
+
+
+
+
+
+
+
+
 
 DROP TABLE IF EXISTS research_dev.pi_agg_yrmon;
 
