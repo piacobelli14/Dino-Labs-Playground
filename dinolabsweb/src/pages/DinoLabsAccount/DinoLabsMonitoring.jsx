@@ -20,365 +20,349 @@ import {
 import DinoLabsNav from "../../helpers/Nav";
 import "../../styles/mainStyles/DinoLabsAccount/DinoLabsMonitoring.css";
 
-const clamp01 = (x) => Math.max(0, Math.min(1, x));
-const pct = (x) => `${Math.round(clamp01(x) * 100)}%`;
-const B = (v) => (v ? "Yes" : "No");
-const fmt = (n, d = 2) =>
-  n == null || !isFinite(n) ? "—" : Math.abs(n) >= 100 ? n.toFixed(0) : n.toFixed(d);
-const fmtBytes = (bytes) => {
-  if (bytes == null || !isFinite(bytes)) return "—";
-  const u = ["B", "KB", "MB", "GB", "TB", "PB"];
-  let i = 0;
-  let v = bytes;
-  while (v >= 1024 && i < u.length - 1) {
-    v /= 1024;
-    i++;
-  }
-  return `${fmt(v, v >= 100 ? 0 : v >= 10 ? 1 : 2)} ${u[i]}`;
-};
-const fmtMs = (ms) => (ms == null || !isFinite(ms)) ? "—" : `${Math.round(ms)} ms`;
+export default function DinoLabsMonitor() {
 
-const UsageBar = ({ usage = 0, color = "#AD6ADD" }) => (
-  <div className="dinolabsMonitoringUsageWrapper">
-    <div className="dinolabsMonitoringUsageBar">
-      <div
-        className="dinolabsMonitoringUsageFill"
-        style={{ width: `${clamp01(usage) * 100}%`, backgroundColor: color }}
-      />
+  const clamp01 = (x) => Math.max(0, Math.min(1, x));
+  const pct = (x) => `${Math.round(clamp01(x) * 100)}%`;
+  const B = (v) => (v ? "Yes" : "No");
+  const fmt = (n, d = 2) =>
+    n == null || !isFinite(n) ? "—" : Math.abs(n) >= 100 ? n.toFixed(0) : n.toFixed(d);
+  const fmtBytes = (bytes) => {
+    if (bytes == null || !isFinite(bytes)) return "—";
+    const u = ["B", "KB", "MB", "GB", "TB", "PB"];
+    let i = 0;
+    let v = bytes;
+    while (v >= 1024 && i < u.length - 1) {
+      v /= 1024;
+      i++;
+    }
+    return `${fmt(v, v >= 100 ? 0 : v >= 10 ? 1 : 2)} ${u[i]}`;
+  };
+  const fmtMs = (ms) => (ms == null || !isFinite(ms)) ? "—" : `${Math.round(ms)} ms`;
+
+  const UsageBar = ({ usage = 0, color = "#AD6ADD" }) => (
+    <div className="dinolabsMonitoringUsageWrapper">
+      <div className="dinolabsMonitoringUsageBar">
+        <div
+          className="dinolabsMonitoringUsageFill"
+          style={{ width: `${clamp01(usage) * 100}%`, backgroundColor: color }}
+        />
+      </div>
     </div>
-  </div>
-);
-
-// Custom hooks remain the same...
-const useUiLoadIndex = () => {
-  const [load, setLoad] = useState(0);
-  useEffect(() => {
-    let alive = true;
-    let last = performance.now();
-    let acc = 0;
-    let n = 0;
-    const ideal = 1000 / 60;
-    const tick = (t) => {
-      const dt = t - last;
-      last = t;
-      const r = clamp01((dt - ideal) / ideal);
-      acc += r;
-      n++;
-      if (n >= 30) {
-        setLoad(clamp01(acc / n));
-        acc = 0;
-        n = 0;
-      }
-      if (alive) requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
-    return () => {
-      alive = false;
-    };
-  }, []);
-  return load;
-};
-
-const usePerf = () => {
-  const [nav, setNav] = useState(null);
-  const [paint, setPaint] = useState({ fp: null, fcp: null });
-  const [lcp, setLcp] = useState(null);
-  const [cls, setCls] = useState(0);
-  const [fid, setFid] = useState(null);
-
-  useEffect(() => {
-    const navEntry = performance.getEntriesByType("navigation")[0];
-    if (navEntry) setNav(navEntry);
-
-    const paints = performance.getEntriesByType("paint");
-    for (const p of paints) {
-      if (p.name === "first-paint") setPaint((s) => ({ ...s, fp: p.startTime }));
-      if (p.name === "first-contentful-paint") setPaint((s) => ({ ...s, fcp: p.startTime }));
-    }
-
-    const poLcp = new PerformanceObserver((list) => {
-      const last = list.getEntries().at(-1);
-      if (last) setLcp(last.renderTime || last.loadTime || last.startTime);
-    });
-    try {
-      poLcp.observe({ type: "largest-contentful-paint", buffered: true });
-    } catch {}
-
-    let clsSum = 0;
-    const poCls = new PerformanceObserver((list) => {
-      for (const e of list.getEntries()) if (!e.hadRecentInput) clsSum += e.value;
-      setCls(clsSum);
-    });
-    try {
-      poCls.observe({ type: "layout-shift", buffered: true });
-    } catch {}
-
-    const poFid = new PerformanceObserver((list) => {
-      const first = list.getEntries()[0];
-      if (first) setFid(first.processingStart - first.startTime);
-    });
-    try {
-      poFid.observe({ type: "first-input", buffered: true });
-    } catch {}
-
-    return () => {
-      try {
-        poLcp.disconnect();
-      } catch {}
-      try {
-        poCls.disconnect();
-      } catch {}
-      try {
-        poFid.disconnect();
-      } catch {}
-    };
-  }, []);
-
-  const ttfb = useMemo(() => (nav ? nav.responseStart - nav.startTime : null), [nav]);
-  const dcl = useMemo(() => (nav ? nav.domContentLoadedEventEnd - nav.startTime : null), [nav]);
-  const load = useMemo(() => (nav ? nav.loadEventEnd - nav.startTime : null), [nav]);
-
-  return { ttfb, dcl, load, fp: paint.fp, fcp: paint.fcp, lcp, cls, fid };
-};
-
-const useNetwork = () => {
-  const [online, setOnline] = useState(navigator.onLine);
-  const [conn, setConn] = useState(() => {
-    const c = navigator.connection || navigator.webkitConnection || navigator.mozConnection;
-    return c
-      ? { effectiveType: c.effectiveType, downlink: c.downlink, rtt: c.rtt, saveData: !!c.saveData }
-      : null;
-  });
-  const [ping, setPing] = useState(null);
-
-  useEffect(() => {
-    const up = () => setOnline(true);
-    const down = () => setOnline(false);
-    window.addEventListener("online", up);
-    window.addEventListener("offline", down);
-    const c = navigator.connection || navigator.webkitConnection || navigator.mozConnection;
-    const onChange = () =>
-      c && setConn({ effectiveType: c.effectiveType, downlink: c.downlink, rtt: c.rtt, saveData: !!c.saveData });
-    c?.addEventListener?.("change", onChange);
-    return () => {
-      window.removeEventListener("online", up);
-      window.removeEventListener("offline", down);
-      c?.removeEventListener?.("change", onChange);
-    };
-  }, []);
-
-  const runPing = async () => {
-    try {
-      const t0 = performance.now();
-      await fetch("https://www.google.com/generate_204", { mode: "no-cors", cache: "no-store" });
-      setPing(Math.round(performance.now() - t0));
-    } catch {
-      setPing(null);
-    }
-  };
-
-  return { online, conn, ping, runPing };
-};
-
-const useBattery = () => {
-  const [bat, setBat] = useState({ level: null, charging: null, chargingTime: null, dischargingTime: null });
-  useEffect(() => {
-    (async () => {
-      if (!navigator.getBattery) return;
-      try {
-        const b = await navigator.getBattery();
-        const push = () =>
-          setBat({
-            level: b.level,
-            charging: b.charging,
-            chargingTime: b.chargingTime,
-            dischargingTime: b.dischargingTime
-          });
-        push();
-        b.addEventListener("levelchange", push);
-        b.addEventListener("chargingchange", push);
-        b.addEventListener("chargingtimechange", push);
-        b.addEventListener("dischargingtimechange", push);
-      } catch {}
-    })();
-  }, []);
-  return bat;
-};
-
-const useDisplay = () => {
-  const [vp, setVp] = useState({ w: window.innerWidth, h: window.innerHeight, dpr: window.devicePixelRatio || 1 });
-  const [scr] = useState({
-    w: screen.width,
-    h: screen.height,
-    aw: screen.availWidth,
-    ah: screen.availHeight,
-    colorDepth: screen.colorDepth,
-    pixelDepth: screen.pixelDepth
-  });
-  const [orientation, setOrientation] = useState(() =>
-    screen.orientation ? `${screen.orientation.type} (${screen.orientation.angle}°)` : "—"
   );
-  useEffect(() => {
-    const onR = () => setVp({ w: window.innerWidth, h: window.innerHeight, dpr: window.devicePixelRatio || 1 });
-    const onO = () =>
-      setOrientation(screen.orientation ? `${screen.orientation.type} (${screen.orientation.angle}°)` : "—");
-    window.addEventListener("resize", onR);
-    screen.orientation?.addEventListener?.("change", onO);
-    return () => {
-      window.removeEventListener("resize", onR);
-      screen.orientation?.removeEventListener?.("change", onO);
-    };
-  }, []);
-  const mq = (q) => (window.matchMedia ? window.matchMedia(q).matches : null);
-  const gamut = mq("(color-gamut: rec2020)") ? "rec2020" : mq("(color-gamut: p3)") ? "p3" : mq("(color-gamut: srgb)") ? "srgb" : "—";
-  const hdr = mq("(dynamic-range: high)") ? "High" : mq("(dynamic-range: standard)") ? "Standard" : "—";
-  const reducedMotion = mq("(prefers-reduced-motion: reduce)");
-  const highContrast = mq("(prefers-contrast: more)");
-  const darkMode = mq("(prefers-color-scheme: dark)");
-  const pointer = mq("(pointer: coarse)") ? "coarse" : mq("(pointer: fine)") ? "fine" : "—";
-  return { vp, scr, orientation, gamut, hdr, reducedMotion, highContrast, darkMode, pointer };
-};
 
-const useGraphics = () => {
-  const [gl, setGl] = useState({ gl2: false, renderer: "—", vendor: "—", shading: "—", antialias: null });
-  const [gpu, setGpu] = useState({ features: [], limits: {} });
-
-  useEffect(() => {
-    try {
-      const canvas = document.createElement("canvas");
-      const ctx = canvas.getContext("webgl2") || canvas.getContext("webgl");
-      if (ctx) {
-        const gl2 = !!canvas.getContext("webgl2");
-        const ext = ctx.getExtension("WEBGL_debug_renderer_info");
-        const renderer = ext ? ctx.getParameter(ext.UNMASKED_RENDERER_WEBGL) : "Hidden";
-        const vendor = ext ? ctx.getParameter(ext.UNMASKED_VENDOR_WEBGL) : "Hidden";
-        const shading = ctx.getParameter(ctx.SHADING_LANGUAGE_VERSION);
-        const antialias = ctx.getContextAttributes().antialias;
-        setGl({ gl2, renderer, vendor, shading, antialias });
-      }
-    } catch {}
-    (async () => {
-      try {
-        if (!navigator.gpu) return;
-        const adapter = await navigator.gpu.requestAdapter();
-        if (!adapter) return;
-        const features = Array.from(adapter.features ?? []);
-        const limits = adapter.limits ? Object.fromEntries(Object.entries(adapter.limits)) : {};
-        setGpu({ features, limits });
-      } catch {}
-    })();
-  }, []);
-  return { gl, gpu };
-};
-
-const useMedia = () => {
-  const [devices, setDevices] = useState([]);
-  const [ac, setAc] = useState({ rate: null, state: "—", latency: "—" });
-
-  useEffect(() => {
-    const md = navigator.mediaDevices;
-    md?.enumerateDevices?.().then((d) => setDevices(d)).catch(() => {});
-    try {
-      const AudioCtx = window.AudioContext || window.webkitAudioContext;
-      if (AudioCtx) {
-        const ctx = new AudioCtx();
-        setAc({
-          rate: ctx.sampleRate || null,
-          state: ctx.state || "—",
-          latency: ctx.baseLatency ? `${fmtMs(ctx.baseLatency * 1000)}` : "—"
-        });
-        ctx.close?.();
-      }
-    } catch {}
-  }, []);
-
-  return { devices, ac };
-};
-
-const useStorage = () => {
-  const [estimate, setEstimate] = useState({ usage: null, quota: null });
-  useEffect(() => {
-    (async () => {
-      try {
-        if (navigator.storage?.estimate) {
-          const { usage, quota } = await navigator.storage.estimate();
-          setEstimate({ usage: usage ?? null, quota: quota ?? null });
+  const useUiLoadIndex = () => {
+    const [load, setLoad] = useState(0);
+    useEffect(() => {
+      let alive = true;
+      let last = performance.now();
+      let acc = 0;
+      let n = 0;
+      const ideal = 1000 / 60;
+      const tick = (t) => {
+        const dt = t - last;
+        last = t;
+        const r = clamp01((dt - ideal) / ideal);
+        acc += r;
+        n++;
+        if (n >= 30) {
+          setLoad(clamp01(acc / n));
+          acc = 0;
+          n = 0;
         }
-      } catch {}
-    })();
-  }, []);
-  return estimate;
-};
-
-const usePerms = () => {
-  const [perms, setPerms] = useState({});
-  useEffect(() => {
-    const names = [
-      "geolocation",
-      "notifications",
-      "camera",
-      "microphone",
-      "clipboard-read",
-      "clipboard-write"
-    ];
-    (async () => {
-      if (!navigator.permissions?.query) return;
-      const out = {};
-      for (const n of names) {
-        try {
-          const st = await navigator.permissions.query({ name: n });
-          out[n] = st.state;
-          st.onchange = () => setPerms((prev) => ({ ...prev, [n]: st.state }));
-        } catch {
-          out[n] = "—";
-        }
-      }
-      setPerms(out);
-    })();
-  }, []);
-  return perms;
-};
-
-const useEnv = () => {
-  const ua = navigator.userAgent;
-  const lang = navigator.language;
-  const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
-  const cores = navigator.hardwareConcurrency || null;
-  const devMem = navigator.deviceMemory || null;
-  const secure = window.isSecureContext;
-  const uaCH = navigator.userAgentData || null;
-  return { ua, uaCH, lang, tz, cores, devMem, secure };
-};
-
-const useSensors = () => {
-  const [geo, setGeo] = useState({ granted: null, coords: null, err: null });
-
-  const askGeo = async () => {
-    try {
-      if (!navigator.geolocation) {
-        setGeo({ granted: false, coords: null, err: "No API." });
-        return;
-      }
-      navigator.geolocation.getCurrentPosition(
-        (pos) => setGeo({ granted: true, coords: pos.coords, err: null }),
-        (e) => setGeo({ granted: false, coords: null, err: e.message }),
-        { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
-      );
-    } catch (error) {
-      setGeo({ granted: false, coords: null, err: String(error) });
-    }
+        if (alive) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+      return () => {
+        alive = false;
+      };
+    }, []);
+    return load;
   };
 
-  return { geo, askGeo };
-};
+  const usePerf = () => {
+    const [nav, setNav] = useState(null);
+    const [paint, setPaint] = useState({ fp: null, fcp: null });
+    const [lcp, setLcp] = useState(null);
+    const [cls, setCls] = useState(0);
+    const [fid, setFid] = useState(null);
+    useEffect(() => {
+      const navEntry = performance.getEntriesByType("navigation")[0];
+      if (navEntry) setNav(navEntry);
+      const paints = performance.getEntriesByType("paint");
+      for (const p of paints) {
+        if (p.name === "first-paint") setPaint((s) => ({ ...s, fp: p.startTime }));
+        if (p.name === "first-contentful-paint") setPaint((s) => ({ ...s, fcp: p.startTime }));
+      }
+      const poLcp = new PerformanceObserver((list) => {
+        const last = list.getEntries().at(-1);
+        if (last) setLcp(last.renderTime || last.loadTime || last.startTime);
+      });
+      try {
+        poLcp.observe({ type: "largest-contentful-paint", buffered: true });
+      } catch {}
+      let clsSum = 0;
+      const poCls = new PerformanceObserver((list) => {
+        for (const e of list.getEntries()) if (!e.hadRecentInput) clsSum += e.value;
+        setCls(clsSum);
+      });
+      try {
+        poCls.observe({ type: "layout-shift", buffered: true });
+      } catch {}
+      const poFid = new PerformanceObserver((list) => {
+        const first = list.getEntries()[0];
+        if (first) setFid(first.processingStart - first.startTime);
+      });
+      try {
+        poFid.observe({ type: "first-input", buffered: true });
+      } catch {}
+      return () => {
+        try {
+          poLcp.disconnect();
+        } catch {}
+        try {
+          poCls.disconnect();
+        } catch {}
+        try {
+          poFid.disconnect();
+        } catch {}
+      };
+    }, []);
+    const ttfb = useMemo(() => (nav ? nav.responseStart - nav.startTime : null), [nav]);
+    const dcl = useMemo(() => (nav ? nav.domContentLoadedEventEnd - nav.startTime : null), [nav]);
+    const load = useMemo(() => (nav ? nav.loadEventEnd - nav.startTime : null), [nav]);
+    return { ttfb, dcl, load, fp: paint.fp, fcp: paint.fcp, lcp, cls, fid };
+  };
 
-const copyText = async (txt) => {
-  try {
-    await navigator.clipboard?.writeText(txt);
-  } catch {}
-};
+  const useNetwork = () => {
+    const [online, setOnline] = useState(navigator.onLine);
+    const [conn, setConn] = useState(() => {
+      const c = navigator.connection || navigator.webkitConnection || navigator.mozConnection;
+      return c
+        ? { effectiveType: c.effectiveType, downlink: c.downlink, rtt: c.rtt, saveData: !!c.saveData }
+        : null;
+    });
+    const [ping, setPing] = useState(null);
+    useEffect(() => {
+      const up = () => setOnline(true);
+      const down = () => setOnline(false);
+      window.addEventListener("online", up);
+      window.addEventListener("offline", down);
+      const c = navigator.connection || navigator.webkitConnection || navigator.mozConnection;
+      const onChange = () =>
+        c && setConn({ effectiveType: c.effectiveType, downlink: c.downlink, rtt: c.rtt, saveData: !!c.saveData });
+      c?.addEventListener?.("change", onChange);
+      return () => {
+        window.removeEventListener("online", up);
+        window.removeEventListener("offline", down);
+        c?.removeEventListener?.("change", onChange);
+      };
+    }, []);
+    const runPing = async () => {
+      try {
+        const t0 = performance.now();
+        await fetch("https://www.google.com/generate_204", { mode: "no-cors", cache: "no-store" });
+        setPing(Math.round(performance.now() - t0));
+      } catch {
+        setPing(null);
+      }
+    };
+    return { online, conn, ping, runPing };
+  };
 
-const DinoLabsMonitor = () => {
+  const useBattery = () => {
+    const [bat, setBat] = useState({ level: null, charging: null, chargingTime: null, dischargingTime: null });
+    useEffect(() => {
+      (async () => {
+        if (!navigator.getBattery) return;
+        try {
+          const b = await navigator.getBattery();
+          const push = () =>
+            setBat({
+              level: b.level,
+              charging: b.charging,
+              chargingTime: b.chargingTime,
+              dischargingTime: b.dischargingTime
+            });
+          push();
+          b.addEventListener("levelchange", push);
+          b.addEventListener("chargingchange", push);
+          b.addEventListener("chargingtimechange", push);
+          b.addEventListener("dischargingtimechange", push);
+        } catch {}
+      })();
+    }, []);
+    return bat;
+  };
+
+  const useDisplay = () => {
+    const [vp, setVp] = useState({ w: window.innerWidth, h: window.innerHeight, dpr: window.devicePixelRatio || 1 });
+    const [scr] = useState({
+      w: screen.width,
+      h: screen.height,
+      aw: screen.availWidth,
+      ah: screen.availHeight,
+      colorDepth: screen.colorDepth,
+      pixelDepth: screen.pixelDepth
+    });
+    const [orientation, setOrientation] = useState(() =>
+      screen.orientation ? `${screen.orientation.type} (${screen.orientation.angle}°)` : "—"
+    );
+    useEffect(() => {
+      const onR = () => setVp({ w: window.innerWidth, h: window.innerHeight, dpr: window.devicePixelRatio || 1 });
+      const onO = () =>
+        setOrientation(screen.orientation ? `${screen.orientation.type} (${screen.orientation.angle}°)` : "—");
+      window.addEventListener("resize", onR);
+      screen.orientation?.addEventListener?.("change", onO);
+      return () => {
+        window.removeEventListener("resize", onR);
+        screen.orientation?.removeEventListener?.("change", onO);
+      };
+    }, []);
+    const mq = (q) => (window.matchMedia ? window.matchMedia(q).matches : null);
+    const gamut = mq("(color-gamut: rec2020)") ? "rec2020" : mq("(color-gamut: p3)") ? "p3" : mq("(color-gamut: srgb)") ? "srgb" : "—";
+    const hdr = mq("(dynamic-range: high)") ? "High" : mq("(dynamic-range: standard)") ? "Standard" : "—";
+    const reducedMotion = mq("(prefers-reduced-motion: reduce)");
+    const highContrast = mq("(prefers-contrast: more)");
+    const darkMode = mq("(prefers-color-scheme: dark)");
+    const pointer = mq("(pointer: coarse)") ? "coarse" : mq("(pointer: fine)") ? "fine" : "—";
+    return { vp, scr, orientation, gamut, hdr, reducedMotion, highContrast, darkMode, pointer };
+  };
+
+  const useGraphics = () => {
+    const [gl, setGl] = useState({ gl2: false, renderer: "—", vendor: "—", shading: "—", antialias: null });
+    const [gpu, setGpu] = useState({ features: [], limits: {} });
+    useEffect(() => {
+      try {
+        const canvas = document.createElement("canvas");
+        const ctx = canvas.getContext("webgl2") || canvas.getContext("webgl");
+        if (ctx) {
+          const gl2 = !!canvas.getContext("webgl2");
+          const ext = ctx.getExtension("WEBGL_debug_renderer_info");
+          const renderer = ext ? ctx.getParameter(ext.UNMASKED_RENDERER_WEBGL) : "Hidden";
+          const vendor = ext ? ctx.getParameter(ext.UNMASKED_VENDOR_WEBGL) : "Hidden";
+          const shading = ctx.getParameter(ctx.SHADING_LANGUAGE_VERSION);
+          const antialias = ctx.getContextAttributes().antialias;
+          setGl({ gl2, renderer, vendor, shading, antialias });
+        }
+      } catch {}
+      (async () => {
+        try {
+          if (!navigator.gpu) return;
+          const adapter = await navigator.gpu.requestAdapter();
+          if (!adapter) return;
+          const features = Array.from(adapter.features ?? []);
+          const limits = adapter.limits ? Object.fromEntries(Object.entries(adapter.limits)) : {};
+          setGpu({ features, limits });
+        } catch {}
+      })();
+    }, []);
+    return { gl, gpu };
+  };
+
+  const useMedia = () => {
+    const [devices, setDevices] = useState([]);
+    const [ac, setAc] = useState({ rate: null, state: "—", latency: "—" });
+    useEffect(() => {
+      const md = navigator.mediaDevices;
+      md?.enumerateDevices?.().then((d) => setDevices(d)).catch(() => {});
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+          const ctx = new AudioCtx();
+          setAc({
+            rate: ctx.sampleRate || null,
+            state: ctx.state || "—",
+            latency: ctx.baseLatency ? `${fmtMs(ctx.baseLatency * 1000)}` : "—"
+          });
+          ctx.close?.();
+        }
+      } catch {}
+    }, []);
+    return { devices, ac };
+  };
+
+  const useStorage = () => {
+    const [estimate, setEstimate] = useState({ usage: null, quota: null });
+    useEffect(() => {
+      (async () => {
+        try {
+          if (navigator.storage?.estimate) {
+            const { usage, quota } = await navigator.storage.estimate();
+            setEstimate({ usage: usage ?? null, quota: quota ?? null });
+          }
+        } catch {}
+      })();
+    }, []);
+    return estimate;
+  };
+
+  const usePerms = () => {
+    const [perms, setPerms] = useState({});
+    useEffect(() => {
+      const names = [
+        "geolocation",
+        "notifications",
+        "camera",
+        "microphone",
+        "clipboard-read",
+        "clipboard-write"
+      ];
+      (async () => {
+        if (!navigator.permissions?.query) return;
+        const out = {};
+        for (const n of names) {
+          try {
+            const st = await navigator.permissions.query({ name: n });
+            out[n] = st.state;
+            st.onchange = () => setPerms((prev) => ({ ...prev, [n]: st.state }));
+          } catch {
+            out[n] = "—";
+          }
+        }
+        setPerms(out);
+      })();
+    }, []);
+    return perms;
+  };
+
+  const useEnv = () => {
+    const ua = navigator.userAgent;
+    const lang = navigator.language;
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const cores = navigator.hardwareConcurrency || null;
+    const devMem = navigator.deviceMemory || null;
+    const secure = window.isSecureContext;
+    const uaCH = navigator.userAgentData || null;
+    return { ua, uaCH, lang, tz, cores, devMem, secure };
+  };
+
+  const useSensors = () => {
+    const [geo, setGeo] = useState({ granted: null, coords: null, err: null });
+    const askGeo = async () => {
+      try {
+        if (!navigator.geolocation) {
+          setGeo({ granted: false, coords: null, err: "No API." });
+          return;
+        }
+        navigator.geolocation.getCurrentPosition(
+          (pos) => setGeo({ granted: true, coords: pos.coords, err: null }),
+          (e) => setGeo({ granted: false, coords: null, err: e.message }),
+          { enableHighAccuracy: true, timeout: 8000, maximumAge: 0 }
+        );
+      } catch (error) {
+        setGeo({ granted: false, coords: null, err: String(error) });
+      }
+    };
+    return { geo, askGeo };
+  };
+
+  const copyText = async (txt) => {
+    try {
+      await navigator.clipboard?.writeText(txt);
+    } catch {}
+  };
+
   const env = useEnv();
   const disp = useDisplay();
   const net = useNetwork();
@@ -417,7 +401,6 @@ const DinoLabsMonitor = () => {
       null,
       2
     );
-
   const exportReport = async () => {
     const text = snapshot();
     const blob = new Blob([text], { type: "application/json;charset=utf-8" });
@@ -436,7 +419,7 @@ const DinoLabsMonitor = () => {
   return (
     <div className="dinolabsPageWrapper">
       <DinoLabsNav activePage="monitor" />
-      
+     
       <div className="dinolabsHeaderContainer">
         <div className="dinolabsControlFlex">
           <div className="dinolabsMonitoringLeadingPanel">
@@ -455,9 +438,8 @@ const DinoLabsMonitor = () => {
                 </button>
               </div>
             </div>
-
             <div className="dinolabsMonitoringContentStack">
-              
+             
               <div className="dinolabsMonitoringSection">
                 <div className="dinolabsMonitoringSectionHeader">
                   <FontAwesomeIcon icon={faGlobe} />
@@ -486,7 +468,6 @@ const DinoLabsMonitor = () => {
                   </div>
                 </div>
               </div>
-
               <div className="dinolabsMonitoringSection">
                 <div className="dinolabsMonitoringSectionHeader">
                   <FontAwesomeIcon icon={faDesktop} />
@@ -516,7 +497,6 @@ const DinoLabsMonitor = () => {
                   <UsageBar usage={uiLoad} color={uiLoad > 0.6 ? "#D7BA7D" : "#AD6ADD"} />
                 </div>
               </div>
-
               <div className="dinolabsMonitoringSection">
                 <div className="dinolabsMonitoringSectionHeader">
                   <FontAwesomeIcon icon={faWifi} />
@@ -542,7 +522,6 @@ const DinoLabsMonitor = () => {
                   <UsageBar usage={net.conn?.downlink ? clamp01(net.conn.downlink / 100) : 0} color="#AD6ADD" />
                 </div>
               </div>
-
               <div className="dinolabsMonitoringSection">
                 <div className="dinolabsMonitoringSectionHeader">
                   <FontAwesomeIcon icon={faBatteryHalf} />
@@ -563,7 +542,6 @@ const DinoLabsMonitor = () => {
                   <UsageBar usage={bat.level ?? 0} color={bat.level != null && bat.level < 0.2 ? "#D7BA7D" : "#AD6ADD"} />
                 </div>
               </div>
-
               <div className="dinolabsMonitoringSection">
                 <div className="dinolabsMonitoringSectionHeader">
                   <FontAwesomeIcon icon={faBolt} />
@@ -600,7 +578,6 @@ const DinoLabsMonitor = () => {
                   </div>
                 </div>
               </div>
-
               <div className="dinolabsMonitoringSection">
                 <div className="dinolabsMonitoringSectionHeader">
                   <FontAwesomeIcon icon={faCubes} />
@@ -621,7 +598,6 @@ const DinoLabsMonitor = () => {
                   </div>
                 </div>
               </div>
-
               <div className="dinolabsMonitoringSection">
                 <div className="dinolabsMonitoringSectionHeader">
                   <FontAwesomeIcon icon={faHeadphones} />
@@ -642,7 +618,6 @@ const DinoLabsMonitor = () => {
                   </div>
                 </div>
               </div>
-
               <div className="dinolabsMonitoringSection">
                 <div className="dinolabsMonitoringSectionHeader">
                   <FontAwesomeIcon icon={faHardDrive} />
@@ -663,7 +638,6 @@ const DinoLabsMonitor = () => {
                   />
                 </div>
               </div>
-
               <div className="dinolabsMonitoringSection">
                 <div className="dinolabsMonitoringSectionHeader">
                   <FontAwesomeIcon icon={faLock} />
@@ -678,7 +652,6 @@ const DinoLabsMonitor = () => {
                   ))}
                 </div>
               </div>
-
               <div className="dinolabsMonitoringSection">
                 <div className="dinolabsMonitoringSectionHeader">
                   <FontAwesomeIcon icon={faEarthAmericas} />
@@ -711,13 +684,10 @@ const DinoLabsMonitor = () => {
                   )}
                 </div>
               </div>
-
             </div>
           </div>
         </div>
       </div>
     </div>
   );
-};
-
-export default DinoLabsMonitor;
+}

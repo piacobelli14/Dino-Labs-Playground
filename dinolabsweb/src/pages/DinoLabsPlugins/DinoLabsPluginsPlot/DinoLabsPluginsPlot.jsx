@@ -7,24 +7,25 @@ import "../../../styles/mainStyles/DinoLabsPlugins/DinoLabsPluginsPlot/DinoLabsP
 import "../../../styles/helperStyles/Slider.css";
 
 const KNOWN_FUNCTIONS = [
-  "sin","cos","tan","sec","csc","cot",
-  "asin","acos","atan","asec","acsc","acot",
-  "sinh","cosh","tanh","asinh","acosh","atanh",
-  "sech","csch","coth","asech","acsch","acoth",
-  "exp","ln","log","logn","sqrt","pow","root",
-  "abs","floor","ceil","round","sign",
-  "hypot","clamp","fact","perm","comb",
-  "toRad","toDeg"
+  "sin", "cos", "tan", "sec", "csc", "cot",
+  "asin", "acos", "atan", "asec", "acsc", "acot",
+  "sinh", "cosh", "tanh", "asinh", "acosh", "atanh",
+  "sech", "csch", "coth", "asech", "acsch", "acoth",
+  "exp", "ln", "log", "logn", "sqrt", "pow", "root",
+  "abs", "floor", "ceil", "round", "sign",
+  "hypot", "clamp", "fact", "perm", "comb",
+  "toRad", "toDeg"
 ];
 
 const KNOWN_CONSTANTS = [
-  "pi","e","tau","phi","gamma",
-  "c","G","h","hbar","k","R","NA","qe","eps0","mu0",
-  "me","mp","mn","g0","sigmaSB","Ry","alpha","ke"
+  "pi", "e", "tau", "phi", "gamma",
+  "c", "G", "h", "hbar", "k", "R", "NA", "qe", "eps0", "mu0",
+  "me", "mp", "mn", "g0", "sigmaSB", "Ry", "alpha", "ke"
 ];
 
 const DinoLabsPluginsPlot = () => {
   const canvasRef = useRef(null);
+
   const [formulas, setFormulas] = useState([]);
   const [variables, setVariables] = useState([]);
   const [intercepts, setIntercepts] = useState([]);
@@ -37,7 +38,7 @@ const DinoLabsPluginsPlot = () => {
   const [mathMaxY, setMathMaxY] = useState(10);
 
   const randomColor = () => {
-    const colors = ['#ff6b6b', '#4ecdc4', '#45b7d1', '#96ceb4', '#feca57', '#ff9ff3', '#54a0ff', '#5f27cd', '#00d2d3', '#ff9f43', '#10ac84', '#ee5253'];
+    const colors = ["#ff6b6b", "#4ecdc4", "#45b7d1", "#96ceb4", "#feca57", "#ff9ff3", "#54a0ff", "#5f27cd", "#00d2d3", "#ff9f43", "#10ac84", "#ee5253"];
     return colors[Math.floor(Math.random() * colors.length)];
   };
 
@@ -526,16 +527,6 @@ const DinoLabsPluginsPlot = () => {
     
   }, [formulas, variables, intercepts, mathMinX, mathMaxX, mathMinY, mathMaxY]);
 
-  useEffect(() => {
-    drawGraph();
-  }, [drawGraph]);
-
-  useEffect(() => {
-    const handleResize = () => drawGraph();
-    window.addEventListener("resize", handleResize);
-    return () => window.removeEventListener("resize", handleResize);
-  }, [drawGraph]);
-
   const extractMissingVariables = (text) => {
     if (!text) return [];
     const matches = text.match(/[a-zA-Z_][a-zA-Z0-9_]*/g) || [];
@@ -549,6 +540,16 @@ const DinoLabsPluginsPlot = () => {
     const existingVars = variables.map(v => v.name);
     return [...new Set(variableNames)].filter(name => !existingVars.includes(name));
   };
+
+  useEffect(() => {
+    drawGraph();
+  }, [drawGraph]);
+
+  useEffect(() => {
+    const handleResize = () => drawGraph();
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [drawGraph]);
 
   return (
     <div className="dinolabsPluginsPlotApp" tabIndex={0}>
@@ -622,7 +623,7 @@ const DinoLabsPluginsPlot = () => {
                         onClick={() => toggleFormulaVisibility(formula.id)}
                         title={formula.isHidden ? "Show Formula" : "Hide Formula"}
                       >
-                        {formula.isHidden ? '👁️‍🗨️' : '👁️'}
+                        {formula.isHidden ? "Show" : "Hide"}
                       </button>
                     </div>
                     <input
@@ -692,7 +693,6 @@ const DinoLabsPluginsPlot = () => {
             onClick={() => setIsKeyboardView(!isKeyboardView)}
             title="Toggle Virtual Keyboard"
           >
-            <span className="dinolabsPluginsPlotKeyboardIcon">⌨️</span>
             <span>Keyboard</span>
           </button>
         </div>
@@ -723,7 +723,7 @@ const DinoLabsPluginsPlot = () => {
               onClick={resetZoom}
               title="Reset Zoom"
             >
-              <span>⌂</span>
+              <span>Home</span>
             </button>
           </div>
 
@@ -743,22 +743,22 @@ const DinoLabsPluginsPlot = () => {
           <div className="dinolabsPluginsPlotKeyboardSection">
             <h4>Numbers & Operators</h4>
             <div className="dinolabsPluginsPlotKeyboardGrid">
-              {['7', '8', '9', '+', '(', ')'].map(key => (
+              {["7", "8", "9", "+", "(", ")"].map(key => (
                 <button key={key} className="dinolabsPluginsPlotKey" onClick={() => insertText(key)}>
                   {key}
                 </button>
               ))}
-              {['4', '5', '6', '-', '[', ']'].map(key => (
+              {["4", "5", "6", "-", "[", "]"].map(key => (
                 <button key={key} className="dinolabsPluginsPlotKey" onClick={() => insertText(key)}>
                   {key}
                 </button>
               ))}
-              {['1', '2', '3', '/', '{', '}'].map(key => (
+              {["1", "2", "3", "/", "{", "}"].map(key => (
                 <button key={key} className="dinolabsPluginsPlotKey" onClick={() => insertText(key)}>
                   {key}
                 </button>
               ))}
-              {['0', '.', '=', '*', '|', '^'].map(key => (
+              {["0", ".", "=", "*", "|", "^"].map(key => (
                 <button key={key} className="dinolabsPluginsPlotKey" onClick={() => insertText(key)}>
                   {key}
                 </button>
@@ -770,16 +770,16 @@ const DinoLabsPluginsPlot = () => {
             <h4>Functions</h4>
             <div className="dinolabsPluginsPlotKeyboardGrid">
               {[
-                'sin(', 'cos(', 'tan(', 'sec(', 'csc(', 'cot(',
-                'asin(', 'acos(', 'atan(', 'asec(', 'acsc(', 'acot(',
-                'sinh(', 'cosh(', 'tanh(', 'asinh(', 'acosh(', 'atanh(',
-                'sech(', 'csch(', 'coth(', 'asech(', 'acsch(', 'acoth(',
-                'exp(', 'ln(', 'log(', 'logn(', 'sqrt(', 'pow(', 'root(',
-                'abs(', 'floor(', 'ceil(', 'round(', 'sign(', 'hypot(', 'clamp(',
-                'fact(', 'perm(', 'comb(', 'toRad(', 'toDeg('
+                "sin(", "cos(", "tan(", "sec(", "csc(", "cot(",
+                "asin(", "acos(", "atan(", "asec(", "acsc(", "acot(",
+                "sinh(", "cosh(", "tanh(", "asinh(", "acosh(", "atanh(",
+                "sech(", "csch(", "coth(", "asech(", "acsch(", "acoth(",
+                "exp(", "ln(", "log(", "logn(", "sqrt(", "pow(", "root(",
+                "abs(", "floor(", "ceil(", "round(", "sign(", "hypot(", "clamp(",
+                "fact(", "perm(", "comb(", "toRad(", "toDeg("
               ].map(key => (
                 <button key={key} className="dinolabsPluginsPlotKey function" onClick={() => insertText(key)}>
-                  {key.replace('(', '')}
+                  {key.replace("(", "")}
                 </button>
               ))}
             </div>
@@ -788,35 +788,35 @@ const DinoLabsPluginsPlot = () => {
           <div className="dinolabsPluginsPlotKeyboardSection">
             <h4>Constants & Variables</h4>
             <div className="dinolabsPluginsPlotKeyboardGrid">
-              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText('3.14159')}>π</button>
-              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText('2.71828')}>e</button>
+              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText("3.14159")}>π</button>
+              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText("2.71828")}>e</button>
 
-              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText('tau')}>τ</button>
-              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText('phi')}>φ</button>
-              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText('gamma')}>γ</button>
-              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText('c')}>c</button>
-              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText('G')}>G</button>
-              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText('h')}>h</button>
-              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText('hbar')}>ħ</button>
-              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText('k')}>k</button>
-              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText('R')}>R</button>
-              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText('NA')}>Nₐ</button>
-              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText('qe')}>qₑ</button>
-              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText('eps0')}>ε₀</button>
-              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText('mu0')}>μ₀</button>
-              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText('me')}>mₑ</button>
-              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText('mp')}>mₚ</button>
-              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText('mn')}>mₙ</button>
-              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText('g0')}>g₀</button>
-              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText('sigmaSB')}>σ</button>
-              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText('Ry')}>R∞</button>
-              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText('alpha')}>α</button>
-              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText('ke')}>kₑ</button>
+              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText("tau")}>τ</button>
+              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText("phi")}>φ</button>
+              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText("gamma")}>γ</button>
+              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText("c")}>c</button>
+              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText("G")}>G</button>
+              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText("h")}>h</button>
+              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText("hbar")}>ħ</button>
+              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText("k")}>k</button>
+              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText("R")}>R</button>
+              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText("NA")}>Nₐ</button>
+              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText("qe")}>qₑ</button>
+              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText("eps0")}>ε₀</button>
+              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText("mu0")}>μ₀</button>
+              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText("me")}>mₑ</button>
+              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText("mp")}>mₚ</button>
+              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText("mn")}>mₙ</button>
+              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText("g0")}>g₀</button>
+              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText("sigmaSB")}>σ</button>
+              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText("Ry")}>R∞</button>
+              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText("alpha")}>α</button>
+              <button className="dinolabsPluginsPlotKey constant" onClick={() => insertText("ke")}>kₑ</button>
 
-              <button className="dinolabsPluginsPlotKey variable" onClick={() => insertText('x')}>x</button>
-              <button className="dinolabsPluginsPlotKey variable" onClick={() => insertText('a')}>a</button>
-              <button className="dinolabsPluginsPlotKey variable" onClick={() => insertText('b')}>b</button>
-              <button className="dinolabsPluginsPlotKey variable" onClick={() => insertText('c')}>c</button>
+              <button className="dinolabsPluginsPlotKey variable" onClick={() => insertText("x")}>x</button>
+              <button className="dinolabsPluginsPlotKey variable" onClick={() => insertText("a")}>a</button>
+              <button className="dinolabsPluginsPlotKey variable" onClick={() => insertText("b")}>b</button>
+              <button className="dinolabsPluginsPlotKey variable" onClick={() => insertText("c")}>c</button>
             </div>
           </div>
         </div>

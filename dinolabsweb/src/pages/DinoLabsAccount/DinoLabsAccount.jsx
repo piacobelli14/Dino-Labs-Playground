@@ -65,6 +65,42 @@ const DinoLabsAccount = ({
     const isTouchDevice = useIsTouchDevice();
     const { token, userID, organizationID, loading } = useAuth();
 
+    const defaultKeyBinds = {
+        save: "s",
+        undo: "z",
+        redo: "y",
+        cut: "x",
+        copy: "c",
+        paste: "v",
+        search: "f",
+        selectAll: "a",
+    };
+
+    const keyBindDisplayNames = {
+        save: "Save File",
+        undo: "Undo Last Action",
+        redo: "Redo Last Action",
+        cut: "Cut",
+        copy: "Copy",
+        paste: "Paste",
+        search: "Search",
+        selectAll: "Select All",
+    };
+
+    const themeOptions = [
+        { name: "Default Theme", value: "default", colors: ["#C586C0", "#CE9178", "#B5CEA8"] },
+        { name: "Dark Theme", value: "dark", colors: ["#a76fa0", "#a35955", "#8b9a75"] },
+        { name: "Light Theme", value: "light", colors: ["#7B68EE", "#FFA07A", "#98FB98"] }
+    ];
+
+    const navigationButtons = [
+        { key: "personalInfo", icon: faUserGear, label: "Update My Personal Information" },
+        { key: "teamInfo", icon: faUsersGear, label: "Update My Team Information" },
+        { key: "settingsManagement", icon: faCode, label: "Edit My Dino Labs IDE Settings" },
+        { key: "shortcutManagement", icon: faKeyboard, label: "Configure My Keyboard Shortcuts" },
+        { key: "themeManagement", icon: faPalette, label: "Change My Editor Theme" }
+    ];
+
     const [uiState, setUiState] = useState({
         isLoaded: false,
         screenSize: window.innerWidth,
@@ -106,42 +142,6 @@ const DinoLabsAccount = ({
     });
 
     const [personalUsageByDay, setPersonalUsageByDay] = useState([]);
-
-    const defaultKeyBinds = {
-        save: "s",
-        undo: "z",
-        redo: "y",
-        cut: "x",
-        copy: "c",
-        paste: "v",
-        search: "f",
-        selectAll: "a",
-    };
-
-    const keyBindDisplayNames = {
-        save: "Save File",
-        undo: "Undo Last Action",
-        redo: "Redo Last Action",
-        cut: "Cut",
-        copy: "Copy",
-        paste: "Paste",
-        search: "Search",
-        selectAll: "Select All",
-    };
-
-    const themeOptions = [
-        { name: "Default Theme", value: "default", colors: ["#C586C0", "#CE9178", "#B5CEA8"] },
-        { name: "Dark Theme", value: "dark", colors: ["#a76fa0", "#a35955", "#8b9a75"] },
-        { name: "Light Theme", value: "light", colors: ["#7B68EE", "#FFA07A", "#98FB98"] }
-    ];
-
-    const navigationButtons = [
-        { key: "personalInfo", icon: faUserGear, label: "Update My Personal Information" },
-        { key: "teamInfo", icon: faUsersGear, label: "Update My Team Information" },
-        { key: "settingsManagement", icon: faCode, label: "Edit My Dino Labs IDE Settings" },
-        { key: "shortcutManagement", icon: faKeyboard, label: "Configure My Keyboard Shortcuts" },
-        { key: "themeManagement", icon: faPalette, label: "Change My Editor Theme" }
-    ];
 
     const [editProfile, setEditProfile] = useState({
         isEditing: false,
@@ -230,7 +230,7 @@ const DinoLabsAccount = ({
             });
 
             if (response.status !== 200) {
-                throw new Error(`Internal Server Error`);
+                throw new Error("Internal Server Error");
             }
 
             const data = await response.json();
@@ -341,33 +341,6 @@ const DinoLabsAccount = ({
         }
     };
 
-    const getKeyBindDisplayName = (action) => {
-        return keyBindDisplayNames[action] || action;
-    };
-
-    const handleKeyBindChange = async (action, newKey) => {
-        if (newKey.length !== 1) {
-            return;
-        }
-
-        const lowerNewKey = newKey.toLowerCase();
-
-        for (const [actionName, key] of Object.entries(keyBinds)) {
-            if (key === lowerNewKey && actionName !== action) {
-                await showDialog({
-                    title: "System Alert",
-                    message: `Key "${newKey}" is already assigned to "${actionName}". Please choose a different key.`,
-                    showCancel: false
-                });
-                return;
-            }
-        }
-
-        const updatedKeyBinds = { ...keyBinds, [action]: lowerNewKey };
-        setKeyBinds(updatedKeyBinds);
-        saveUserKeyBinds(userID, organizationID, updatedKeyBinds);
-    };
-
     const saveUserKeyBinds = async (userID, organizationID, updatedKeyBinds) => {
         try {
             const token = localStorage.getItem("token");
@@ -381,7 +354,7 @@ const DinoLabsAccount = ({
             });
 
             if (!response.ok) {
-                throw new Error(`Failed to save key binds: ${response.statusText}`);
+                throw new Error(`Failed to save key bindings: ${response.statusText}`);
             }
         } catch (error) {
             await showDialog({
@@ -414,33 +387,6 @@ const DinoLabsAccount = ({
                 showCancel: false
             });
         }
-    };
-
-    const handleStateChange = (state) => {
-        const newState = uiState.selectedState === state ? "none" : state;
-        setUiState(prev => ({ ...prev, selectedState: newState }));
-    };
-
-    const updateDisplayPreference = (key, value) => {
-        setDisplayPreferences(prev => ({ ...prev, [key]: value }));
-        updateShowColumnValue(userID, organizationID, key, value);
-    };
-
-    const handleProfileField = (field, value) => {
-        setEditProfile(prev => ({ ...prev, [field]: value }));
-    };
-
-    const handleImageFile = (file) => {
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            setEditProfile(prev => ({
-                ...prev,
-                imageFile: file,
-                imagePreview: e.target.result
-            }));
-        };
-        reader.readAsDataURL(file);
     };
 
     const uploadProfileImage = async (file) => {
@@ -545,22 +491,6 @@ const DinoLabsAccount = ({
         }
     };
 
-    const resetProfileEdits = () => {
-        setEditProfile(prev => ({
-            ...prev,
-            isEditing: false,
-            firstName: userInfo.firstName || "",
-            lastName: userInfo.lastName || "",
-            phone: userInfo.phone || "",
-            role: userInfo.role || "",
-            imageUrl: userInfo.image || "",
-            imageFile: null,
-            imagePreview: userInfo.image || ""
-        }));
-    };
-
-    const setTeamField = (k, v) => setTeamAccess(prev => ({ ...prev, [k]: v }));
-
     const joinTeam = async () => {
         if (!teamAccess.joinCode.trim()) {
             await showDialog({ title: "Join Team", message: "Enter a team code.", showCancel: false });
@@ -627,6 +557,76 @@ const DinoLabsAccount = ({
             setTeamField("creating", false);
         }
     };
+
+    const getKeyBindDisplayName = (action) => {
+        return keyBindDisplayNames[action] || action;
+    };
+
+    const handleKeyBindChange = async (action, newKey) => {
+        if (newKey.length !== 1) {
+            return;
+        }
+
+        const lowerNewKey = newKey.toLowerCase();
+
+        for (const [actionName, key] of Object.entries(keyBinds)) {
+            if (key === lowerNewKey && actionName !== action) {
+                await showDialog({
+                    title: "System Alert",
+                    message: `Key "${newKey}" is already assigned to "${actionName}". Please choose a different key.`,
+                    showCancel: false
+                });
+                return;
+            }
+        }
+
+        const updatedKeyBinds = { ...keyBinds, [action]: lowerNewKey };
+        setKeyBinds(updatedKeyBinds);
+        saveUserKeyBinds(userID, organizationID, updatedKeyBinds);
+    };
+
+    const handleStateChange = (state) => {
+        const newState = uiState.selectedState === state ? "none" : state;
+        setUiState(prev => ({ ...prev, selectedState: newState }));
+    };
+
+    const updateDisplayPreference = (key, value) => {
+        setDisplayPreferences(prev => ({ ...prev, [key]: value }));
+        updateShowColumnValue(userID, organizationID, key, value);
+    };
+
+    const handleProfileField = (field, value) => {
+        setEditProfile(prev => ({ ...prev, [field]: value }));
+    };
+
+    const handleImageFile = (file) => {
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = (e) => {
+            setEditProfile(prev => ({
+                ...prev,
+                imageFile: file,
+                imagePreview: e.target.result
+            }));
+        };
+        reader.readAsDataURL(file);
+    };
+
+    const resetProfileEdits = () => {
+        setEditProfile(prev => ({
+            ...prev,
+            isEditing: false,
+            firstName: userInfo.firstName || "",
+            lastName: userInfo.lastName || "",
+            phone: userInfo.phone || "",
+            role: userInfo.role || "",
+            imageUrl: userInfo.image || "",
+            imageFile: null,
+            imagePreview: userInfo.image || ""
+        }));
+    };
+
+    const setTeamField = (k, v) => setTeamAccess(prev => ({ ...prev, [k]: v }));
 
     const renderToggleButton = (label, checked, onChange, tooltipContent) => (
         <button className="dinolabsSettingsButtonLine">

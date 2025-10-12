@@ -4,7 +4,7 @@ import "tippy.js/dist/tippy.css";
 import DinoLabsNav from "../../../helpers/Nav";
 import "../../../styles/mainStyles/DinoLabsPlugins/DinoLabsPluginsCalculator/DinoLabsPluginsCalculator.css";
 
-const DinoLabsPluginsCalculator = () => {
+export default function DinoLabsPluginsCalculator() {
   const [expression, setExpression] = useState("");
   const [history, setHistory] = useState([]);
   const [terminalState, setTerminalState] = useState("funcs");
@@ -299,14 +299,14 @@ const DinoLabsPluginsCalculator = () => {
       return { value: val, error: null };
     } catch (error) {
       const raw = String(error && error.message ? error.message : "Error");
-      if (raw.startsWith("DOMAIN")) return { value: null, error: "Domain Error" };
-      if (raw.startsWith("ARITY pow")) return { value: null, error: "Pow Expects One Or Two Arguments" };
-      if (raw.startsWith("ARITY hypot")) return { value: null, error: "Hypot Expects At Least Two Arguments" };
-      if (raw.includes("Mismatched parentheses")) return { value: null, error: "Mismatched Parentheses" };
-      if (raw.includes("Stack Underflow")) return { value: null, error: "Malformed Expression" };
-      if (raw.startsWith("Unknown variable")) return { value: null, error: "Unknown Variable" };
-      if (raw.includes("Invalid Expression")) return { value: null, error: "Malformed Expression" };
-      return { value: null, error: "Error" };
+      if (raw.startsWith("DOMAIN")) return { value: null, error: "Domain error." };
+      if (raw.startsWith("ARITY pow")) return { value: null, error: "Pow expects one or two arguments." };
+      if (raw.startsWith("ARITY hypot")) return { value: null, error: "Hypot expects at least two arguments." };
+      if (raw.includes("Mismatched parentheses")) return { value: null, error: "Mismatched parentheses." };
+      if (raw.includes("Stack Underflow")) return { value: null, error: "Malformed expression." };
+      if (raw.startsWith("Unknown variable")) return { value: null, error: "Unknown variable." };
+      if (raw.includes("Invalid Expression")) return { value: null, error: "Malformed expression." };
+      return { value: null, error: "Error." };
     }
   };
 
@@ -327,7 +327,7 @@ const DinoLabsPluginsCalculator = () => {
     let variable = null;
     if (vars.includes("x")) variable = "x";
     else if (vars.length === 1) variable = vars[0];
-    else return "Cannot Determine A Single Variable To Solve For.";
+    else return "Cannot determine a single variable to solve for.";
     const f = (x) => {
       const l = parseAndEvaluate(leftStr, { [variable]: x });
       const r = parseAndEvaluate(rightStr, { [variable]: x });
@@ -376,7 +376,7 @@ const DinoLabsPluginsCalculator = () => {
       const r = tryNewton(s);
       if (r !== null && isFinite(r)) return `${variable} = ${r.toFixed(6)}`;
     }
-    return "No Real Solution Found.";
+    return "No real solution found.";
   };
 
   const handleEnter = () => {
@@ -437,7 +437,7 @@ const DinoLabsPluginsCalculator = () => {
             className="dinolabsPluginsCalculatorInput"
             value={expression}
             onChange={(e) => setExpression(e.target.value)}
-            placeholder="Enter An Expression."
+            placeholder="Enter an expression."
             autoFocus
           />
         </div>
@@ -580,6 +580,4 @@ const DinoLabsPluginsCalculator = () => {
       </div>
     </div>
   );
-};
-
-export default DinoLabsPluginsCalculator;
+}

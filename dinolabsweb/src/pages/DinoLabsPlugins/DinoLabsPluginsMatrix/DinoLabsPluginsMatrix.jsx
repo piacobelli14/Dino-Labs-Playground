@@ -20,303 +20,317 @@ import {
 import DinoLabsNav from "../../../helpers/Nav";
 import "../../../styles/mainStyles/DinoLabsPlugins/DinoLabsPluginsMatrix/DinoLabsPluginsMatrix.css";
 
-const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
-const roundNice = (x) => {
-  if (!isFinite(x)) return x.toString();
-  const s =
-    Math.abs(x) >= 1e6 || (Math.abs(x) < 1e-4 && x !== 0)
-      ? x.toExponential(6)
-      : x.toFixed(6);
-  return s.replace(/\.?0+($|e)/i, "$1");
-};
-const deepClone = (m) => m.map((r) => r.slice());
-const zeros = (r, c) => Array.from({ length: r }, () => Array(c).fill(0));
-const identity = (n) =>
-  Array.from({ length: n }, (_, i) =>
-    Array.from({ length: n }, (_, j) => (i === j ? 1 : 0))
-  );
-const randomMatrix = (r, c) =>
-  Array.from({ length: r }, () =>
-    Array.from({ length: c }, () => Math.round((Math.random() * 2 - 1) * 100) / 10)
-  );
-const shape = (M) => [M.length, (M[0] || []).length];
+export default function DinoLabsPluginsMatrix() {
 
-const matrixToCSV = (M) => M.map((row) => row.map(roundNice).join(",")).join("\n");
-const matrixToJSON = (M) => JSON.stringify(M);
-const matrixToLaTeX = (M) =>
-  "\\begin{bmatrix}\n" +
-  M.map((row) => row.map(roundNice).join(" & ")).join(" \\\\\n") +
-  "\n\\end{bmatrix}";
+  const clamp = (n, min, max) => Math.max(min, Math.min(max, n));
 
-const parseTextToMatrix = (txt) => {
-  const trimmed = (txt || "").trim();
-  if (!trimmed) return [[0]];
-  const rows = trimmed
-    .replace(/;+$/gm, "")
-    .split(/\n|;/g)
-    .map((line) =>
-      line
-        .trim()
-        .split(/,|\t|\s+/g)
-        .filter(Boolean)
-        .map((x) => (x === "-" || x === "." ? 0 : Number(x)))
-        .map((x) => (Number.isFinite(x) ? x : 0))
-    )
-    .filter((r) => r.length > 0);
-  const maxC = rows.reduce((m, r) => Math.max(m, r.length), 0);
-  if (rows.length === 0 || maxC === 0) return [[0]];
-  return rows.map((r) => (r.length === maxC ? r : r.concat(Array(maxC - r.length).fill(0))));
-};
+  const roundNice = (x) => {
+    if (!isFinite(x)) return x.toString();
+    const s =
+      Math.abs(x) >= 1e6 || (Math.abs(x) < 1e-4 && x !== 0)
+        ? x.toExponential(6)
+        : x.toFixed(6);
+    return s.replace(/\.?0+($|e)/i, "$1");
+  };
 
-const add = (A, B) => {
-  const [ra, ca] = shape(A);
-  const [rb, cb] = shape(B);
-  if (ra !== rb || ca !== cb) throw new Error("Shapes Must Match For Addition Or Subtraction.");
-  return A.map((row, i) => row.map((v, j) => v + B[i][j]));
-};
-const sub = (A, B) => {
-  const [ra, ca] = shape(A);
-  const [rb, cb] = shape(B);
-  if (ra !== rb || ca !== cb) throw new Error("Shapes Must Match For Addition Or Subtraction.");
-  return A.map((row, i) => row.map((v, j) => v - B[i][j]));
-};
-const scalarMul = (A, k) => A.map((row) => row.map((v) => v * k));
-const transpose = (A) => {
-  const [r, c] = shape(A);
-  const T = zeros(c || 1, r || 1);
-  for (let i = 0; i < r; i++) for (let j = 0; j < c; j++) T[j][i] = A[i][j];
-  return T;
-};
-const multiply = (A, B) => {
-  const [ra, ca] = shape(A);
-  const [rb, cb] = shape(B);
-  if (ca !== rb) throw new Error("Inner Dimensions Must Match For Multiplication.");
-  const C = zeros(ra, cb);
-  for (let i = 0; i < ra; i++) {
-    for (let k = 0; k < ca; k++) {
-      const aik = A[i][k];
-      if (aik === 0) continue;
-      for (let j = 0; j < cb; j++) C[i][j] += aik * B[k][j];
-    }
-  }
-  return C;
-};
+  const deepClone = (m) => m.map((r) => r.slice());
 
-const rref = (A, tol = 1e-10) => {
-  const M = deepClone(A);
-  const [rows, cols] = shape(M);
-  let lead = 0;
-  const ops = [];
-  for (let r = 0; r < rows; r++) {
-    if (lead >= cols) break;
-    let i = r;
-    while (Math.abs(M[i][lead]) < tol) {
-      i++;
-      if (i === rows) {
-        i = r;
-        lead++;
-        if (lead === cols) break;
+  const zeros = (r, c) => Array.from({ length: r }, () => Array(c).fill(0));
+
+  const identity = (n) =>
+    Array.from({ length: n }, (_, i) =>
+      Array.from({ length: n }, (_, j) => (i === j ? 1 : 0))
+    );
+
+  const randomMatrix = (r, c) =>
+    Array.from({ length: r }, () =>
+      Array.from({ length: c }, () => Math.round((Math.random() * 2 - 1) * 100) / 10)
+    );
+
+  const shape = (M) => [M.length, (M[0] || []).length];
+
+  const matrixToCSV = (M) => M.map((row) => row.map(roundNice).join(",")).join("\n");
+
+  const matrixToJSON = (M) => JSON.stringify(M);
+
+  const matrixToLaTeX = (M) =>
+    "\\begin{bmatrix}\n" +
+    M.map((row) => row.map(roundNice).join(" & ")).join(" \\\\\n") +
+    "\n\\end{bmatrix}";
+
+  const parseTextToMatrix = (txt) => {
+    const trimmed = (txt || "").trim();
+    if (!trimmed) return [[0]];
+    const rows = trimmed
+      .replace(/;+$/gm, "")
+      .split(/\n|;/g)
+      .map((line) =>
+        line
+          .trim()
+          .split(/,|\t|\s+/g)
+          .filter(Boolean)
+          .map((x) => (x === "-" || x === "." ? 0 : Number(x)))
+          .map((x) => (Number.isFinite(x) ? x : 0))
+      )
+      .filter((r) => r.length > 0);
+    const maxC = rows.reduce((m, r) => Math.max(m, r.length), 0);
+    if (rows.length === 0 || maxC === 0) return [[0]];
+    return rows.map((r) => (r.length === maxC ? r : r.concat(Array(maxC - r.length).fill(0))));
+  };
+
+  const add = (A, B) => {
+    const [ra, ca] = shape(A);
+    const [rb, cb] = shape(B);
+    if (ra !== rb || ca !== cb) throw new Error("Shapes Must Match For Addition Or Subtraction.");
+    return A.map((row, i) => row.map((v, j) => v + B[i][j]));
+  };
+
+  const sub = (A, B) => {
+    const [ra, ca] = shape(A);
+    const [rb, cb] = shape(B);
+    if (ra !== rb || ca !== cb) throw new Error("Shapes Must Match For Addition Or Subtraction.");
+    return A.map((row, i) => row.map((v, j) => v - B[i][j]));
+  };
+
+  const scalarMul = (A, k) => A.map((row) => row.map((v) => v * k));
+
+  const transpose = (A) => {
+    const [r, c] = shape(A);
+    const T = zeros(c || 1, r || 1);
+    for (let i = 0; i < r; i++) for (let j = 0; j < c; j++) T[j][i] = A[i][j];
+    return T;
+  };
+
+  const multiply = (A, B) => {
+    const [ra, ca] = shape(A);
+    const [rb, cb] = shape(B);
+    if (ca !== rb) throw new Error("Inner Dimensions Must Match For Multiplication.");
+    const C = zeros(ra, cb);
+    for (let i = 0; i < ra; i++) {
+      for (let k = 0; k < ca; k++) {
+        const aik = A[i][k];
+        if (aik === 0) continue;
+        for (let j = 0; j < cb; j++) C[i][j] += aik * B[k][j];
       }
     }
-    if (lead === cols) break;
-    if (i !== r) {
-      [M[i], M[r]] = [M[r], M[i]];
-      ops.push(`R${r + 1} ↔ R${i + 1}`);
-    }
-    const lv = M[r][lead];
-    if (Math.abs(lv) > tol) {
-      for (let j = 0; j < cols; j++) M[r][j] /= lv;
-      ops.push(`R${r + 1} ← R${r + 1} / ${roundNice(lv)}`);
-    }
-    for (let i2 = 0; i2 < rows; i2++) {
-      if (i2 !== r) {
-        const lv2 = M[i2][lead];
-        if (Math.abs(lv2) > tol) {
-          for (let j = 0; j < cols; j++) M[i2][j] -= lv2 * M[r][j];
-          ops.push(`R${i2 + 1} ← R${i2 + 1} - (${roundNice(lv2)})·R${r + 1}`);
+    return C;
+  };
+
+  const rref = (A, tol = 1e-10) => {
+    const M = deepClone(A);
+    const [rows, cols] = shape(M);
+    let lead = 0;
+    const ops = [];
+    for (let r = 0; r < rows; r++) {
+      if (lead >= cols) break;
+      let i = r;
+      while (Math.abs(M[i][lead]) < tol) {
+        i++;
+        if (i === rows) {
+          i = r;
+          lead++;
+          if (lead === cols) break;
         }
       }
+      if (lead === cols) break;
+      if (i !== r) {
+        [M[i], M[r]] = [M[r], M[i]];
+        ops.push(`R${r + 1} ↔ R${i + 1}`);
+      }
+      const lv = M[r][lead];
+      if (Math.abs(lv) > tol) {
+        for (let j = 0; j < cols; j++) M[r][j] /= lv;
+        ops.push(`R${r + 1} ← R${r + 1} / ${roundNice(lv)}`);
+      }
+      for (let i2 = 0; i2 < rows; i2++) {
+        if (i2 !== r) {
+          const lv2 = M[i2][lead];
+          if (Math.abs(lv2) > tol) {
+            for (let j = 0; j < cols; j++) M[i2][j] -= lv2 * M[r][j];
+            ops.push(`R${i2 + 1} ← R${i2 + 1} - (${roundNice(lv2)})·R${r + 1}`);
+          }
+        }
+      }
+      lead++;
     }
-    lead++;
-  }
-  return { R: M, ops };
-};
+    return { R: M, ops };
+  };
 
-const rankFromRREF = (R, tol = 1e-10) => R.reduce((acc, row) => acc + (row.some((v) => Math.abs(v) > tol) ? 1 : 0), 0);
+  const rankFromRREF = (R, tol = 1e-10) => R.reduce((acc, row) => acc + (row.some((v) => Math.abs(v) > tol) ? 1 : 0), 0);
 
-const luDecompose = (A) => {
-  const n = A.length;
-  if (n === 0 || A[0].length !== n) throw new Error("LU Decomposition Requires A Square Matrix.");
-  const LU = deepClone(A);
-  const P = Array.from({ length: n }, (_, i) => i);
-  let pivSign = 1;
-  for (let j = 0; j < n; j++) {
-    for (let i = 0; i < n; i++) {
-      const kmax = Math.min(i, j);
-      let s = 0;
-      for (let k = 0; k < kmax; k++) s += LU[i][k] * LU[k][j];
-      LU[i][j] -= s;
-    }
-    let p = j;
-    for (let i = j + 1; i < n; i++) if (Math.abs(LU[i][j]) > Math.abs(LU[p][j])) p = i;
-    if (p !== j) {
-      [LU[p], LU[j]] = [LU[j], LU[p]];
-      [P[p], P[j]] = [P[j], P[p]];
-      pivSign = -pivSign;
-    }
-    if (j < n && LU[j][j] !== 0) {
-      for (let i = j + 1; i < n; i++) LU[i][j] /= LU[j][j];
-    }
-    for (let i = j + 1; i < n; i++) {
-      for (let k = j + 1; k < n; k++) LU[i][k] -= LU[i][j] * LU[j][k];
-    }
-  }
-  return { LU, P, pivSign };
-};
-
-const determinant = (A) => {
-  const n = A.length;
-  if (n === 0 || A[0].length !== n) throw new Error("Determinant Requires A Square Matrix.");
-  const { LU, pivSign } = luDecompose(A);
-  let det = pivSign;
-  for (let i = 0; i < n; i++) det *= LU[i][i];
-  return det;
-};
-
-const luSolve = (LU, P, b) => {
-  const n = LU.length;
-  const x = new Array(n);
-  for (let i = 0; i < n; i++) {
-    let sum = b[P[i]];
-    for (let j = 0; j < i; j++) sum -= LU[i][j] * x[j];
-    x[i] = sum;
-  }
-  for (let i = n - 1; i >= 0; i--) {
-    let sum = x[i];
-    for (let j = i + 1; j < n; j++) sum -= LU[i][j] * x[j];
-    x[i] = sum / LU[i][i];
-  }
-  return x;
-};
-
-const solveAxEqualsb = (A, bCol) => {
-  const n = A.length;
-  if (n === 0 || A[0].length !== n) throw new Error("Solve Requires A Square Matrix.");
-  if (bCol.length !== n) throw new Error("The b Vector Must Have The Same Number Of Rows As A.");
-  const { LU, P } = luDecompose(A);
-  const x = luSolve(LU, P, bCol.map((v) => v[0] ?? v));
-  return x.map((v) => [v]);
-};
-
-const inverse = (A) => {
-  const n = A.length;
-  if (n === 0 || A[0].length !== n) throw new Error("Inverse Requires A Square Matrix.");
-  const Aug = A.map((row, i) => row.concat(identity(n)[i]));
-  const { R } = rref(Aug);
-  const tol = 1e-8;
-  for (let i = 0; i < n; i++) {
+  const luDecompose = (A) => {
+    const n = A.length;
+    if (n === 0 || A[0].length !== n) throw new Error("LU Decomposition Requires A Square Matrix.");
+    const LU = deepClone(A);
+    const P = Array.from({ length: n }, (_, i) => i);
+    let pivSign = 1;
     for (let j = 0; j < n; j++) {
-      if (i === j && Math.abs(R[i][j] - 1) > tol) throw new Error("Matrix Is Singular; No Inverse.");
-      if (i !== j && Math.abs(R[i][j]) > tol) throw new Error("Matrix Is Singular; No Inverse.");
+      for (let i = 0; i < n; i++) {
+        const kmax = Math.min(i, j);
+        let s = 0;
+        for (let k = 0; k < kmax; k++) s += LU[i][k] * LU[k][j];
+        LU[i][j] -= s;
+      }
+      let p = j;
+      for (let i = j + 1; i < n; i++) if (Math.abs(LU[i][j]) > Math.abs(LU[p][j])) p = i;
+      if (p !== j) {
+        [LU[p], LU[j]] = [LU[j], LU[p]];
+        [P[p], P[j]] = [P[j], P[p]];
+        pivSign = -pivSign;
+      }
+      if (j < n && LU[j][j] !== 0) {
+        for (let i = j + 1; i < n; i++) LU[i][j] /= LU[j][j];
+      }
+      for (let i = j + 1; i < n; i++) {
+        for (let k = j + 1; k < n; k++) LU[i][k] -= LU[i][j] * LU[j][k];
+      }
     }
-  }
-  return R.map((row) => row.slice(n));
-};
+    return { LU, P, pivSign };
+  };
 
-const powerIteration = (A, maxIter = 1000, tol = 1e-10) => {
-  const [n, m] = shape(A);
-  if (n !== m) throw new Error("Eigen Computation Requires A Square Matrix.");
-  let v = Array.from({ length: n }, () => 1 / Math.sqrt(n));
-  let lambdaOld = 0;
-  const dot = (x, y) => x.reduce((s, xi, i) => s + xi * y[i], 0);
-  const norm = (x) => Math.sqrt(dot(x, x));
-  for (let it = 0; it < maxIter; it++) {
-    const w = Array(n).fill(0);
-    for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) w[i] += A[i][j] * v[j];
-    const nv = norm(w);
-    if (nv < tol) break;
-    const vNext = w.map((x) => x / nv);
-    const lambda = dot(vNext, w);
-    if (Math.abs(lambda - lambdaOld) < tol) {
+  const determinant = (A) => {
+    const n = A.length;
+    if (n === 0 || A[0].length !== n) throw new Error("Determinant Requires A Square Matrix.");
+    const { LU, pivSign } = luDecompose(A);
+    let det = pivSign;
+    for (let i = 0; i < n; i++) det *= LU[i][i];
+    return det;
+  };
+
+  const luSolve = (LU, P, b) => {
+    const n = LU.length;
+    const x = new Array(n);
+    for (let i = 0; i < n; i++) {
+      let sum = b[P[i]];
+      for (let j = 0; j < i; j++) sum -= LU[i][j] * x[j];
+      x[i] = sum;
+    }
+    for (let i = n - 1; i >= 0; i--) {
+      let sum = x[i];
+      for (let j = i + 1; j < n; j++) sum -= LU[i][j] * x[j];
+      x[i] = sum / LU[i][i];
+    }
+    return x;
+  };
+
+  const solveAxEqualsb = (A, bCol) => {
+    const n = A.length;
+    if (n === 0 || A[0].length !== n) throw new Error("Solve Requires A Square Matrix.");
+    if (bCol.length !== n) throw new Error("The b Vector Must Have The Same Number Of Rows As A.");
+    const { LU, P } = luDecompose(A);
+    const x = luSolve(LU, P, bCol.map((v) => v[0] ?? v));
+    return x.map((v) => [v]);
+  };
+
+  const inverse = (A) => {
+    const n = A.length;
+    if (n === 0 || A[0].length !== n) throw new Error("Inverse Requires A Square Matrix.");
+    const Aug = A.map((row, i) => row.concat(identity(n)[i]));
+    const { R } = rref(Aug);
+    const tol = 1e-8;
+    for (let i = 0; i < n; i++) {
+      for (let j = 0; j < n; j++) {
+        if (i === j && Math.abs(R[i][j] - 1) > tol) throw new Error("Matrix Is Singular; No Inverse.");
+        if (i !== j && Math.abs(R[i][j]) > tol) throw new Error("Matrix Is Singular; No Inverse.");
+      }
+    }
+    return R.map((row) => row.slice(n));
+  };
+
+  const powerIteration = (A, maxIter = 1000, tol = 1e-10) => {
+    const [n, m] = shape(A);
+    if (n !== m) throw new Error("Eigen Computation Requires A Square Matrix.");
+    let v = Array.from({ length: n }, () => 1 / Math.sqrt(n));
+    let lambdaOld = 0;
+    const dot = (x, y) => x.reduce((s, xi, i) => s + xi * y[i], 0);
+    const norm = (x) => Math.sqrt(dot(x, x));
+    for (let it = 0; it < maxIter; it++) {
+      const w = Array(n).fill(0);
+      for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) w[i] += A[i][j] * v[j];
+      const nv = norm(w);
+      if (nv < tol) break;
+      const vNext = w.map((x) => x / nv);
+      const lambda = dot(vNext, w);
+      if (Math.abs(lambda - lambdaOld) < tol) {
+        v = vNext;
+        lambdaOld = lambda;
+        break;
+      }
       v = vNext;
       lambdaOld = lambda;
-      break;
     }
-    v = vNext;
-    lambdaOld = lambda;
-  }
-  return { eigenvalue: lambdaOld, eigenvector: v.map((x) => [x]) };
-};
+    return { eigenvalue: lambdaOld, eigenvector: v.map((x) => [x]) };
+  };
 
-const clamp01 = (x) => Math.max(0, Math.min(1, x));
-const valueToHeat = (v, minV, maxV) => {
-  if (!isFinite(v)) return "var(--mx-cell-bg)";
-  const span = Math.max(Math.abs(minV), Math.abs(maxV)) || 1;
-  const t = Math.max(-1, Math.min(1, v / span));
-  if (Math.abs(t) < 0.15) return "hsl(210 20% 30%)";
-  const intensity = Math.abs(t);
-  const hue = t < 0 ? 210 : 0;
-  const sat = 35 + intensity * 45;
-  const light = 18 + (1 - intensity) * 12;
-  return `hsl(${hue} ${clamp01(sat)}% ${clamp01(light)}%)`;
-};
+  const clamp01 = (x) => Math.max(0, Math.min(1, x));
 
-const MatrixGrid = ({ label, matrix, setMatrix, minV, maxV, editable = true }) => {
-  const [rows, cols] = shape(matrix);
-  const onChange = useCallback(
-    (r, c, val) => {
-      const n = Number(val);
-      const v = Number.isFinite(n) ? n : 0;
-      setMatrix((prev) => {
-        const next = deepClone(prev);
-        next[r][c] = v;
-        return next;
-      });
-    },
-    [setMatrix]
-  );
-  return (
-    <div className="dinolabsMatrixMatrixBox" aria-live="polite">
-      <div className="dinolabsMatrixMatrixHeader">
-        <span className="dinolabsMatrixMatrixTitle">{label}</span>
-        <span className="dinolabsMatrixMatrixDims">
-          {rows}×{cols}
-        </span>
+  const valueToHeat = (v, minV, maxV) => {
+    if (!isFinite(v)) return "var(--mx-cell-bg)";
+    const span = Math.max(Math.abs(minV), Math.abs(maxV)) || 1;
+    const t = Math.max(-1, Math.min(1, v / span));
+    if (Math.abs(t) < 0.15) return "hsl(210 20% 30%)";
+    const intensity = Math.abs(t);
+    const hue = t < 0 ? 210 : 0;
+    const sat = 35 + intensity * 45;
+    const light = 18 + (1 - intensity) * 12;
+    return `hsl(${hue} ${clamp01(sat)}% ${clamp01(light)}%)`;
+  };
+
+  const MatrixGrid = ({ label, matrix, setMatrix, minV, maxV, editable = true }) => {
+    const [rows, cols] = shape(matrix);
+    const onChange = useCallback(
+      (r, c, val) => {
+        const n = Number(val);
+        const v = Number.isFinite(n) ? n : 0;
+        setMatrix((prev) => {
+          const next = deepClone(prev);
+          next[r][c] = v;
+          return next;
+        });
+      },
+      [setMatrix]
+    );
+    return (
+      <div className="dinolabsMatrixMatrixBox" aria-live="polite">
+        <div className="dinolabsMatrixMatrixHeader">
+          <span className="dinolabsMatrixMatrixTitle">{label}</span>
+          <span className="dinolabsMatrixMatrixDims">
+            {rows}×{cols}
+          </span>
+        </div>
+        <div
+          className="dinolabsMatrixMatrixGrid"
+          style={{ gridTemplateColumns: `repeat(${cols}, minmax(48px, 1fr))` }}
+        >
+          {matrix.map((row, i) =>
+            row.map((v, j) => (
+              <input
+                key={`${i}-${j}`}
+                className="dinolabsMatrixCellInput"
+                type="text"
+                inputMode="decimal"
+                value={Number.isFinite(v) ? String(v) : ""}
+                onChange={(e) => editable && onChange(i, j, e.target.value)}
+                readOnly={!editable}
+                style={{ backgroundColor: valueToHeat(v, minV, maxV) }}
+              />
+            ))
+          )}
+        </div>
       </div>
-      <div
-        className="dinolabsMatrixMatrixGrid"
-        style={{ gridTemplateColumns: `repeat(${cols}, minmax(48px, 1fr))` }}
-      >
-        {matrix.map((row, i) =>
-          row.map((v, j) => (
-            <input
-              key={`${i}-${j}`}
-              className="dinolabsMatrixCellInput"
-              type="text"
-              inputMode="decimal"
-              value={Number.isFinite(v) ? String(v) : ""}
-              onChange={(e) => editable && onChange(i, j, e.target.value)}
-              readOnly={!editable}
-              style={{ backgroundColor: valueToHeat(v, minV, maxV) }}
-            />
-          ))
-        )}
-      </div>
-    </div>
-  );
-};
+    );
+  };
 
-const formatMessage = (s) => {
-  const str = String(s || "").trim();
-  if (!str) return "";
-  const titled = str
-    .split(" ")
-    .map((w) => (w.length ? w[0].toUpperCase() + w.slice(1) : w))
-    .join(" ");
-  return titled.endsWith(".") ? titled : `${titled}.`;
-};
+  const formatMessage = (s) => {
+    const str = String(s || "").trim();
+    if (!str) return "";
+    const titled = str
+      .split(" ")
+      .map((w) => (w.length ? w[0].toUpperCase() + w.slice(1) : w))
+      .join(" ");
+    return titled.endsWith(".") ? titled : `${titled}.`;
+  };
 
-const DinoLabsPluginsMatrix = () => {
   const [aRows, setARows] = useState(3);
   const [aCols, setACols] = useState(3);
   const [bRows, setBRows] = useState(3);
@@ -329,6 +343,12 @@ const DinoLabsPluginsMatrix = () => {
   const [importText, setImportText] = useState("");
   const [rrefOps, setRrefOps] = useState([]);
   const [history, setHistory] = useState([]);
+
+  const [minV, maxV] = useMemo(() => {
+    const all = [...A.flat(), ...B.flat(), ...Result.flat()].filter((x) => Number.isFinite(x));
+    if (all.length === 0) return [-1, 1];
+    return [Math.min(...all), Math.max(...all)];
+  }, [A, B, Result]);
 
   const resizeMatrix = (M, rNew, cNew) => {
     const [rOld, cOld] = shape(M);
@@ -345,27 +365,24 @@ const DinoLabsPluginsMatrix = () => {
     setARows(r);
     setA((prev) => resizeMatrix(prev, r, aCols));
   };
+
   const handleSetACols = (val) => {
     const c = clamp(Number(val) || 1, 1, 10);
     setACols(c);
     setA((prev) => resizeMatrix(prev, aRows, c));
   };
+
   const handleSetBRows = (val) => {
     const r = clamp(Number(val) || 1, 1, 10);
     setBRows(r);
     setB((prev) => resizeMatrix(prev, r, bCols));
   };
+
   const handleSetBCols = (val) => {
     const c = clamp(Number(val) || 1, 1, 10);
     setBCols(c);
     setB((prev) => resizeMatrix(prev, bRows, c));
   };
-
-  const [minV, maxV] = useMemo(() => {
-    const all = [...A.flat(), ...B.flat(), ...Result.flat()].filter((x) => Number.isFinite(x));
-    if (all.length === 0) return [-1, 1];
-    return [Math.min(...all), Math.max(...all)];
-  }, [A, B, Result]);
 
   const pushHistory = (label, out) => {
     setHistory((h) => [{ label, out: deepClone(out), ts: Date.now() }, ...h].slice(0, 50));
@@ -382,6 +399,7 @@ const DinoLabsPluginsMatrix = () => {
       setLastOp(formatMessage(error.message || error));
     }
   };
+
   const doSub = () => {
     try {
       const C = sub(A, B);
@@ -393,6 +411,7 @@ const DinoLabsPluginsMatrix = () => {
       setLastOp(formatMessage(error.message || error));
     }
   };
+
   const doMulAB = () => {
     try {
       const C = multiply(A, B);
@@ -404,6 +423,7 @@ const DinoLabsPluginsMatrix = () => {
       setLastOp(formatMessage(error.message || error));
     }
   };
+
   const doMulBA = () => {
     try {
       const C = multiply(B, A);
@@ -415,6 +435,7 @@ const DinoLabsPluginsMatrix = () => {
       setLastOp(formatMessage(error.message || error));
     }
   };
+
   const doScalarA = () => {
     const k = Number(scalar) || 0;
     const C = scalarMul(A, k);
@@ -423,6 +444,7 @@ const DinoLabsPluginsMatrix = () => {
     setRrefOps([]);
     pushHistory(`${roundNice(k)} · A`, C);
   };
+
   const doScalarB = () => {
     const k = Number(scalar) || 0;
     const C = scalarMul(B, k);
@@ -431,6 +453,7 @@ const DinoLabsPluginsMatrix = () => {
     setRrefOps([]);
     pushHistory(`${roundNice(k)} · B`, C);
   };
+
   const doTransposeA = () => {
     const C = transpose(A);
     setResult(C);
@@ -438,6 +461,7 @@ const DinoLabsPluginsMatrix = () => {
     setRrefOps([]);
     pushHistory("Aᵀ", C);
   };
+
   const doTransposeB = () => {
     const C = transpose(B);
     setResult(C);
@@ -445,6 +469,7 @@ const DinoLabsPluginsMatrix = () => {
     setRrefOps([]);
     pushHistory("Bᵀ", C);
   };
+
   const doDetA = () => {
     try {
       const d = determinant(A);
@@ -457,6 +482,7 @@ const DinoLabsPluginsMatrix = () => {
       setLastOp(formatMessage(error.message || error));
     }
   };
+
   const doDetB = () => {
     try {
       const d = determinant(B);
@@ -469,6 +495,7 @@ const DinoLabsPluginsMatrix = () => {
       setLastOp(formatMessage(error.message || error));
     }
   };
+
   const doInverseA = () => {
     try {
       const inv = inverse(A);
@@ -480,6 +507,7 @@ const DinoLabsPluginsMatrix = () => {
       setLastOp(formatMessage(error.message || error));
     }
   };
+
   const doInverseB = () => {
     try {
       const invB = inverse(B);
@@ -491,6 +519,7 @@ const DinoLabsPluginsMatrix = () => {
       setLastOp(formatMessage(error.message || error));
     }
   };
+
   const doRrefA = () => {
     const { R, ops } = rref(A);
     setResult(R);
@@ -498,6 +527,7 @@ const DinoLabsPluginsMatrix = () => {
     setRrefOps(ops);
     pushHistory("RREF(A)", R);
   };
+
   const doRrefB = () => {
     const { R, ops } = rref(B);
     setResult(R);
@@ -505,6 +535,7 @@ const DinoLabsPluginsMatrix = () => {
     setRrefOps(ops);
     pushHistory("RREF(B)", R);
   };
+
   const doRankA = () => {
     const r = rankFromRREF(rref(A).R);
     const C = [[r]];
@@ -513,6 +544,7 @@ const DinoLabsPluginsMatrix = () => {
     setRrefOps([]);
     pushHistory("rank(A)", C);
   };
+
   const doRankB = () => {
     const r = rankFromRREF(rref(B).R);
     const C = [[r]];
@@ -521,6 +553,7 @@ const DinoLabsPluginsMatrix = () => {
     setRrefOps([]);
     pushHistory("rank(B)", C);
   };
+
   const doSolveAxEqB = () => {
     const [ra, ca] = shape(A);
     const [rb, cb] = shape(B);
@@ -542,6 +575,7 @@ const DinoLabsPluginsMatrix = () => {
       setLastOp(formatMessage(error.message || error));
     }
   };
+
   const doEigenA = () => {
     try {
       const { eigenvalue, eigenvector } = powerIteration(A);
@@ -556,7 +590,9 @@ const DinoLabsPluginsMatrix = () => {
   };
 
   const fillZeroA = () => setA(zeros(aRows, aCols));
+
   const fillZeroB = () => setB(zeros(bRows, bCols));
+
   const fillIdA = () => {
     const n = Math.min(aRows, aCols);
     const I = identity(n);
@@ -564,6 +600,7 @@ const DinoLabsPluginsMatrix = () => {
     setACols(n);
     setA(I);
   };
+
   const fillIdB = () => {
     const n = Math.min(bRows, bCols);
     const I = identity(n);
@@ -571,7 +608,9 @@ const DinoLabsPluginsMatrix = () => {
     setBCols(n);
     setB(I);
   };
+
   const fillRandomA = () => setA(randomMatrix(aRows, aCols));
+
   const fillRandomB = () => setB(randomMatrix(bRows, bCols));
 
   const copyToClipboard = async (fmt, src) => {
@@ -583,6 +622,7 @@ const DinoLabsPluginsMatrix = () => {
       setLastOp("Copy Failed.");
     }
   };
+
   const downloadText = (name, text) => {
     const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
     const url = URL.createObjectURL(blob);
@@ -599,6 +639,7 @@ const DinoLabsPluginsMatrix = () => {
     setACols(M[0]?.length || 1);
     setA(M);
   };
+
   const importToB = () => {
     const M = parseTextToMatrix(importText);
     setBRows(M.length);
@@ -801,6 +842,4 @@ const DinoLabsPluginsMatrix = () => {
       </div>
     </div>
   );
-};
-
-export default DinoLabsPluginsMatrix;
+}

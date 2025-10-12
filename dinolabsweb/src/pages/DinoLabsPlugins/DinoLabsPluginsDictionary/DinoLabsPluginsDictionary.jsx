@@ -10,8 +10,6 @@ import {
 import DinoLabsNav from "../../../helpers/Nav";
 import "../../../styles/mainStyles/DinoLabsPlugins/DinoLabsPluginsDictionary/DinoLabsPluginsDictionary.css";
 
-const MW_API_BASE = "https://www.dictionaryapi.com/api/v3/references/collegiate/json";
-
 const getMWKey = () => {
   try {
     if (typeof import.meta !== "undefined" && import.meta.env) {
@@ -38,8 +36,11 @@ const getMWKey = () => {
   return "";
 };
 
-const DinoLabsPluginsDictionary = () => {
+const MW_API_BASE = "https://www.dictionaryapi.com/api/v3/references/collegiate/json";
+
+export default function DinoLabsPluginsDictionary() {
   const apiKey = getMWKey();
+
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("idle");
   const [entries, setEntries] = useState([]);
@@ -96,7 +97,7 @@ const DinoLabsPluginsDictionary = () => {
       setStatus("done");
     } catch (error) {
       setStatus("error");
-      setErrorMsg(err?.message || "Something went wrong.");
+      setErrorMsg(error?.message || "Something went wrong.");
     }
   }, [apiKey]);
 
@@ -112,7 +113,7 @@ const DinoLabsPluginsDictionary = () => {
         {!apiKey && (
           <div className="dinolabsPluginsDictionaryBanner">
             <FontAwesomeIcon icon={faTriangleExclamation} />
-            <span>Add <code>VITE_REACT_APP_MW_DICTIONARY_KEY</code> to <code>.env</code></span>
+            <span>Add <code>VITE_REACT_APP_MW_DICTIONARY_KEY</code> to <code>.env</code>.</span>
           </div>
         )}
 
@@ -128,7 +129,7 @@ const DinoLabsPluginsDictionary = () => {
                 fetchDefinitions(query);
               }
             }}
-            placeholder="Search a word…"
+            placeholder="Search a word..."
             maxLength={64}
             inputMode="search"
             autoCorrect="off"
@@ -158,11 +159,11 @@ const DinoLabsPluginsDictionary = () => {
       <div className="dinolabsPluginsDictionaryContent">
         {(status === "idle" ||
           (entries.length === 0 && suggestions.length === 0 && status !== "loading" && status !== "error")) && (
-          <div className="dinolabsPluginsDictionaryEmpty">📚 Type a word and press enter to look it up.</div>
+          <div className="dinolabsPluginsDictionaryEmpty">Type a word and press Enter to look it up.</div>
         )}
 
         {status === "error" && (
-          <div className="dinolabsPluginsDictionaryEmpty dinolabsPluginsDictionaryError">🚨 {errorMsg || "Error fetching results."}</div>
+          <div className="dinolabsPluginsDictionaryEmpty dinolabsPluginsDictionaryError">{errorMsg || "Error fetching results."}</div>
         )}
 
         <div className="dinolabsPluginsDictionaryGrid">
@@ -205,6 +206,4 @@ const DinoLabsPluginsDictionary = () => {
       </div>
     </div>
   );
-};
-
-export default DinoLabsPluginsDictionary;
+}

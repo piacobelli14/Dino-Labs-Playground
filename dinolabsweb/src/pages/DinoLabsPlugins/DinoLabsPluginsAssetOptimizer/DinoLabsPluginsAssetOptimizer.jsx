@@ -9,259 +9,316 @@ import "../../../styles/mainStyles/DinoLabsPlugins/DinoLabsPluginsAssetOptimizer
 import "../../../styles/helperStyles/Slider.css";
 import "../../../styles/helperStyles/Checkbox.css";
 
-const uid = () => Math.random().toString(36).slice(2, 9);
-const bytesToMB = (n) => +(n / (1024 * 1024)).toFixed(2);
-const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
-const pretty = (n) => (n ?? n === 0 ? n.toLocaleString() : "—");
-const IMAGE_TYPES = new Set(["image/png","image/jpeg","image/webp","image/avif","image/gif","image/svg+xml"]);
-const VIDEO_TYPES = new Set(["video/mp4","video/webm","video/ogg","video/quicktime","video/x-matroska"]);
-const AUDIO_TYPES = new Set(["audio/wav","audio/x-wav","audio/mpeg","audio/mp3","audio/ogg","audio/flac","audio/aac","audio/x-aac","audio/mp4"]);
-const FONT_TYPES  = new Set(["font/ttf","font/otf","font/woff","font/woff2","application/x-font-ttf","application/x-font-opentype","application/font-woff","application/font-woff2"]);
+export default function DinoLabsPluginsAssetOptimizer() {
 
-const withTimeout = (promise, ms, errorMsg) => {
-  return Promise.race([
-    promise,
-    new Promise((_, reject) => setTimeout(() => reject(new Error(errorMsg)), ms))
-  ]);
-};
+  const IMAGE_TYPES = new Set(["image/png","image/jpeg","image/webp","image/avif","image/gif","image/svg+xml"]);
 
-const guessKind = (f) => {
-  const t = (f.type || "").toLowerCase();
-  if (IMAGE_TYPES.has(t)) return "image";
-  if (VIDEO_TYPES.has(t)) return "video";
-  if (AUDIO_TYPES.has(t)) return "audio";
-  if (FONT_TYPES.has(t) || /\.(ttf|otf|woff2?)$/i.test(f.name)) return "font";
-  return "other";
-};
+  const VIDEO_TYPES = new Set(["video/mp4","video/webm","video/ogg","video/quicktime","video/x-matroska"]);
 
-const isValidFile = (f) => {
-  if (!f || !f.size || !f.type) return false;
-  const kind = guessKind(f);
-  return kind !== "other" && f.size < 1024 * 1024 * 100;
-};
+  const AUDIO_TYPES = new Set(["audio/wav","audio/x-wav","audio/mpeg","audio/mp3","audio/ogg","audio/flac","audio/aac","audio/x-aac","audio/mp4"]);
 
-const canPlayVideo = async (file) => {
-  const url = URL.createObjectURL(file);
-  try {
-    const video = document.createElement("video");
-    video.src = url;
+  const FONT_TYPES  = new Set(["font/ttf","font/otf","font/woff","font/woff2","application/x-font-ttf","application/x-font-opentype","application/font-woff","application/font-woff2"]);
+
+  const CRC_TABLE = (() => {
+    const t = new Uint32Array(256);
+    for (let n=0; n<256; n++) {
+      let c=n; for (let k=0;k<8;k++) c = (c & 1) ? (0xEDB88320 ^ (c>>>1)) : (c>>>1);
+      t[n]=c>>>0;
+    }
+    return t;
+  })();
+
+  const uid = () => Math.random().toString(36).slice(2, 9);
+
+  const bytesToMB = (n) => +(n / (1024 * 1024)).toFixed(2);
+
+  const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+
+  const pretty = (n) => (n ?? n === 0 ? n.toLocaleString() : "—");
+
+  const withTimeout = (promise, ms, errorMsg) => {
+    return Promise.race([
+      promise,
+      new Promise((_, reject) => setTimeout(() => reject(new Error(errorMsg)), ms))
+    ]);
+  };
+
+  const guessKind = (f) => {
+    const t = (f.type || "").toLowerCase();
+    if (IMAGE_TYPES.has(t)) return "image";
+    if (VIDEO_TYPES.has(t)) return "video";
+    if (AUDIO_TYPES.has(t)) return "audio";
+    if (FONT_TYPES.has(t) || /\.(ttf|otf|woff2?)$/i.test(f.name)) return "font";
+    return "other";
+  };
+
+  const isValidFile = (f) => {
+    if (!f || !f.size || !f.type) return false;
+    const kind = guessKind(f);
+    return kind !== "other" && f.size < 1024 * 1024 * 100;
+  };
+
+  const canCanvasEncode = async (mime) =>
     await withTimeout(
-      new Promise((ok, err) => { video.onloadedmetadata = ok; video.onerror = err; }),
+      new Promise((res) => {
+        const c = document.createElement("canvas"); c.width = 1; c.height = 1;
+        c.toBlob((b) => res(!!b), mime, 0.8);
+      }),
       5000,
-      `Video validation failed for ${file.name}: Metadata load timed out`
+      "Canvas encoding check timed out."
     );
-    const canPlay = video.canPlayType(file.type);
-    return canPlay === "probably" || canPlay === "maybe";
-  } catch {
-    return false;
-  } finally {
-    URL.revokeObjectURL(url);
-  }
-};
 
-const canCanvasEncode = async (mime) =>
-  await withTimeout(
-    new Promise((res) => {
-      const c = document.createElement("canvas"); c.width = 1; c.height = 1;
-      c.toBlob((b) => res(!!b), mime, 0.8);
-    }),
-    5000,
-    "Canvas encoding check timed out"
-  );
-
-const toBitmap = async (fileOrBlob) => {
-  try {
-    return await withTimeout(
-      createImageBitmap(fileOrBlob),
-      10000,
-      `Bitmap creation timed out for ${fileOrBlob.name || 'unknown'}`
-    );
-  } catch {
-    const url = URL.createObjectURL(fileOrBlob);
+  const toBitmap = async (fileOrBlob) => {
     try {
-      const img = new Image();
-      img.decoding = "async";
+      return await withTimeout(
+        createImageBitmap(fileOrBlob),
+        10000,
+        `Bitmap creation timed out for ${fileOrBlob.name || "unknown"}.`
+      );
+    } catch {
+      const url = URL.createObjectURL(fileOrBlob);
+      try {
+        const img = new Image();
+        img.decoding = "async";
+        await withTimeout(
+          new Promise((ok, err) => { img.onload = ok; img.onerror = err; img.src = url; }),
+          10000,
+          `Image loading timed out for ${fileOrBlob.name || "unknown"}.`
+        );
+        const c = document.createElement("canvas"); c.width = img.naturalWidth; c.height = img.naturalHeight;
+        const ctx = c.getContext("2d"); ctx.drawImage(img, 0, 0);
+        const b = await withTimeout(
+          createImageBitmap(c),
+          10000,
+          `Bitmap creation from canvas timed out for ${fileOrBlob.name || "unknown"}.`
+        );
+        URL.revokeObjectURL(url);
+        return b;
+      } catch (error) {
+        URL.revokeObjectURL(url);
+        throw error;
+      }
+    }
+  };
+
+  const drawScaled = (bmp, maxW, maxH) => {
+    const r = Math.min(maxW / bmp.width, maxH / bmp.height, 1);
+    const W = Math.max(1, Math.floor(bmp.width * r));
+    const H = Math.max(1, Math.floor(bmp.height * r));
+    const c = document.createElement("canvas"); c.width = W; c.height = H;
+    c.getContext("2d").drawImage(bmp, 0, 0, W, H);
+    return c;
+  };
+
+  const encodeCanvas = (canvas, mime, quality) =>
+    withTimeout(
+      new Promise((res, rej) => canvas.toBlob((b) => (b ? res(b) : rej(new Error("Encode failed."))), mime, quality)),
+      10000,
+      "Canvas encoding timed out."
+    );
+
+  const canPlayVideo = async (file) => {
+    const url = URL.createObjectURL(file);
+    try {
+      const video = document.createElement("video");
+      video.src = url;
       await withTimeout(
-        new Promise((ok, err) => { img.onload = ok; img.onerror = err; img.src = url; }),
-        10000,
-        `Image loading timed out for ${fileOrBlob.name || 'unknown'}`
+        new Promise((ok, err) => { video.onloadedmetadata = ok; video.onerror = err; }),
+        5000,
+        `Video validation failed for ${file.name}: Metadata load timed out.`
       );
-      const c = document.createElement("canvas"); c.width = img.naturalWidth; c.height = img.naturalHeight;
-      const ctx = c.getContext("2d"); ctx.drawImage(img, 0, 0);
-      const b = await withTimeout(
-        createImageBitmap(c),
-        10000,
-        `Bitmap creation from canvas timed out for ${fileOrBlob.name || 'unknown'}`
-      );
+      const canPlay = video.canPlayType(file.type);
+      return canPlay === "probably" || canPlay === "maybe";
+    } catch {
+      return false;
+    } finally {
       URL.revokeObjectURL(url);
-      return b;
+    }
+  };
+
+  const snapshotPoster = useCallback(async (file, ts = 0.2, maxW=1280, maxH=720) => {
+    addLog(`Starting poster snapshot for ${file.name}.`);
+    const url = URL.createObjectURL(file);
+    try {
+      const video = document.createElement("video");
+      video.src = url; video.muted = true; video.playsInline = true; video.preload = "metadata";
+      await withTimeout(
+        new Promise((ok, err) => { video.onloadedmetadata = ok; video.onerror = err; }),
+        30000,
+        `Video metadata load for poster timed out for ${file.name}.`
+      );
+      video.currentTime = Math.min(ts * (video.duration || 1), (video.duration || 1));
+      await withTimeout(
+        new Promise((ok) => video.onseeked = ok),
+        10000,
+        `Video seek for poster timed out for ${file.name}.`
+      );
+      const r = Math.min(maxW / video.videoWidth, maxH / video.videoHeight, 1);
+      const W = Math.max(2, Math.floor(video.videoWidth * r));
+      const H = Math.max(2, Math.floor(video.videoHeight * r));
+      const c = document.createElement("canvas"); c.width=W; c.height=H;
+      c.getContext("2d").drawImage(video, 0, 0, W, H);
+      const blob = await encodeCanvas(c, "image/jpeg", 0.85);
+      const name = file.name.replace(/\.[^.]+$/, "") + "_poster.jpg";
+      addLog(`Completed poster snapshot for ${file.name}.`);
+      return new File([blob], name, { type: "image/jpeg" });
     } catch (error) {
+      throw new Error(`Poster snapshot failed for ${file.name}: ${error.message}.`);
+    } finally {
       URL.revokeObjectURL(url);
-      throw error;
     }
-  }
-};
+  }, []);
 
-const drawScaled = (bmp, maxW, maxH) => {
-  const r = Math.min(maxW / bmp.width, maxH / bmp.height, 1);
-  const W = Math.max(1, Math.floor(bmp.width * r));
-  const H = Math.max(1, Math.floor(bmp.height * r));
-  const c = document.createElement("canvas"); c.width = W; c.height = H;
-  c.getContext("2d").drawImage(bmp, 0, 0, W, H);
-  return c;
-};
-
-const encodeCanvas = (canvas, mime, quality) =>
-  withTimeout(
-    new Promise((res, rej) => canvas.toBlob((b) => (b ? res(b) : rej(new Error("Encode Failed."))), mime, quality)),
-    10000,
-    "Canvas encoding timed out"
-  );
-
-const CRC_TABLE = (() => {
-  const t = new Uint32Array(256);
-  for (let n=0; n<256; n++) {
-    let c=n; for (let k=0;k<8;k++) c = (c & 1) ? (0xEDB88320 ^ (c>>>1)) : (c>>>1);
-    t[n]=c>>>0;
-  }
-  return t;
-})();
-const crc32 = (u8) => {
-  let c=~0; for (let i=0;i<u8.length;i++) c = CRC_TABLE[(c ^ u8[i]) & 0xFF] ^ (c >>> 8);
-  return (~c)>>>0;
-};
-const strToU8 = (s) => new TextEncoder().encode(s);
-const dosDateTime = (d=new Date()) => {
-  const time = ((d.getHours() & 31) << 11) | ((d.getMinutes() & 63) << 5) | ((Math.floor(d.getSeconds()/2)) & 31);
-  const date = (((d.getFullYear()-1980) & 127) << 9) | (((d.getMonth()+1)&15) << 5) | (d.getDate() & 31);
-  return { time, date };
-};
-async function buildZip(files) {
-  const localParts = [];
-  const centralParts = [];
-  let offset = 0;
-  const { time, date } = dosDateTime();
-  for (const f of files) {
-    const nameU8 = strToU8(f.name);
-    const crc = crc32(f.u8);
-    const compSize = f.u8.length;
-    const uncomp = f.u8.length;
-    const local = new Uint8Array(30 + nameU8.length + compSize);
-    let p = 0;
-    const w16 = (v) => { local[p++] = v & 255; local[p++] = (v>>>8) & 255; };
-    const w32 = (v) => { w16(v & 65535); w16((v>>>16) & 65535); };
-    w32(0x04034b50);
-    w16(20);
-    w16(0);
-    w16(0);
-    w16(time); w16(date);
-    w32(crc);
-    w32(compSize);
-    w32(uncomp);
-    w16(nameU8.length);
-    w16(0);
-    local.set(nameU8, p); p += nameU8.length;
-    local.set(f.u8, p);   p += compSize;
-    localParts.push(local);
-    const cent = new Uint8Array(46 + nameU8.length);
-    p = 0;
-    const c16 = (v) => { cent[p++] = v & 255; cent[p++] = (v>>>8) & 255; };
-    const c32 = (v) => { c16(v & 65535); c16((v>>>16) & 65535); };
-    c32(0x02014b50);
-    c16(0x031E);
-    c16(20);
-    c16(0);
-    c16(0);
-    c16(time); c16(date);
-    c32(crc);
-    c32(compSize);
-    c32(uncomp);
-    c16(nameU8.length);
-    c16(0);
-    c16(0);
-    c16(0);
-    c16(0);
-    c32(0);
-    c32(offset);
-    cent.set(nameU8, p); p += nameU8.length;
-    centralParts.push(cent);
-    offset += local.length;
-  }
-  const centralSize = centralParts.reduce((s,a)=>s+a.length,0);
-  const centralOffset = offset;
-  const end = new Uint8Array(22);
-  let q = 0;
-  const e16 = (v) => { end[q++] = v & 255; end[q++] = (v>>>8) & 255; };
-  const e32 = (v) => { e16(v & 65535); e16((v>>>16) & 65535); };
-  e32(0x06054b50);
-  e16(0); e16(0);
-  e16(files.length); e16(files.length);
-  e32(centralSize);
-  e32(centralOffset);
-  e16(0);
-  return new Blob([...localParts, ...centralParts, end], { type: "application/zip" });
-}
-
-function packShelves(items, maxW, maxH, padding=2) {
-  const rects = items.map((it)=>({ w:it.w+padding*2, h:it.h+padding*2, item:it }));
-  rects.sort((a,b)=>b.h-a.h);
-  let x=0,y=0,rowH=0, W=0,H=0;
-  const placed=[];
-  for (const r of rects) {
-    if (x + r.w > maxW) { x=0; y+=rowH; rowH=0; }
-    if (y + r.h > maxH) return null;
-    r.x = x; r.y = y; x += r.w; rowH = Math.max(rowH, r.h);
-    W = Math.max(W, x); H = Math.max(H, y + r.h);
-    placed.push(r);
-  }
-  return {W,H,rects:placed,padding};
-}
-
-function encodeWAVFromAudioBuffer(buf) {
-  const numCh = buf.numberOfChannels;
-  const rate = buf.sampleRate;
-  const length = buf.length;
-  const dataLen = length * numCh * 2;
-  const totalLen = 44 + dataLen;
-  const out = new DataView(new ArrayBuffer(totalLen));
-  let p=0;
-  const w8 = (n)=>out.setUint8(p++, n);
-  const w16 = (n)=>{ out.setUint16(p, n, true); p+=2; };
-  const w32 = (n)=>{ out.setUint32(p, n, true); p+=4; };
-  w8(0x52);w8(0x49);w8(0x46);w8(0x46); w32(36+dataLen);
-  w8(0x57);w8(0x41);w8(0x56);w8(0x45);
-  w8(0x66);w8(0x6d);w8(0x74);w8(0x20); w32(16);
-  w16(1);
-  w16(numCh);
-  w32(rate);
-  w32(rate * numCh * 2);
-  w16(numCh * 2);
-  w16(16);
-  w8(0x64);w8(0x61);w8(0x74);w8(0x61); w32(dataLen);
-  const chans = Array.from({length:numCh},(_,i)=>buf.getChannelData(i));
-  for (let i=0;i<length;i++){
-    for (let c=0;c<numCh;c++){
-      const s = Math.max(-1, Math.min(1, chans[c][i]));
-      const v = s < 0 ? s * 0x8000 : s * 0x7FFF;
-      out.setInt16(p, v, true); p+=2;
+  const encodeWAVFromAudioBuffer = (buf) => {
+    const numCh = buf.numberOfChannels;
+    const rate = buf.sampleRate;
+    const length = buf.length;
+    const dataLen = length * numCh * 2;
+    const totalLen = 44 + dataLen;
+    const out = new DataView(new ArrayBuffer(totalLen));
+    let p=0;
+    const w8 = (n)=>out.setUint8(p++, n);
+    const w16 = (n)=>{ out.setUint16(p, n, true); p+=2; };
+    const w32 = (n)=>{ out.setUint32(p, n, true); p+=4; };
+    w8(0x52);w8(0x49);w8(0x46);w8(0x46); w32(36+dataLen);
+    w8(0x57);w8(0x41);w8(0x56);w8(0x45);
+    w8(0x66);w8(0x6d);w8(0x74);w8(0x20); w32(16);
+    w16(1);
+    w16(numCh);
+    w32(rate);
+    w32(rate * numCh * 2);
+    w16(numCh * 2);
+    w16(16);
+    w8(0x64);w8(0x61);w8(0x74);w8(0x61); w32(dataLen);
+    const chans = Array.from({length:numCh},(_,i)=>buf.getChannelData(i));
+    for (let i=0;i<length;i++){
+      for (let c=0;c<numCh;c++){
+        const s = Math.max(-1, Math.min(1, chans[c][i]));
+        const v = s < 0 ? s * 0x8000 : s * 0x7FFF;
+        out.setInt16(p, v, true); p+=2;
+      }
     }
-  }
-  return new Blob([out.buffer], { type: "audio/wav" });
-}
+    return new Blob([out.buffer], { type: "audio/wav" });
+  };
 
-const DinoLabsPluginsAssetOptimizer = () => {
+  const crc32 = (u8) => {
+    let c=~0; for (let i=0;i<u8.length;i++) c = CRC_TABLE[(c ^ u8[i]) & 0xFF] ^ (c >>> 8);
+    return (~c)>>>0;
+  };
+
+  const strToU8 = (s) => new TextEncoder().encode(s);
+
+  const dosDateTime = (d=new Date()) => {
+    const time = ((d.getHours() & 31) << 11) | ((d.getMinutes() & 63) << 5) | ((Math.floor(d.getSeconds()/2)) & 31);
+    const date = (((d.getFullYear()-1980) & 127) << 9) | (((d.getMonth()+1)&15) << 5) | (d.getDate() & 31);
+    return { time, date };
+  };
+
+  const buildZip = async (files) => {
+    const localParts = [];
+    const centralParts = [];
+    let offset = 0;
+    const { time, date } = dosDateTime();
+    for (const f of files) {
+      const nameU8 = strToU8(f.name);
+      const crc = crc32(f.u8);
+      const compSize = f.u8.length;
+      const uncomp = f.u8.length;
+      const local = new Uint8Array(30 + nameU8.length + compSize);
+      let p = 0;
+      const w16 = (v) => { local[p++] = v & 255; local[p++] = (v>>>8) & 255; };
+      const w32 = (v) => { w16(v & 65535); w16((v>>>16) & 65535); };
+      w32(0x04034b50);
+      w16(20);
+      w16(0);
+      w16(0);
+      w16(time); w16(date);
+      w32(crc);
+      w32(compSize);
+      w32(uncomp);
+      w16(nameU8.length);
+      w16(0);
+      local.set(nameU8, p); p += nameU8.length;
+      local.set(f.u8, p);   p += compSize;
+      localParts.push(local);
+      const cent = new Uint8Array(46 + nameU8.length);
+      p = 0;
+      const c16 = (v) => { cent[p++] = v & 255; cent[p++] = (v>>>8) & 255; };
+      const c32 = (v) => { c16(v & 65535); c16((v>>>16) & 65535); };
+      c32(0x02014b50);
+      c16(0x031E);
+      c16(20);
+      c16(0);
+      c16(0);
+      c16(time); c16(date);
+      c32(crc);
+      c32(compSize);
+      c32(uncomp);
+      c16(nameU8.length);
+      c16(0);
+      c16(0);
+      c16(0);
+      c16(0);
+      c32(0);
+      c32(offset);
+      cent.set(nameU8, p); p += nameU8.length;
+      centralParts.push(cent);
+      offset += local.length;
+    }
+    const centralSize = centralParts.reduce((s,a)=>s+a.length,0);
+    const centralOffset = offset;
+    const end = new Uint8Array(22);
+    let q = 0;
+    const e16 = (v) => { end[q++] = v & 255; end[q++] = (v>>>8) & 255; };
+    const e32 = (v) => { e16(v & 65535); e16((v>>>16) & 65535); };
+    e32(0x06054b50);
+    e16(0); e16(0);
+    e16(files.length); e16(files.length);
+    e32(centralSize);
+    e32(centralOffset);
+    e16(0);
+    return new Blob([...localParts, ...centralParts, end], { type: "application/zip" });
+  };
+
+  const packShelves = (items, maxW, maxH, padding=2) => {
+    const rects = items.map((it)=>({ w:it.w+padding*2, h:it.h+padding*2, item:it }));
+    rects.sort((a,b)=>b.h-a.h);
+    let x=0,y=0,rowH=0, W=0,H=0;
+    const placed=[];
+    for (const r of rects) {
+      if (x + r.w > maxW) { x=0; y+=rowH; rowH=0; }
+      if (y + r.h > maxH) return null;
+      r.x = x; r.y = y; x += r.w; rowH = Math.max(rowH, r.h);
+      W = Math.max(W, x); H = Math.max(H, y + r.h);
+      placed.push(r);
+    }
+    return {W,H,rects:placed,padding};
+  };
+
   const [files, setFiles] = useState([]);
+
   const [imageOpts, setImageOpts] = useState({ webp:true, avif:true, jpeg:false, quality:82, maxW:4096, maxH:4096 });
+
   const [videoOpts, setVideoOpts] = useState({ enable:true, mime:"video/webm;codecs=vp9", fps:30, maxW:1920, maxH:1080 });
+
   const [audioOpts, setAudioOpts] = useState({ wav:true, opus:true, normalize:true });
+
   const [spriteOpts, setSpriteOpts] = useState({ enabled:false, padding:2, maxW:2048, maxH:2048, pow2:false, extrude:false });
+
   const [fontCssRanges, setFontCssRanges] = useState("U+0020-007E, U+00A0-00FF");
+
   const [fontFamilyName, setFontFamilyName] = useState("BrandSans");
+
   const [jobs, setJobs] = useState([]);
+
   const [log, setLog] = useState([]);
+
   const [support, setSupport] = useState({ webp:false, avif:false, mrVideo:false, mrAudio:false });
+
   const [videoProgress, setVideoProgress] = useState({});
+
   const [isOptimizing, setIsOptimizing] = useState(false);
+
   const [overallProgress, setOverallProgress] = useState(0);
 
   const addLog = (m) => setLog((L)=>[m, ...L].slice(0,500));
@@ -269,7 +326,7 @@ const DinoLabsPluginsAssetOptimizer = () => {
   useEffect(() => {
     (async () => {
       try {
-        addLog("Checking browser support...");
+        addLog("Checking browser support.");
         const webp = await canCanvasEncode("image/webp");
         const avif = await canCanvasEncode("image/avif");
         const mrVideo = typeof MediaRecorder !== "undefined" &&
@@ -280,9 +337,9 @@ const DinoLabsPluginsAssetOptimizer = () => {
         setImageOpts((o)=>({ ...o, avif: avif && o.avif, webp: webp && o.webp }));
         setVideoOpts((o)=>({ ...o, mime: mrVideo && MediaRecorder.isTypeSupported?.("video/webm;codecs=vp9") ? "video/webm;codecs=vp9" : "video/webm;codecs=vp8" }));
         setAudioOpts((o)=>({ ...o, opus: mrAudio && o.opus }));
-        addLog(`Browser support: WebP=${webp}, AVIF=${avif}, MediaRecorder Video=${mrVideo}, MediaRecorder Audio=${mrAudio}, Browser=${navigator.userAgent}`);
+        addLog(`Browser support: WebP=${webp}, AVIF=${avif}, MediaRecorder Video=${mrVideo}, MediaRecorder Audio=${mrAudio}, Browser=${navigator.userAgent}.`);
       } catch (error) {
-        addLog(`Error checking browser support: ${error.message}`);
+        addLog(`Error checking browser support: ${error.message}.`);
       }
     })();
   }, []);
@@ -305,23 +362,23 @@ const DinoLabsPluginsAssetOptimizer = () => {
   };
 
   const transcodeImage = useCallback(async (file, fmt, q, maxW, maxH) => {
-    addLog(`Starting image transcoding for ${file.name} to ${fmt}`);
+    addLog(`Starting image transcoding for ${file.name} to ${fmt}.`);
     try {
       const bmp = await toBitmap(file);
       const canvas = drawScaled(bmp, maxW, maxH);
       const mime = fmt === "jpeg" ? "image/jpeg" : fmt === "avif" ? "image/avif" : "image/webp";
       const blob = await encodeCanvas(canvas, mime, clamp(q/100, 0, 1));
       const name = file.name.replace(/\.[^.]+$/, "") + (fmt==="jpeg" ? ".jpg" : `.${fmt}`);
-      addLog(`Completed image transcoding for ${file.name} to ${fmt}`);
+      addLog(`Completed image transcoding for ${file.name} to ${fmt}.`);
       return new File([blob], name, { type: blob.type });
     } catch (error) {
-      throw new Error(`Image transcoding failed for ${file.name} to ${fmt}: ${error.message}`);
+      throw new Error(`Image transcoding failed for ${file.name} to ${fmt}: ${error.message}.`);
     }
   }, []);
 
   const transcodeVideoWebM = useCallback(async (file, { mime, fps, maxW, maxH, onProgress }) => {
-    if (!support.mrVideo) throw new Error("MediaRecorder Not Supported For Video On This Browser.");
-    addLog(`Starting video transcoding for ${file.name}`);
+    if (!support.mrVideo) throw new Error("MediaRecorder not supported for video on this browser.");
+    addLog(`Starting video transcoding for ${file.name}.`);
     const canPlay = await canPlayVideo(file);
     if (!canPlay) {
       addLog(`Video ${file.name} cannot be played by this browser, attempting to include original file.`);
@@ -334,13 +391,13 @@ const DinoLabsPluginsAssetOptimizer = () => {
       await withTimeout(
         new Promise((ok, err) => { video.onloadedmetadata = ok; video.onerror = err; }),
         30000,
-        `Video metadata load timed out for ${file.name}`
+        `Video metadata load timed out for ${file.name}.`
       );
-      addLog(`Video ${file.name} metadata: ${video.videoWidth}x${video.videoHeight}, duration=${video.duration}s`);
+      addLog(`Video ${file.name} metadata: ${video.videoWidth}x${video.videoHeight}, duration=${video.duration}s.`);
       await withTimeout(
         video.play().catch(() => {}),
         10000,
-        `Video playback initiation timed out for ${file.name}`
+        `Video playback initiation timed out for ${file.name}.`
       );
       const r = Math.min(maxW / video.videoWidth, maxH / video.videoHeight, 1);
       const W = Math.max(2, Math.floor(video.videoWidth * r));
@@ -371,79 +428,46 @@ const DinoLabsPluginsAssetOptimizer = () => {
       await withTimeout(
         video.play(),
         30000,
-        `Video playback timed out for ${file.name}`
+        `Video playback timed out for ${file.name}.`
       );
       draw();
       await withTimeout(
         new Promise((ok) => video.onended = ok),
         60000,
-        `Video playback completion timed out for ${file.name}`
+        `Video playback completion timed out for ${file.name}.`
       );
       cancelAnimationFrame(rafId);
       rec.stop();
       await withTimeout(
         new Promise((ok) => rec.onstop = ok),
         10000,
-        `MediaRecorder stop timed out for ${file.name}`
+        `MediaRecorder stop timed out for ${file.name}.`
       );
       const blob = new Blob(chunks, { type: mrType });
       const out = new File([blob], file.name.replace(/\.[^.]+$/, "") + ".webm", { type: mrType });
-      addLog(`Completed video transcoding for ${file.name}`);
+      addLog(`Completed video transcoding for ${file.name}.`);
       return out;
     } catch (error) {
-      throw new Error(`Video transcoding failed for ${file.name}: ${error.message}`);
+      throw new Error(`Video transcoding failed for ${file.name}: ${error.message}.`);
     } finally {
       URL.revokeObjectURL(url);
     }
   }, [support.mrVideo]);
 
-  const snapshotPoster = useCallback(async (file, ts = 0.2, maxW=1280, maxH=720) => {
-    addLog(`Starting poster snapshot for ${file.name}`);
-    const url = URL.createObjectURL(file);
-    try {
-      const video = document.createElement("video");
-      video.src = url; video.muted = true; video.playsInline = true; video.preload = "metadata";
-      await withTimeout(
-        new Promise((ok, err) => { video.onloadedmetadata = ok; video.onerror = err; }),
-        30000,
-        `Video metadata load for poster timed out for ${file.name}`
-      );
-      video.currentTime = Math.min(ts * (video.duration || 1), (video.duration || 1));
-      await withTimeout(
-        new Promise((ok) => video.onseeked = ok),
-        10000,
-        `Video seek for poster timed out for ${file.name}`
-      );
-      const r = Math.min(maxW / video.videoWidth, maxH / video.videoHeight, 1);
-      const W = Math.max(2, Math.floor(video.videoWidth * r));
-      const H = Math.max(2, Math.floor(video.videoHeight * r));
-      const c = document.createElement("canvas"); c.width=W; c.height=H;
-      c.getContext("2d").drawImage(video, 0, 0, W, H);
-      const blob = await encodeCanvas(c, "image/jpeg", 0.85);
-      const name = file.name.replace(/\.[^.]+$/, "") + "_poster.jpg";
-      addLog(`Completed poster snapshot for ${file.name}`);
-      return new File([blob], name, { type: "image/jpeg" });
-    } catch (error) {
-      throw new Error(`Poster snapshot failed for ${file.name}: ${error.message}`);
-    } finally {
-      URL.revokeObjectURL(url);
-    }
-  }, []);
-
   const transcodeAudio = useCallback(async (file, { wav, opus, normalize }) => {
-    addLog(`Starting audio transcoding for ${file.name}`);
+    addLog(`Starting audio transcoding for ${file.name}.`);
     try {
       const out = [];
       const ac = new (window.AudioContext || window.webkitAudioContext)();
       const buf = await withTimeout(
         file.arrayBuffer(),
         10000,
-        `Audio buffer load timed out for ${file.name}`
+        `Audio buffer load timed out for ${file.name}.`
       );
       const audioBuffer = await withTimeout(
         ac.decodeAudioData(buf.slice(0)),
         10000,
-        `Audio decoding timed out for ${file.name}`
+        `Audio decoding timed out for ${file.name}.`
       );
       let target = audioBuffer;
       if (normalize) {
@@ -481,28 +505,28 @@ const DinoLabsPluginsAssetOptimizer = () => {
           await withTimeout(
             off.startRendering(),
             30000,
-            `Audio rendering timed out for ${file.name}`
+            `Audio rendering timed out for ${file.name}.`
           );
           mr.stop();
           await withTimeout(
             new Promise((ok) => mr.onstop = ok),
             10000,
-            `MediaRecorder stop timed out for ${file.name}`
+            `MediaRecorder stop timed out for ${file.name}.`
           );
           const blob = new Blob(chunks, { type: "audio/webm;codecs=opus" });
           out.push(new File([blob], file.name.replace(/\.[^.]+$/, "") + ".webm", { type: blob.type }));
         }
       }
       await ac.close();
-      addLog(`Completed audio transcoding for ${file.name}`);
+      addLog(`Completed audio transcoding for ${file.name}.`);
       return out;
     } catch (error) {
-      throw new Error(`Audio transcoding failed for ${file.name}: ${error.message}`);
+      throw new Error(`Audio transcoding failed for ${file.name}: ${error.message}.`);
     }
   }, [support.mrAudio]);
 
   const buildSpriteAtlas = useCallback(async (items, opt) => {
-    addLog("Starting sprite atlas creation");
+    addLog("Starting sprite atlas creation.");
     try {
       const bitmaps = [];
       for (const it of items) {
@@ -510,7 +534,7 @@ const DinoLabsPluginsAssetOptimizer = () => {
         bitmaps.push({ id: it.id, name: it.name, w: bmp.width, h: bmp.height, bmp });
       }
       const pack = packShelves(bitmaps, opt.maxW, opt.maxH, opt.padding);
-      if (!pack) throw new Error("Images Do Not Fit Max Atlas Size.");
+      if (!pack) throw new Error("Images do not fit max atlas size.");
       let W = pack.W, H = pack.H;
       if (opt.pow2) {
         const nextPow2 = (n) => 1 << (32 - Math.clz32(n - 1));
@@ -531,18 +555,18 @@ const DinoLabsPluginsAssetOptimizer = () => {
         frames[r.item.name] = { x, y, w: r.item.w, h: r.item.h };
       }
       const png = await encodeCanvas(c, "image/png", 1);
-      addLog("Completed sprite atlas creation");
+      addLog("Completed sprite atlas creation.");
       return {
         atlasPng: new File([png], "sprite-atlas.png", { type: "image/png" }),
         atlasJson: new File([JSON.stringify({ meta:{ w:W, h:H, padding:opt.padding, pow2:opt.pow2 }, frames }, null, 2)], "sprite-atlas.json", { type: "application/json" })
       };
     } catch (error) {
-      throw new Error(`Sprite atlas creation failed: ${error.message}`);
+      throw new Error(`Sprite atlas creation failed: ${error.message}.`);
     }
   }, []);
 
   const makeFontCss = (file, family, ranges) => {
-    addLog(`Generating font CSS for ${file.name}`);
+    addLog(`Generating font CSS for ${file.name}.`);
     try {
       const srcUrl = URL.createObjectURL(file);
       const ext = file.name.split(".").pop()?.toLowerCase();
@@ -552,10 +576,10 @@ const DinoLabsPluginsAssetOptimizer = () => {
   font-family:"${family}"; src:url(${JSON.stringify(srcUrl)}) format("${fmt}");
   font-display:swap; unicode-range: ${ranges};
 }`;
-      addLog(`Completed font CSS for ${file.name}`);
+      addLog(`Completed font CSS for ${file.name}.`);
       return new File([css], file.name.replace(/\.[^.]+$/, ".css"), { type: "text/css" });
     } catch (error) {
-      throw new Error(`Font CSS generation failed for ${file.name}: ${error.message}`);
+      throw new Error(`Font CSS generation failed for ${file.name}: ${error.message}.`);
     }
   };
 
@@ -570,7 +594,7 @@ const DinoLabsPluginsAssetOptimizer = () => {
     }
     setIsOptimizing(true);
     setJobs([]); setLog([]); setOverallProgress(0);
-    addLog("Starting optimization...");
+    addLog("Starting optimization.");
 
     const outputs = [];
     const imgTargets = [
@@ -583,7 +607,7 @@ const DinoLabsPluginsAssetOptimizer = () => {
 
     for (const it of files) {
       if (!isValidFile(it.file)) {
-        addLog(`Skipping invalid file: ${it.name}`);
+        addLog(`Skipping invalid file: ${it.name}.`);
         processedFiles++;
         setOverallProgress((processedFiles / totalFiles) * 100);
         outputs.push({ sourceId: it.id, name: it.name, file: it.file, kind: it.kind, target: "original" });
@@ -591,19 +615,19 @@ const DinoLabsPluginsAssetOptimizer = () => {
       }
       const f = it.file;
       try {
-        addLog(`Processing file: ${f.name} (${it.kind})`);
+        addLog(`Processing file: ${f.name} (${it.kind}).`);
         if (it.kind === "image" && imgTargets.length) {
           for (const fmt of imgTargets) {
             try {
               const out = await withTimeout(
                 transcodeImage(f, fmt, imageOpts.quality, imageOpts.maxW, imageOpts.maxH),
                 30000,
-                `Image transcoding timed out for ${f.name} to ${fmt}`
+                `Image transcoding timed out for ${f.name} to ${fmt}.`
               );
               outputs.push({ sourceId: it.id, name: out.name, file: out, kind: "image", target: `${fmt}@${imageOpts.quality}%` });
               addLog(`Image ${f.name} → ${out.name}.`);
             } catch (error) {
-              addLog(`Image Failed: ${f.name} → ${fmt} - ${error.message}`);
+              addLog(`Image failed: ${f.name} → ${fmt} - ${error.message}.`);
               outputs.push({ sourceId: it.id, name: f.name, file: f, kind: "image", target: "original" });
             }
           }
@@ -614,7 +638,7 @@ const DinoLabsPluginsAssetOptimizer = () => {
             const out = await withTimeout(
               transcodeVideoWebM(f, { mime: videoOpts.mime, fps: videoOpts.fps, maxW: videoOpts.maxW, maxH: videoOpts.maxH, onProgress: update }),
               60000,
-              `Video transcoding timed out for ${f.name}`
+              `Video transcoding timed out for ${f.name}.`
             );
             outputs.push({ sourceId: it.id, name: out.name, file: out, kind: "video", target: out.name.endsWith(".webm") ? "webm" : "original" });
             addLog(`Video ${f.name} → ${out.name}.`);
@@ -622,14 +646,14 @@ const DinoLabsPluginsAssetOptimizer = () => {
               const poster = await withTimeout(
                 snapshotPoster(f),
                 30000,
-                `Poster snapshot timed out for ${f.name}`
+                `Poster snapshot timed out for ${f.name}.`
               );
               outputs.push({ sourceId: it.id, name: poster.name, file: poster, kind: "image", target: "poster" });
             } catch (error) {
-              addLog(`Poster Failed: ${f.name} - ${error.message}`);
+              addLog(`Poster failed: ${f.name} - ${error.message}.`);
             }
           } catch (error) {
-            addLog(`Video Failed: ${f.name} - ${error.message}`);
+            addLog(`Video failed: ${f.name} - ${error.message}.`);
             outputs.push({ sourceId: it.id, name: f.name, file: f, kind: "video", target: "original" });
           } finally {
             setVideoProgress((m)=>({ ...m, [it.id]: 1 }));
@@ -640,14 +664,14 @@ const DinoLabsPluginsAssetOptimizer = () => {
             const outs = await withTimeout(
               transcodeAudio(f, audioOpts),
               30000,
-              `Audio transcoding timed out for ${f.name}`
+              `Audio transcoding timed out for ${f.name}.`
             );
             for (const o of outs) {
               outputs.push({ sourceId: it.id, name: o.name, file: o, kind: "audio", target: o.type.includes("opus") ? "opus" : "wav" });
               addLog(`Audio ${f.name} → ${o.name}.`);
             }
           } catch (error) {
-            addLog(`Audio Failed: ${f.name} - ${error.message}`);
+            addLog(`Audio failed: ${f.name} - ${error.message}.`);
             outputs.push({ sourceId: it.id, name: f.name, file: f, kind: "audio", target: "original" });
           }
         }
@@ -655,19 +679,19 @@ const DinoLabsPluginsAssetOptimizer = () => {
           try {
             const css = makeFontCss(f, fontFamilyName, fontCssRanges);
             outputs.push({ sourceId: it.id, name: css.name, file: css, kind: "font-css", target: "unicode-range-css" });
-            addLog(`Font CSS Generated For ${f.name}.`);
+            addLog(`Font CSS generated for ${f.name}.`);
           } catch (error) {
-            addLog(`Font CSS Failed: ${f.name} - ${error.message}`);
+            addLog(`Font CSS failed: ${f.name} - ${error.message}.`);
             outputs.push({ sourceId: it.id, name: f.name, file: f, kind: "font", target: "original" });
           }
         }
       } catch (error) {
-        addLog(`Error On ${it.name}: ${error.message}`);
+        addLog(`Error on ${it.name}: ${error.message}.`);
         outputs.push({ sourceId: it.id, name: f.name, file: f, kind: it.kind, target: "original" });
       }
       processedFiles++;
       setOverallProgress((processedFiles / totalFiles) * 100);
-      addLog(`Progress: ${processedFiles}/${totalFiles} files processed`);
+      addLog(`Progress: ${processedFiles}/${totalFiles} files processed.`);
     }
     if (spriteOpts.enabled) {
       const sprites = files.filter(x=>x.kind==="image");
@@ -676,18 +700,18 @@ const DinoLabsPluginsAssetOptimizer = () => {
           const { atlasPng, atlasJson } = await withTimeout(
             buildSpriteAtlas(sprites, spriteOpts),
             60000,
-            "Sprite atlas creation timed out"
+            "Sprite atlas creation timed out."
           );
           outputs.push({ sourceId: "__atlas__", name: atlasPng.name, file: atlasPng, kind: "atlas", target: "png" });
           outputs.push({ sourceId: "__atlas__", name: atlasJson.name, file: atlasJson, kind: "atlas-map", target: "json" });
-          addLog("Sprite Atlas Generated.");
+          addLog("Sprite atlas generated.");
         } catch (error) {
-          addLog(`Atlas Failed: ${error.message}`);
+          addLog(`Atlas failed: ${error.message}.`);
         }
       }
       processedFiles++;
       setOverallProgress((processedFiles / totalFiles) * 100);
-      addLog(`Progress: ${processedFiles}/${totalFiles} files processed`);
+      addLog(`Progress: ${processedFiles}/${totalFiles} files processed.`);
     }
     setJobs(outputs);
     addLog(`Optimization completed with ${outputs.length} outputs.`);
@@ -714,7 +738,7 @@ const DinoLabsPluginsAssetOptimizer = () => {
         inputs: files.map(f=>({ name:f.name, bytes:f.file.size, kind:f.kind })),
         outputs: jobs.map(j=>({ name:j.name, bytes:j.file.size, kind:j.kind, target:j.target, sourceId:j.sourceId })),
         totals: { inMB: totals.totalInMB, outMB: totals.totalOutMB, savedMB: totals.totalSavedMB },
-        notes: "Created In No-Dependency Mode."
+        notes: "Created in no-dependency mode."
       };
       const zipFiles = [];
       zipFiles.push({ name: "deliverables/manifest.json", u8: strToU8(JSON.stringify(manifest, null, 2)) });
@@ -725,14 +749,14 @@ const DinoLabsPluginsAssetOptimizer = () => {
       const blob = await withTimeout(
         buildZip(zipFiles),
         30000,
-        "ZIP creation timed out"
+        "ZIP creation timed out."
       );
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a"); a.href=url; a.download="deliverables.zip"; document.body.appendChild(a); a.click(); a.remove();
       URL.revokeObjectURL(url);
       addLog("Bundle downloaded successfully.");
     } catch (error) {
-      addLog(`Download Bundle Failed: ${error.message}`);
+      addLog(`Download bundle failed: ${error.message}.`);
     }
   };
 
@@ -777,11 +801,18 @@ const DinoLabsPluginsAssetOptimizer = () => {
       await navigator.clipboard.writeText(lines.join("\n"));
       addLog("Snippets copied to clipboard.");
     } catch (error) {
-      addLog(`Copy Snippets Failed: ${error.message}`);
+      addLog(`Copy snippets failed: ${error.message}.`);
     }
   };
 
   const fileInputRef = useRef(null);
+
+  const Chip = ({ label, value }) => (
+    <div className="dinolabsAssetOptimizerChip">
+      <div className="dinolabsAssetOptimizerChipValue">{value}</div>
+      <div className="dinolabsAssetOptimizerChipLabel">{label}</div>
+    </div>
+  );
 
   return (
     <div className="dinolabsAssetOptimizerApp" tabIndex={0} onDragOver={(e)=>e.preventDefault()} onDrop={onDrop}>
@@ -795,12 +826,12 @@ const DinoLabsPluginsAssetOptimizer = () => {
             </header>
             <div className="dinolabsAssetOptimizerDrop" onClick={()=>fileInputRef.current?.click()}>
               <FontAwesomeIcon icon={faUpload} />
-              <div>Drop Files Here Or Click To Add.</div>
-              <div className="dinolabsAssetOptimizerSmall">Images, Video, Audio, Fonts. No External Libraries.</div>
+              <div>Drop files here or click to add.</div>
+              <div className="dinolabsAssetOptimizerSmall">Images, video, audio, fonts. No external libraries.</div>
               <input ref={fileInputRef} type="file" multiple hidden onChange={(e)=>addFiles(e.target.files)} />
             </div>
             <div className="dinolabsAssetOptimizerList">
-              {files.length===0 && <div className="dinolabsAssetOptimizerEmpty">No Files Yet.</div>}
+              {files.length===0 && <div className="dinolabsAssetOptimizerEmpty">No files yet.</div>}
               {files.map((f)=>(
                 <div key={f.id} className="dinolabsAssetOptimizerItem">
                   <span className={`dinolabsAssetOptimizerBadge ${f.kind}`}>{f.kind}</span>
@@ -848,7 +879,7 @@ const DinoLabsPluginsAssetOptimizer = () => {
                   <label className={`dinolabsAssetOptimizerPill ${videoOpts.enable?"dinolabsAssetOptimizerPillOn":""} ${!support.mrVideo?"dinolabsAssetOptimizerPillMuted":""}`}>
                     <input type="checkbox" className="dinolabsSettingsCheckbox" checked={videoOpts.enable} disabled={!support.mrVideo} onChange={(e)=>setVideoOpts({...videoOpts, enable:e.target.checked})} /> Enable
                   </label>
-                  <span className="dinolabsAssetOptimizerHint">{support.mrVideo ? "OK." : "Not Supported In This Browser."}</span>
+                  <span className="dinolabsAssetOptimizerHint">{support.mrVideo ? "OK." : "Not supported in this browser."}</span>
                 </div>
                 <div className="dinolabsAssetOptimizerRow">
                   <span>FPS</span>
@@ -898,7 +929,7 @@ const DinoLabsPluginsAssetOptimizer = () => {
                 <label><FontAwesomeIcon icon={faFont}/> Font Unicode-Range CSS</label>
                 <div className="dinolabsAssetOptimizerRow"><input className="dinolabsAssetOptimizerInput" value={fontFamilyName} onChange={(e)=>setFontFamilyName(e.target.value)} placeholder="Font Family Name" /></div>
                 <textarea className="dinolabsAssetOptimizerTextarea" rows={3} value={fontCssRanges} onChange={(e)=>setFontCssRanges(e.target.value)} />
-                <div className="dinolabsAssetOptimizerHint">Generates @font-face With Unicode-Range. Advisory Only; Does Not Shrink Binaries.</div>
+                <div className="dinolabsAssetOptimizerHint">Generates @font-face with unicode-range. Advisory only; does not shrink binaries.</div>
               </div>
             </div>
 
@@ -917,7 +948,7 @@ const DinoLabsPluginsAssetOptimizer = () => {
           <section className="dinolabsAssetOptimizerSection">
             <header className="dinolabsAssetOptimizerSectionTitle"><FontAwesomeIcon icon={faCamera}/><span>Log</span></header>
             <div className="dinolabsAssetOptimizerLog">
-              {log.length===0 ? <div className="dinolabsAssetOptimizerEmpty">No Logs Yet.</div> : log.map((l,i)=><div key={i} className="dinolabsAssetOptimizerLogLine">{l}</div>)}
+              {log.length===0 ? <div className="dinolabsAssetOptimizerEmpty">No logs yet.</div> : log.map((l,i)=><div key={i} className="dinolabsAssetOptimizerLogLine">{l}</div>)}
             </div>
           </section>
         </aside>
@@ -945,7 +976,7 @@ const DinoLabsPluginsAssetOptimizer = () => {
 
             <section className="dinolabsAssetOptimizerCard">
               <header className="dinolabsAssetOptimizerCardTitle"><FontAwesomeIcon icon={faGears}/><span>Deltas And Outputs</span></header>
-              {totals.rows.length===0 ? <div className="dinolabsAssetOptimizerEmpty">Add Files And Run Optimize.</div> : (
+              {totals.rows.length===0 ? <div className="dinolabsAssetOptimizerEmpty">Add files and run optimize.</div> : (
                 <div className="dinolabsAssetOptimizerTable">
                   <div className="dinolabsAssetOptimizerTableHead">
                     <div>Name</div><div>Kind</div><div>In (MB)</div><div>Best (MB)</div><div>Saved</div><div>Outputs</div><div>Progress</div>
@@ -974,7 +1005,7 @@ const DinoLabsPluginsAssetOptimizer = () => {
             <section className="dinolabsAssetOptimizerCard">
               <header className="dinolabsAssetOptimizerCardTitle"><FontAwesomeIcon icon={faDownload}/><span>Generated Files</span></header>
               <div className="dinolabsAssetOptimizerOutputsGrid">
-                {jobs.length===0 ? <div className="dinolabsAssetOptimizerEmpty">No Files Generated Yet.</div> :
+                {jobs.length===0 ? <div className="dinolabsAssetOptimizerEmpty">No files generated yet.</div> :
                   jobs.map((j,idx)=>(
                     <div key={idx} className="dinolabsAssetOptimizerOutCard">
                       <div className={`dinolabsAssetOptimizerBadge ${j.kind}`}>{j.kind}</div>
@@ -991,13 +1022,4 @@ const DinoLabsPluginsAssetOptimizer = () => {
       </div>
     </div>
   );
-};
-
-const Chip = ({ label, value }) => (
-  <div className="dinolabsAssetOptimizerChip">
-    <div className="dinolabsAssetOptimizerChipValue">{value}</div>
-    <div className="dinolabsAssetOptimizerChipLabel">{label}</div>
-  </div>
-);
-
-export default DinoLabsPluginsAssetOptimizer;
+}

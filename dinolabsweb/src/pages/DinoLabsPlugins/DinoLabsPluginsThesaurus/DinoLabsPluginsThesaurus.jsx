@@ -10,42 +10,43 @@ import {
 import DinoLabsNav from "../../../helpers/Nav";
 import "../../../styles/mainStyles/DinoLabsPlugins/DinoLabsPluginsThesaurus/DinoLabsPluginsThesaurus.css";
 
-const MW_THES_BASE = "https://www.dictionaryapi.com/api/v3/references/thesaurus/json";
+export default function DinoLabsPluginsThesaurus() {
 
-const getMWThesKey = () => {
-  try {
-    if (typeof import.meta !== "undefined" && import.meta.env) {
-      return (
-        import.meta.env.VITE_REACT_APP_MW_THESAURUS_KEY ||
-        import.meta.env.VITE_MW_THESAURUS_KEY ||
-        import.meta.env.VITE_REACT_APP_MW_THES_KEY ||
-        ""
-      );
-    }
-  } catch {}
-  try {
-    if (typeof process !== "undefined" && process.env) {
-      return (
-        process.env.REACT_APP_MW_THESAURUS_KEY ||
-        process.env.MW_THESAURUS_KEY ||
-        process.env.REACT_APP_MW_THES_KEY ||
-        ""
-      );
-    }
-  } catch {}
-  return "";
-};
+  const MW_THES_BASE = "https://www.dictionaryapi.com/api/v3/references/thesaurus/json";
 
-const toArray = (x) => (Array.isArray(x) ? x : x ? [x] : []);
-const uniqTrimmed = (arr) => [...new Set(toArray(arr).map((s) => String(s).trim()).filter(Boolean))];
+  const getMWThesKey = () => {
+    try {
+      if (typeof import.meta !== "undefined" && import.meta.env) {
+        return (
+          import.meta.env.VITE_REACT_APP_MW_THESAURUS_KEY ||
+          import.meta.env.VITE_MW_THESAURUS_KEY ||
+          import.meta.env.VITE_REACT_APP_MW_THES_KEY ||
+          ""
+        );
+      }
+    } catch {}
+    try {
+      if (typeof process !== "undefined" && process.env) {
+        return (
+          process.env.REACT_APP_MW_THESAURUS_KEY ||
+          process.env.MW_THESAURUS_KEY ||
+          process.env.REACT_APP_MW_THES_KEY ||
+          ""
+        );
+      }
+    } catch {}
+    return "";
+  };
 
-const DinoLabsPluginsThesaurus = () => {
   const apiKey = getMWThesKey();
   const [query, setQuery] = useState("");
   const [status, setStatus] = useState("idle");
   const [entries, setEntries] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [errorMsg, setErrorMsg] = useState("");
+
+  const toArray = (x) => (Array.isArray(x) ? x : x ? [x] : []);
+  const uniqTrimmed = (arr) => [...new Set(toArray(arr).map((s) => String(s).trim()).filter(Boolean))];
 
   const normalizeThesEntry = (d, fallbackQuery) => {
     const headword =
@@ -134,7 +135,7 @@ const DinoLabsPluginsThesaurus = () => {
       setStatus("done");
     } catch (error) {
       setStatus("error");
-      setErrorMsg(err?.message || "Something went wrong.");
+      setErrorMsg(error?.message || "Something went wrong.");
     }
   }, [apiKey]);
 
@@ -150,7 +151,7 @@ const DinoLabsPluginsThesaurus = () => {
         {!apiKey && (
           <div className="dinolabsPluginsThesaurusBanner">
             <FontAwesomeIcon icon={faTriangleExclamation} />
-            <span>Add <code>VITE_REACT_APP_MW_THESAURUS_KEY</code> to <code>.env</code></span>
+            <span>Add <code>VITE_REACT_APP_MW_THESAURUS_KEY</code> to <code>.env</code>.</span>
           </div>
         )}
 
@@ -166,7 +167,7 @@ const DinoLabsPluginsThesaurus = () => {
                 fetchThesaurus(query);
               }
             }}
-            placeholder="Find synonyms…"
+            placeholder="Find synonyms..."
             maxLength={64}
             inputMode="search"
             autoCorrect="off"
@@ -201,11 +202,11 @@ const DinoLabsPluginsThesaurus = () => {
       <div className="dinolabsPluginsThesaurusContent">
         {(status === "idle" ||
           (entries.length === 0 && suggestions.length === 0 && status !== "loading" && status !== "error")) && (
-          <div className="dinolabsPluginsThesaurusEmpty">🔍 Type a word and press enter to explore synonyms.</div>
+          <div className="dinolabsPluginsThesaurusEmpty">Type a word and press Enter to explore synonyms.</div>
         )}
 
         {status === "error" && (
-          <div className="dinolabsPluginsThesaurusEmpty dinolabsPluginsThesaurusError">🚨 {errorMsg || "Error fetching results."}</div>
+          <div className="dinolabsPluginsThesaurusEmpty dinolabsPluginsThesaurusError">{errorMsg || "Error fetching results."}</div>
         )}
 
         <div className="dinolabsPluginsThesaurusGrid">
@@ -236,7 +237,7 @@ const DinoLabsPluginsThesaurus = () => {
                     ))}
                   </div>
                 ) : (
-                  <div className="dinolabsPluginsThesaurusNoResults">No Synonyms Found.</div>
+                  <div className="dinolabsPluginsThesaurusNoResults">No synonyms found.</div>
                 )}
 
                 {e.ants && e.ants.length > 0 && (
@@ -272,6 +273,4 @@ const DinoLabsPluginsThesaurus = () => {
       </div>
     </div>
   );
-};
-
-export default DinoLabsPluginsThesaurus;
+}
