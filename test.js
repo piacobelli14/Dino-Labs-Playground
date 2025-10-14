@@ -65,4 +65,16 @@ SELECT
     SUM(months_enrolled)::numeric / 12 AS member_year
 FROM months_by_member
 GROUP BY yr, medical_plan, medical_plan_design
-ORDER BY yr ASC, count_per_plan_grouping DESC;
+ORDER BY
+    yr ASC,
+    CASE
+        WHEN medical_plan_design = 'FFS' THEN 1
+        WHEN medical_plan_design = 'STAR' THEN 2
+        WHEN medical_plan_design = 'STAR Health' THEN 3
+        WHEN medical_plan_design = 'STAR Kids' THEN 4
+        WHEN medical_plan_design = 'STAR+PLUS' THEN 5
+        WHEN medical_plan_design = 'CHIP' THEN 6
+        WHEN medical_plan_design IS NULL THEN 8
+        ELSE 7
+    END,
+    medical_plan ASC;
