@@ -1,3 +1,15 @@
+C:\Users\piacobelli\.conda\envs\piacobelliEnv\lib\site-packages\numpy\_distributor_init.py:30: UserWarning: loaded more than 1 DLL from .libs:
+C:\Users\piacobelli\.conda\envs\piacobelliEnv\lib\site-packages\numpy\.libs\libopenblas.EL2C6PLE4ZYW3ECEVIV3OXXGRN2NRFM2.gfortran-win_amd64.dll
+C:\Users\piacobelli\.conda\envs\piacobelliEnv\lib\site-packages\numpy\.libs\libopenblas64__v0.3.21-gcc_10_3_0.dll
+  warnings.warn("loaded more than 1 DLL from .libs:"
+Traceback (most recent call last):
+  File "z:/Users/piacobelli/ClaimVersioning/claim_versioning.py", line 953, in <module>
+    pullClaimsNeedingNoAdditionalProcessing()
+  File "z:/Users/piacobelli/ClaimVersioning/claim_versioning.py", line 365, in pullClaimsNeedingNoAdditionalProcessing
+    cursor.execute(query)
+psycopg2.errors.WrongObjectType: type character varying is not composite  (seg22 slice4 10.88.0.22:6006 pid=3187968)
+
+
 def pullClaimsNeedingNoAdditionalProcessing():
     '''
     All line_counters have only one version and one row per the version. They also have one paid date.
@@ -178,3 +190,4 @@ def pullClaimsNeedingNoAdditionalProcessing():
         cursor.execute(query)
         print(cursor.rowcount)
         cursor.execute('vacuum analyze research_dev.pi_final_claims_kspadmn;')
+
