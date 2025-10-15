@@ -1,15 +1,3 @@
-C:\Users\piacobelli\.conda\envs\piacobelliEnv\lib\site-packages\numpy\_distributor_init.py:30: UserWarning: loaded more than 1 DLL from .libs:
-C:\Users\piacobelli\.conda\envs\piacobelliEnv\lib\site-packages\numpy\.libs\libopenblas.EL2C6PLE4ZYW3ECEVIV3OXXGRN2NRFM2.gfortran-win_amd64.dll
-C:\Users\piacobelli\.conda\envs\piacobelliEnv\lib\site-packages\numpy\.libs\libopenblas64__v0.3.21-gcc_10_3_0.dll
-  warnings.warn("loaded more than 1 DLL from .libs:"
-Traceback (most recent call last):
-  File "z:/Users/piacobelli/ClaimVersioning/claim_versioning.py", line 953, in <module>
-    pullClaimsNeedingNoAdditionalProcessing()
-  File "z:/Users/piacobelli/ClaimVersioning/claim_versioning.py", line 365, in pullClaimsNeedingNoAdditionalProcessing
-    cursor.execute(query)
-psycopg2.errors.WrongObjectType: type character varying is not composite  (seg22 slice4 10.88.0.22:6006 pid=3187968)
-
-
 def pullClaimsNeedingNoAdditionalProcessing():
     '''
     All line_counters have only one version and one row per the version. They also have one paid date.
@@ -20,16 +8,16 @@ def pullClaimsNeedingNoAdditionalProcessing():
         drop table if exists research_dev.pi_kspadmn_base_claims_kspadmn;
         create table research_dev.pi_kspadmn_base_claims_kspadmn as
         with claims as (
-            select payor_code, trim(payor_claim_control_number) as pccn, trim(carrier_specific_unique_member_id) as mem_id
+            select payor_code::int, trim(payor_claim_control_number) as pccn, trim(carrier_specific_unique_member_id) as mem_id
             from research_dev.pi_payor_specific_claims_kspadmn
-            where date_of_service_from::int / 10000 >= 2019 and payor_code in (20000040)
+            where date_of_service_from::int / 10000 >= 2019 and payor_code::int = 20000040
             group by 1,2,3
             having count(distinct paid_date) = 1 and count(distinct version_number) = 1
         )
         select distinct
             c.apcd_id,
             a.data_submitter_code,
-            a.payor_code,
+            a.payor_code::int as payor_code,
             trim(a.carrier_specific_unique_member_id) as mem_id,
             trim(a.carrier_specific_unique_subscriber_id) as sub_id,
             trim(a.payor_claim_control_number) as pccn,
@@ -175,11 +163,11 @@ def pullClaimsNeedingNoAdditionalProcessing():
             1 as approach
         from research_dev.pi_payor_specific_claims_kspadmn a
         join claims b
-            on a.payor_code = b.payor_code
+            on a.payor_code::int = b.payor_code
             and trim(a.payor_claim_control_number) = b.pccn
             and trim(a.carrier_specific_unique_member_id) = b.mem_id
         left join research_data.xz_mpi_crosswalk c
-            on a.payor_code = c.payor_code
+            on a.payor_code::int = c.payor_code
             and trim(a.carrier_specific_unique_member_id) = trim(c.mem_id)
     ;
     insert into research_dev.pi_final_claims_kspadmn
@@ -187,7 +175,10 @@ def pullClaimsNeedingNoAdditionalProcessing():
     '''
 
     with connection.cursor() as cursor:
-        cursor.execute(query)
-        print(cursor.rowcount)
-        cursor.execute('vacuum analyze research_dev.pi_final_claims_kspadmn;')
-
+        try:
+            cursor.execute(query)
+            print(f"Inserted {cursor.rowcount} rows")
+            cursor.execute('vacuum analyze research_dev.pi_final_claims_kspadmn;')
+        except psycopg2.Error as e:
+            print(f"Database error: {e}")
+            raise
