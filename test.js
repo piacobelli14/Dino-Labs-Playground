@@ -1,80 +1,180 @@
-WITH combined_plans AS (
-    SELECT 
-        yr,
-        medical_plan_primary AS medical_plan,
-        medical_plan_design_primary AS medical_plan_design,
-        apcd_id
-    FROM research_dev.pi_agg_yrmon_plan_update_temp_merged_1
-    WHERE medical_plan_primary IS NOT NULL
-      AND medical_plan_primary IN ('Medicaid', 'Com-Ers', 'Com-Trs', 'Com-ErsTrs')
-      AND medical_plan_design_primary NOT IN ('CHIP PERI', 'HTW', 'NorthStar', 'MMP')
+def pullClaimsNeedingNoAdditionalProcessing():
+    '''
+    All line_counters have only one version and one row per the version. They also have one paid date.
+    This is the vast majority of the 'kspadmn' payor codes.
+    We will simply take the claims as they currently exist.
+    '''
+    query = f'''
+        drop table if exists research_dev.pi_kspadmn_base_claims_kspadmn;
+        create table research_dev.pi_kspadmn_base_claims_kspadmn as
+        with claims as (
+            select payor_code, trim(payor_claim_control_number) as pccn, trim(carrier_specific_unique_member_id) as mem_id
+            from research_dev.pi_payor_specific_claims_kspadmn
+            where date_of_service_from::int / 10000 >= 2019 and payor_code in (20000040)
+            group by 1,2,3
+            having count(distinct paid_date) = 1 and count(distinct version_number) = 1
+        )
+        select distinct
+            c.apcd_id,
+            a.data_submitter_code,
+            a.payor_code,
+            trim(a.carrier_specific_unique_member_id) as mem_id,
+            trim(a.carrier_specific_unique_subscriber_id) as sub_id,
+            trim(a.payor_claim_control_number) as pccn,
+            a.line_counter,
+            trim(a.member_zip_code) as member_zip_code,
+            to_date(a.date_of_service_from::text, 'YYYYMMDD') as date_of_service_from,
+            to_date(a.date_of_service_thru::text, 'YYYYMMDD') as date_of_service_thru,
+            to_date(a.paid_date::text, 'YYYYMMDD') as paid_date,
+            to_date(a.admission_date::text, 'YYYYMMDD') as admission_date,
+            a.admission_hour,
+            a.admission_type,
+            a.point_of_origin,
+            to_date(a.discharge_date::text, 'YYYYMMDD') as discharge_date,
+            a.discharge_hour,
+            a.discharge_status,
+            trim(a.type_of_bill_institutional) as bill,
+            trim(a.place_of_service_professional) as place_of_service,
+            trim(a.revenue_code) as revenue_code,
+            trim(a.procedure_code) as procedure_code,
+            trim(a.procedure_modifier_1) as procedure_modifier_1,
+            trim(a.procedure_modifier_2) as procedure_modifier_2,
+            trim(a.procedure_modifier_3) as procedure_modifier_3,
+            trim(a.procedure_modifier_4) as procedure_modifier_4,
+            trim(a.admitting_diagnosis) as admitting_diagnosis,
+            a.first_external_cause_code,
+            a.icd_version_indicator,
+            trim(a.principal_diagnosis) as principal_diagnosis,
+            trim(a.other_diagnosis_1) as other_diagnosis_1,
+            trim(a.other_diagnosis_2) as other_diagnosis_2,
+            trim(a.other_diagnosis_3) as other_diagnosis_3,
+            trim(a.other_diagnosis_4) as other_diagnosis_4,
+            trim(a.other_diagnosis_5) as other_diagnosis_5,
+            trim(a.other_diagnosis_6) as other_diagnosis_6,
+            trim(a.other_diagnosis_7) as other_diagnosis_7,
+            trim(a.other_diagnosis_8) as other_diagnosis_8,
+            trim(a.other_diagnosis_9) as other_diagnosis_9,
+            trim(a.other_diagnosis_10) as other_diagnosis_10,
+            trim(a.other_diagnosis_11) as other_diagnosis_11,
+            trim(a.other_diagnosis_12) as other_diagnosis_12,
+            trim(a.other_diagnosis_13) as other_diagnosis_13,
+            trim(a.other_diagnosis_14) as other_diagnosis_14,
+            trim(a.other_diagnosis_15) as other_diagnosis_15,
+            trim(a.other_diagnosis_16) as other_diagnosis_16,
+            trim(a.other_diagnosis_17) as other_diagnosis_17,
+            trim(a.other_diagnosis_18) as other_diagnosis_18,
+            trim(a.other_diagnosis_19) as other_diagnosis_19,
+            trim(a.other_diagnosis_20) as other_diagnosis_20,
+            trim(a.other_diagnosis_21) as other_diagnosis_21,
+            trim(a.other_diagnosis_22) as other_diagnosis_22,
+            trim(a.other_diagnosis_23) as other_diagnosis_23,
+            trim(a.other_diagnosis_24) as other_diagnosis_24,
+            trim(a.present_on_admission_code_1) as present_on_admission_code_1,
+            trim(a.present_on_admission_code_2) as present_on_admission_code_2,
+            trim(a.present_on_admission_code_3) as present_on_admission_code_3,
+            trim(a.present_on_admission_code_4) as present_on_admission_code_4,
+            trim(a.present_on_admission_code_5) as present_on_admission_code_5,
+            trim(a.present_on_admission_code_6) as present_on_admission_code_6,
+            trim(a.present_on_admission_code_7) as present_on_admission_code_7,
+            trim(a.present_on_admission_code_8) as present_on_admission_code_8,
+            trim(a.present_on_admission_code_9) as present_on_admission_code_9,
+            trim(a.present_on_admission_code_10) as present_on_admission_code_10,
+            trim(a.present_on_admission_code_11) as present_on_admission_code_11,
+            trim(a.present_on_admission_code_12) as present_on_admission_code_12,
+            trim(a.present_on_admission_code_13) as present_on_admission_code_13,
+            trim(a.present_on_admission_code_14) as present_on_admission_code_14,
+            trim(a.present_on_admission_code_15) as present_on_admission_code_15,
+            trim(a.present_on_admission_code_16) as present_on_admission_code_16,
+            trim(a.present_on_admission_code_17) as present_on_admission_code_17,
+            trim(a.present_on_admission_code_18) as present_on_admission_code_18,
+            trim(a.present_on_admission_code_19) as present_on_admission_code_19,
+            trim(a.present_on_admission_code_20) as present_on_admission_code_20,
+            trim(a.present_on_admission_code_21) as present_on_admission_code_21,
+            trim(a.present_on_admission_code_22) as present_on_admission_code_22,
+            trim(a.present_on_admission_code_23) as present_on_admission_code_23,
+            trim(a.present_on_admission_code_24) as present_on_admission_code_24,
+            trim(a.present_on_admission_code_25) as present_on_admission_code_25,
+            trim(a.icd_cm_pcs_principal_procedure_code) as icd_cm_pcs_principal_procedure_code,
+            trim(a.icd_cm_pcs_other_procedure_code_1) as icd_cm_pcs_other_procedure_code_1,
+            trim(a.icd_cm_pcs_other_procedure_code_2) as icd_cm_pcs_other_procedure_code_2,
+            trim(a.icd_cm_pcs_other_procedure_code_3) as icd_cm_pcs_other_procedure_code_3,
+            trim(a.icd_cm_pcs_other_procedure_code_4) as icd_cm_pcs_other_procedure_code_4,
+            trim(a.icd_cm_pcs_other_procedure_code_5) as icd_cm_pcs_other_procedure_code_5,
+            trim(a.icd_cm_pcs_other_procedure_code_6) as icd_cm_pcs_other_procedure_code_6,
+            trim(a.icd_cm_pcs_other_procedure_code_7) as icd_cm_pcs_other_procedure_code_7,
+            trim(a.icd_cm_pcs_other_procedure_code_8) as icd_cm_pcs_other_procedure_code_8,
+            trim(a.icd_cm_pcs_other_procedure_code_9) as icd_cm_pcs_other_procedure_code_9,
+            trim(a.icd_cm_pcs_other_procedure_code_10) as icd_cm_pcs_other_procedure_code_10,
+            trim(a.icd_cm_pcs_other_procedure_code_11) as icd_cm_pcs_other_procedure_code_11,
+            trim(a.icd_cm_pcs_other_procedure_code_12) as icd_cm_pcs_other_procedure_code_12,
+            trim(a.icd_cm_pcs_other_procedure_code_13) as icd_cm_pcs_other_procedure_code_13,
+            trim(a.icd_cm_pcs_other_procedure_code_14) as icd_cm_pcs_other_procedure_code_14,
+            trim(a.icd_cm_pcs_other_procedure_code_15) as icd_cm_pcs_other_procedure_code_15,
+            trim(a.icd_cm_pcs_other_procedure_code_16) as icd_cm_pcs_other_procedure_code_16,
+            trim(a.icd_cm_pcs_other_procedure_code_17) as icd_cm_pcs_other_procedure_code_17,
+            trim(a.icd_cm_pcs_other_procedure_code_18) as icd_cm_pcs_other_procedure_code_18,
+            trim(a.icd_cm_pcs_other_procedure_code_19) as icd_cm_pcs_other_procedure_code_19,
+            trim(a.icd_cm_pcs_other_procedure_code_20) as icd_cm_pcs_other_procedure_code_20,
+            trim(a.icd_cm_pcs_other_procedure_code_21) as icd_cm_pcs_other_procedure_code_21,
+            trim(a.icd_cm_pcs_other_procedure_code_22) as icd_cm_pcs_other_procedure_code_22,
+            trim(a.icd_cm_pcs_other_procedure_code_23) as icd_cm_pcs_other_procedure_code_23,
+            trim(a.icd_cm_pcs_other_procedure_code_24) as icd_cm_pcs_other_procedure_code_24,
+            trim(a.icd_cm_pcs_other_procedure_code_25) as icd_cm_pcs_other_procedure_code_25,
+            a.service_units_quantity,
+            a.unit_of_measure,
+            a.charge_amount,
+            a.withhold_amount as withold_amount,
+            a.plan_paid_amount,
+            a.co_pay_amount,
+            a.coinsurance_amount,
+            a.deductible_amount,
+            a.other_insurance_paid_amount,
+            a.cob_tpl_amount,
+            a.allowed_amount,
+            a.payment_arrangement_type_flag,
+            a.drug_code,
+            a.rendering_provider_id,
+            a.rendering_provider_npi,
+            a.rendering_provider_entity_type_qualifier,
+            a.in_plan_network_indicator,
+            a.rendering_provider_first_name,
+            a.rendering_provider_middle_name,
+            a.rendering_provider_last_name_or_organization_name,
+            a.rendering_provider_suffix,
+            a.rendering_provider_specialty,
+            a.rendering_provider_city_name,
+            a.rendering_provider_state_or_province,
+            a.rendering_provider_zip_code,
+            a.rendering_provider_group_practice_npi,
+            a.billing_provider_id,
+            a.billing_provider_npi,
+            a.billing_provider_last_name_or_organization_name,
+            a.billing_providertax_id,
+            a.referring_provider_id,
+            a.referring_provider_npi,
+            a.attending_provider_id,
+            a.attending_provider_npi,
+            a.carrier_associated_with_claim,
+            a.type_of_claim,
+            a.claim_status,
+            a.denied_claim_line_indicator,
+            a.claim_adjustment_reason_code,
+            a.claim_line_type,
+            1 as approach
+        from research_dev.pi_payor_specific_claims_kspadmn a
+        join claims b
+            on a.payor_code = b.payor_code
+            and trim(a.payor_claim_control_number) = b.pccn
+            and trim(a.carrier_specific_unique_member_id) = b.mem_id
+        left join research_data.xz_mpi_crosswalk c
+            on a.payor_code = c.payor_code
+            and trim(a.carrier_specific_unique_member_id) = trim(c.mem_id)
+    ;
+    insert into research_dev.pi_final_claims_kspadmn
+    select * from research_dev.pi_kspadmn_base_claims_kspadmn;
+    '''
 
-    UNION ALL
-
-    SELECT 
-        yr,
-        medical_plan_secondary AS medical_plan,
-        medical_plan_design_secondary AS medical_plan_design,
-        apcd_id
-    FROM research_dev.pi_agg_yrmon_plan_update_temp_merged_1
-    WHERE medical_plan_secondary IS NOT NULL
-      AND medical_plan_secondary IN ('Medicaid', 'Com-Ers', 'Com-Trs', 'Com-ErsTrs')
-      AND medical_plan_design_secondary NOT IN ('CHIP PERI', 'HTW', 'NorthStar', 'MMP')
-),
-expanded_plans AS (
-    SELECT yr, medical_plan, medical_plan_design, apcd_id
-    FROM combined_plans
-    WHERE medical_plan <> 'Com-ErsTrs'
-
-    UNION ALL
-    SELECT yr, 'Com-Ers' AS medical_plan, medical_plan_design, apcd_id
-    FROM combined_plans
-    WHERE medical_plan = 'Com-ErsTrs'
-
-    UNION ALL
-    SELECT yr, 'Com-Trs' AS medical_plan, medical_plan_design, apcd_id
-    FROM combined_plans
-    WHERE medical_plan = 'Com-ErsTrs'
-),
-normalized_plans AS (
-    SELECT
-        yr,
-        apcd_id,
-        medical_plan,
-        CASE 
-            WHEN medical_plan IN ('Com-Ers', 'Com-Trs') THEN NULL
-            ELSE medical_plan_design
-        END AS medical_plan_design
-    FROM expanded_plans
-),
-months_by_member AS (
-    SELECT
-        yr,
-        apcd_id,
-        medical_plan,
-        medical_plan_design,
-        COUNT(*) AS months_enrolled
-    FROM normalized_plans
-    GROUP BY yr, apcd_id, medical_plan, medical_plan_design
-)
-SELECT
-    yr,
-    medical_plan,
-    medical_plan_design,
-    COUNT(DISTINCT apcd_id) AS count_per_plan_grouping,
-    SUM(months_enrolled)::numeric / 12 AS member_year
-FROM months_by_member
-GROUP BY yr, medical_plan, medical_plan_design
-ORDER BY
-    yr ASC,
-    CASE
-        WHEN medical_plan_design = 'FFS' THEN 1
-        WHEN medical_plan_design = 'STAR' THEN 2
-        WHEN medical_plan_design = 'STAR Health' THEN 3
-        WHEN medical_plan_design = 'STAR Kids' THEN 4
-        WHEN medical_plan_design = 'STAR+PLUS' THEN 5
-        WHEN medical_plan_design = 'CHIP' THEN 6
-        WHEN medical_plan_design IS NULL THEN 8
-        ELSE 7
-    END,
-    medical_plan ASC;
+    with connection.cursor() as cursor:
+        cursor.execute(query)
+        print(cursor.rowcount)
+        cursor.execute('vacuum analyze research_dev.pi_final_claims_kspadmn;')
