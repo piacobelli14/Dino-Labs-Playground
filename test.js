@@ -1,8 +1,8 @@
 def pullClaimsNeedingNoAdditionalProcessing():
     '''
-    All line_counters have only one version and one row per the version. They also have one paid date.
-    This is the vast majority if the 'kspadmn' payor codes.
-    We will simply take the claims as they currently exist.
+        All line_counters have only one version and one row per the version. They also have one paid date.
+        This is the vast majority if the 'kspadmn' payor codes.
+        We will simply take the claims as they currently exist.
     '''
     query = f'''
         drop table if exists research_dev.pi_kspadmn_base_claims_kspadmn;
@@ -23,14 +23,14 @@ def pullClaimsNeedingNoAdditionalProcessing():
             pccn,
             line_counter,
             trim(member_zip_code),
-            to_date(date_of_service_from::text, 'YYYMMDD'),
-            to_date(date_of_service_thru::text, 'YYYMMDD'),
-            to_date(paid_date::text, 'YYYMMDD'),
-            to_date(admission_date::text, 'YYYMMDD'),
+            to_date(date_of_service_from::text, 'YYYYMMDD'),
+            to_date(date_of_service_thru::text, 'YYYYMMDD'),
+            to_date(paid_date::text, 'YYYYMMDD'),
+            to_date(admission_date::text, 'YYYYMMDD'),
             admission_hour,
             admission_type,
             point_of_origin,
-            to_date(discharge_date::text, 'YYYMMDD'),
+            to_date(discharge_date::text, 'YYYYMMDD'),
             discharge_hour,
             discharge_status,
             trim(type_of_bill_institutional) bill,
@@ -164,8 +164,9 @@ def pullClaimsNeedingNoAdditionalProcessing():
         from research_dev.pi_payor_specific_claims_kspadmn a
         join claims b on a.payor_code = b.payor_code and trim(a.payor_claim_control_number) = b.pccn and trim(carrier_specific_unique_member_id) = b.mem_id
         left join research_data.xz_mpi_crosswalk c on a.payor_code = c.payor_code
-        and trim(a.carrier_specific_unique_member_id::text) = c.mem_id::text;
+        and trim(a.carrier_specific_unique_member_id) = trim(c.mem_id);
     '''
+
     with connection.cursor() as cursor:
         try:
             cursor.execute(query)
