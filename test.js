@@ -1,3 +1,22 @@
+Created temp table with 8482930 rows
+Created base table with 23459624 rows
+Database error: column "apcd_id" is of type bigint but expression is of type text
+LINE 3:         select * from research_dev.pi_kspadmn_base_claims_ks...
+                       ^
+HINT:  You will need to rewrite or cast the expression.
+
+Traceback (most recent call last):
+  File "z:/Users/piacobelli/ClaimVersioning/claim_versioning.py", line 965, in <module>
+    pullClaimsNeedingNoAdditionalProcessing()
+  File "z:/Users/piacobelli/ClaimVersioning/claim_versioning.py", line 374, in pullClaimsNeedingNoAdditionalProcessing
+    cursor.execute(query3)
+psycopg2.errors.DatatypeMismatch: column "apcd_id" is of type bigint but expression is of type text
+LINE 3:         select * from research_dev.pi_kspadmn_base_claims_ks...
+                       ^
+HINT:  You will need to rewrite or cast the expression.
+
+PS Z:\Users\piacobelli\ClaimVersioning>
+    
 def pullClaimsNeedingNoAdditionalProcessing():
     '''
     All line_counters have only one version and one row per the version. They also have one paid date.
@@ -190,3 +209,4 @@ def pullClaimsNeedingNoAdditionalProcessing():
         except psycopg2.Error as e:
             print(f"Database error: {e}")
             raise
+
