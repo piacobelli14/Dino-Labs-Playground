@@ -1,22 +1,3 @@
-Created temp table with 8482930 rows
-Created base table with 23459624 rows
-Database error: column "apcd_id" is of type bigint but expression is of type text
-LINE 3:         select * from research_dev.pi_kspadmn_base_claims_ks...
-                       ^
-HINT:  You will need to rewrite or cast the expression.
-
-Traceback (most recent call last):
-  File "z:/Users/piacobelli/ClaimVersioning/claim_versioning.py", line 965, in <module>
-    pullClaimsNeedingNoAdditionalProcessing()
-  File "z:/Users/piacobelli/ClaimVersioning/claim_versioning.py", line 374, in pullClaimsNeedingNoAdditionalProcessing
-    cursor.execute(query3)
-psycopg2.errors.DatatypeMismatch: column "apcd_id" is of type bigint but expression is of type text
-LINE 3:         select * from research_dev.pi_kspadmn_base_claims_ks...
-                       ^
-HINT:  You will need to rewrite or cast the expression.
-
-PS Z:\Users\piacobelli\ClaimVersioning>
-    
 def pullClaimsNeedingNoAdditionalProcessing():
     '''
     All line_counters have only one version and one row per the version. They also have one paid date.
@@ -38,7 +19,7 @@ def pullClaimsNeedingNoAdditionalProcessing():
         drop table if exists research_dev.pi_kspadmn_base_claims_kspadmn;
         create table research_dev.pi_kspadmn_base_claims_kspadmn as
         select distinct
-            NULL as apcd_id,
+            c.apcd_id::bigint as apcd_id,
             a.data_submitter_code,
             a.payor_code::int as payor_code,
             a.plan_specific_contract_number as mem_id,
@@ -189,6 +170,9 @@ def pullClaimsNeedingNoAdditionalProcessing():
             on a.payor_code::int = b.payor_code
             and a.payor_claim_control_number = b.pccn
             and a.plan_specific_contract_number = b.mem_id
+        left join research_data.xz_mpi_crosswalk c
+            on a.payor_code::int = c.payor_code
+            and a.plan_specific_contract_number = c.mem_id
         distributed by (apcd_id);
     '''
 
@@ -209,4 +193,3 @@ def pullClaimsNeedingNoAdditionalProcessing():
         except psycopg2.Error as e:
             print(f"Database error: {e}")
             raise
-
