@@ -7,11 +7,11 @@ const ProtectedRoute = ({ children }) => {
     if (loading) {
         return <div>Loading...</div>; 
     }
-    {/*}
+    
     if (!token) {
         return <Navigate to="/login" replace />;
     }
-    */}
+    
 
     return children;
 };
