@@ -7,6 +7,7 @@
         -moz-appearance: none;
         appearance: none;
         border: 0px solid #ddd;
+        border-radius: 4px; 
         background-color: #f0f0f0;
         border-radius: 0.05rem;
         transition: background-color 0.3s ease, border-color 0.3s ease;
@@ -32,6 +33,7 @@
         -moz-appearance: none;
         appearance: none;
         border: 0px solid #ddd;
+        border-radius: 4px; 
         background-color: #f0f0f0;
         border-radius: 0.05rem;
         transition: background-color 0.3s ease, border-color 0.3s ease;
@@ -57,6 +59,7 @@
         -moz-appearance: none;
         appearance: none;
         border: 0px solid #ddd;
+        border-radius: 4px; 
         background-color: #f0f0f0;
         border-radius: 0.05rem;
         transition: background-color 0.3s ease, border-color 0.3s ease;
@@ -82,6 +85,7 @@
         -moz-appearance: none;
         appearance: none;
         border: 0px solid #ddd;
+        border-radius: 4px; 
         background-color: #f0f0f0;
         border-radius: 0.05rem;
         transition: background-color 0.3s ease, border-color 0.3s ease;

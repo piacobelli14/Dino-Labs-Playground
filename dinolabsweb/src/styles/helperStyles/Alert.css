@@ -13,74 +13,89 @@
     }
 
     .dinolabsAlert {
-        background-color: #222222;
+        background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
         display: flex;
         flex-direction: column;
         justify-content: center;
         align-items: center;
         box-sizing: border-box;
-        padding: 2vw;
-        border: none;
-        border-radius: 1vw;
-        box-shadow: 0 0 8px rgba(255, 255, 255, 0.2);
-        min-width: 30%;
-        max-width: 30%;
+        padding: 2rem;
+        border: 1px solid #475569;
+        border-radius: 6px;
+        box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+        min-width: 400px;
+        max-width: 500px;
     }
 
     .dinolabsAlertImage {
-        min-height: 6vw;
-        max-height: 6vw;
+        height: 60px;
+        width: auto;
     }
 
     .dinolabsAlertHeader {
-        font-size: 1.6vw;
+        font-size: 20px;
         font-weight: 700;
-        color: #f5f5f5;
-        margin-top: 1vw;
+        color: #f1f5f9;
+        margin-top: 1rem;
         text-align: center;
     }
 
     .dinolabsAlertSubHeader {
-        font-size: 1.1vw;
-        font-weight: 500;
-        color: #f5f5f5;
-        margin-top: 0.4vw;
-        opacity: 0.8;
+        font-size: 14px;
+        font-weight: 600;
+        color: #f1f5f9;
+        margin-top: 0.5rem;
+        opacity: 0.9;
         text-align: center;
+        line-height: 1.4;
     }
 
     .dinolabsAlertButtonsFlex {
         display: flex;
         justify-content: center;
         align-items: center;
-        padding: 2vw 0;
+        padding: 2rem 0 0 0;
         width: 100%;
-        gap: 1vw;
+        gap: 1rem;
     }
 
     .dinolabsAlertButtons {
-        width: 30%;
-        padding: 0;
-        padding: 0.6vw;
-        font-size: 1vw;
-        font-weight: 800;
-        color: white;
-        border-radius: 0.4vw;
+        padding: 0.6rem 1.2rem;
+        font-size: 12px;
+        font-weight: 700;
+        color: #f1f5f9;
+        border: 1px solid #475569;
+        border-radius: 6px;
         cursor: pointer;
+        transition: all 0.2s ease;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        min-width: 80px;
+    }
+
+    .dinolabsAlertButtons[style*="backgroundColor: #AD6ADD"] {
+        background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
+        border-color: #1e40af;
+    }
+
+    .dinolabsAlertButtons[style*="backgroundColor: #D8D8D8"] {
+        background: linear-gradient(145deg, #334155 0%, #475569 100%);
+        border-color: #475569;
+        color: #f1f5f9;
     }
 
     .dinolabsAlertButtons:hover {
-        opacity: 0.6;
-        border: none;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px -1px rgba(30, 64, 175, 0.2);
+        border: 1px solid #475569;
         outline: none;
     }
 
     .dinolabsAlertButtons:focus {
-        opacity: 1.0;
-        border: none;
         outline: none;
+        border-color: #1e40af;
+        box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.2), 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        transform: translateY(-1px);
     }
-
 
     .dinolabsAlertInputWrapper {
         display: flex;
@@ -88,69 +103,78 @@
         justify-content: center;
         align-items: center;
         width: 100%;
-        padding: 1vw 0 0 0;
+        padding: 1rem 0 0 0;
     }
 
     .dinolabsAlertInput.input-text {
-        background-color: #191919;
-        border: 0.2vh solid #c0c0c0;
-        padding: 0.6vw;
-        font-size: 0.9vw;
+        background: linear-gradient(145deg, #334155 0%, #475569 100%);
+        border: 1px solid #475569;
+        padding: 0.6rem 1rem;
+        font-size: 12px;
         font-weight: 700;
-        color: #c0c0c0;
-        border-radius: 0.4vw;
-        width: 70%;
+        color: #f1f5f9;
+        border-radius: 6px;
+        width: 80%;
         outline: none;
-        box-shadow: 0 0 4px #191919; 
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
+    }
+
+    .dinolabsAlertInput.input-text::placeholder {
+        color: #94a3b8;
+        font-weight: 700;
     }
 
     .dinolabsAlertInput.input-text:hover {
-        opacity: 0.6;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px -1px rgba(30, 64, 175, 0.2);
         outline: none;
     }
 
     .dinolabsAlertInput.input-text:focus {
-        opacity: 1.0;
         outline: none;
+        border-color: #1e40af;
+        box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.2), 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        transform: translateY(-1px);
     }
 
     .dinolabsAlertInput.input-select {
-        background-color: #191919;
-        border: 0.2vh solid #c0c0c0;
-        padding: 0.6vw;
-        font-size: 0.9vw;
+        background: linear-gradient(145deg, #334155 0%, #475569 100%);
+        border: 1px solid #475569;
+        padding: 0.6rem 1rem;
+        font-size: 12px;
         font-weight: 700;
-        color: #c0c0c0;
-        border-radius: 0.4vw;
-        width: 55%;
+        color: #f1f5f9;
+        border-radius: 6px;
+        width: 80%;
         outline: none;
-        cursor: pointer; 
-        box-shadow: 0 0 4px #191919;
+        cursor: pointer;
+        box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+        transition: all 0.2s ease;
     }
 
     .dinolabsAlertInput.input-select:hover {
-        opacity: 0.6;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 6px -1px rgba(30, 64, 175, 0.2);
         outline: none;
-        cursor: pointer; 
+        cursor: pointer;
     }
 
     .dinolabsAlertInput.input-select:focus {
-        opacity: 1.0;
         outline: none;
-        cursor: pointer; 
+        border-color: #1e40af;
+        box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.2), 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        transform: translateY(-1px);
+        cursor: pointer;
     }
 
     .dinolabsAlertInput::-ms-expand {
-        display: none; 
+        display: none;
     }
     
     .dinolabsAlertInput {
-        -webkit-appearance: none;  
-        -moz-appearance: none;    
-        appearance: none;          
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
     }
-    
-
-
-
 }

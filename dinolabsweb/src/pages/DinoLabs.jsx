@@ -21,7 +21,8 @@ import {
   faFolderOpen,
   faPenToSquare,
   faUsersCog,
-  faComputer
+  faComputer,
+  faUserCog
 } from "@fortawesome/free-solid-svg-icons";
 import { openDB } from "idb";
 import { fileTypeMap } from "./DinoLabsFileTypeMap.jsx";
@@ -1903,7 +1904,7 @@ const DinoLabs = () => {
 
                   <Tippy content="My Account" theme="tooltip-light">
                     <button className="leadingDirectoryZoomButton" onClick={(() => {navigate("/account");})}>
-                      <FontAwesomeIcon icon={faUserCircle} style={{ color: "" }} />
+                      <FontAwesomeIcon icon={faUserCog} style={{ color: "" }} />
                     </button>
                   </Tippy>
 
