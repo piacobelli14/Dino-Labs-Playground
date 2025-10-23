@@ -104,7 +104,7 @@ const Login = () => {
         <div
             className="loginPageWrapper"
             style={{
-                background: "linear-gradient(135deg, #15171C 0%, #322842 50%, #15171C 100%)",
+                background: "linear-gradient(135deg, #0a0e27 0%, #1e2238 50%, #1e2238 100%)",
                 display: screenSize >= 5300 ? "none" : ""
             }}
         >

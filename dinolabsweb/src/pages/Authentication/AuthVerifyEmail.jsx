@@ -92,7 +92,7 @@ const VerifyEmail = () => {
     >
       <div
         className="verificationHeaderContainer"
-        style={{ background: "linear-gradient(135deg, #15171C 0%, #322842 50%, #15171C 100%)" }}
+        style={{ background: "linear-gradient(135deg, #0a0e27 0%, #1e2238 50%, #1e2238 100%)" }}
       >
         {!showRetry ? (
           <div className="loading-wrapper">
