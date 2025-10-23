@@ -6,22 +6,29 @@ const DinoLabsUnavailable = ({ screenSize }) => {
   const safeScreenSize = typeof screenSize === "number" ? screenSize : 0;
 
   return (
-    <div className="unavailable-container">
-      <div className="unavailable-wrapper">
-        <img
-          className="unavailable-image"
-          src="./DinoLabsLogo-White.png"
-          alt=""
-          onError={(e) => {
-            e.target.src = "/fallback-logo.png"; 
-          }}
-        />
-        <label className="unavailable-label">
-          The Dino Labs IDE is currently unavailable at this screen size.
-        </label>
-        <label className="unavailable-sub-label">
-          Please sign in on a {safeScreenSize < 700 ? "larger" : "smaller"} screen to continue.
-        </label>
+    <div className="dinolabsUnavailableContainer">
+      <div className="dinolabsUnavailableWrapper">
+        <div className="dinolabsUnavailableContent">
+          <img
+            className="dinolabsUnavailableImage"
+            src="./DinoLabsLogo-White.png"
+            alt="Dino Labs Logo"
+            onError={(e) => {
+              e.target.src = "/fallback-logo.png"; 
+            }}
+          />
+          <div className="dinolabsUnavailableTextStack">
+            <h1 className="dinolabsUnavailableTitle">
+              Dino Labs IDE Unavailable
+            </h1>
+            <p className="dinolabsUnavailableMessage">
+              The IDE is currently unavailable at this screen size.
+            </p>
+            <p className="dinolabsUnavailableSubMessage">
+              Please sign in on a {safeScreenSize < 700 ? "larger" : "smaller"} screen to continue.
+            </p>
+          </div>
+        </div>
       </div>
     </div>
   );

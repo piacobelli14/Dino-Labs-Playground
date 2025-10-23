@@ -37,6 +37,7 @@ export default function DinoLabsPdfViewer({ fileHandle }) {
         }
         const file = await fileHandle.getFile();
         const name = file.name || "Untitled.pdf";
+        
         setDisplayName(name);
 
         const ext = name.split(".").pop()?.toLowerCase();

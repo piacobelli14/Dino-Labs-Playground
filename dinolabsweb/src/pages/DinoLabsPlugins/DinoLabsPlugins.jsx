@@ -58,7 +58,7 @@ const DinoLabsPlugins = () => {
         description: "Graph equations and visualize functions interactively.",
         icon: faChartLine,
         gradientClass: "dinolabsPluginsGradientPlotter",
-        path: "/plotter"
+        path: "/plot"
       },
       {
         key: "matrix",
@@ -69,14 +69,6 @@ const DinoLabsPlugins = () => {
         path: "/matrix"
       },
       {
-        key: "unitlab",
-        title: "Unit Lab",
-        description: "Dimensional-aware calculator & converter.",
-        icon: faRulerCombined,
-        gradientClass: "dinolabsPluginsGradientUnitLab",
-        path: "/unitlab"
-      },
-      {
         key: "colortypelab",
         title: "Color & Type Lab",
         description: "Palettes, contrast checks, gradients, variable fonts.",
@@ -84,30 +76,6 @@ const DinoLabsPlugins = () => {
         gradientClass: "dinolabsPluginsGradientColorTypeLab",
         path: "/colortypelab"
       },
-      {
-        key: "assetoptimizer",
-        title: "Asset Pipeline Optimizer",
-        description: "Batch image/video/audio optimization & deliverables.",
-        icon: faCubesStacked,
-        gradientClass: "dinolabsPluginsGradientAsset",
-        path: "/assetoptimizer"
-      },
-      {
-        key: "visualdiff",
-        title: "Visual Diff & Reviewer",
-        description: "Side-by-side, pixel diff, DOM/CSS diffs, track strips.",
-        icon: faImages,
-        gradientClass: "dinolabsPluginsGradientVisualDiff",
-        path: "/visualdiff"
-      },
-      {
-        key: "regexdatalab",
-        title: "Regex & Test-Data Builder",
-        description: "Visual regex composer + synthetic data generator.",
-        icon: faHighlighter,
-        gradientClass: "dinolabsPluginsGradientRegex",
-        path: "/regexdatalab"
-      }
     ],
     []
   );

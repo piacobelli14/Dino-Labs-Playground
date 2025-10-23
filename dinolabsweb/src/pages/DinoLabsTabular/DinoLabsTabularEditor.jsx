@@ -1791,6 +1791,7 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
           </div>
         </div>
       </div>
+      
       <div
         className="dinolabsFormulaBarWrapper"
         onMouseDown={(e) => { interactingWithFormulaBarRef.current = true; e.stopPropagation(); }}

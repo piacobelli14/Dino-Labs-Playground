@@ -5,6 +5,8 @@ import DinoLabsNav from "../../../helpers/Nav";
 import DinoLabsColorPicker from "../../../helpers/ColorPicker.jsx";
 import "../../../styles/mainStyles/DinoLabsPlugins/DinoLabsPluginsPlot/DinoLabsPluginsPlot.css";
 import "../../../styles/helperStyles/Slider.css";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faEye, faEyeSlash, faHouse, faKeyboard, faLineChart, faMinus, faPlus, faXmark } from "@fortawesome/free-solid-svg-icons";
 
 const KNOWN_FUNCTIONS = [
   "sin", "cos", "tan", "sec", "csc", "cot",
@@ -562,7 +564,7 @@ const DinoLabsPluginsPlot = () => {
               onClick={addFormula}
               title="Add New Formula"
             >
-              <span className="dinolabsPluginsPlotAddIcon">+</span>
+              <FontAwesomeIcon icon={faPlus}/>
             </button>
             <div className="dinolabsPluginsPlotModeSelector">
               <button 
@@ -623,7 +625,8 @@ const DinoLabsPluginsPlot = () => {
                         onClick={() => toggleFormulaVisibility(formula.id)}
                         title={formula.isHidden ? "Show Formula" : "Hide Formula"}
                       >
-                        {formula.isHidden ? "Show" : "Hide"}
+                        <FontAwesomeIcon icon={formula.isHidden ? faEye : faEyeSlash}/>
+
                       </button>
                     </div>
                     <input
@@ -638,7 +641,7 @@ const DinoLabsPluginsPlot = () => {
                       onClick={() => removeFormula(formula.id)}
                       title="Remove Formula"
                     >
-                      ×
+                      <FontAwesomeIcon icon={faXmark}/>
                     </button>
                   </div>
                   {missingVars.length > 0 && (
@@ -693,7 +696,8 @@ const DinoLabsPluginsPlot = () => {
             onClick={() => setIsKeyboardView(!isKeyboardView)}
             title="Toggle Virtual Keyboard"
           >
-            <span>Keyboard</span>
+            <FontAwesomeIcon icon={faKeyboard}/>
+            <span>{isKeyboardView ? "Hide Keyboard" : "Show Keyboard"}</span>
           </button>
         </div>
 
@@ -709,21 +713,21 @@ const DinoLabsPluginsPlot = () => {
               onClick={() => zoomGraph(true)}
               title="Zoom In"
             >
-              <span>+</span>
+              <FontAwesomeIcon icon={faPlus}/>
             </button>
             <button 
               className="dinolabsPluginsPlotControlButton zoom-out" 
               onClick={() => zoomGraph(false)}
-              title="Zoom Out"
+              title="Zoom Out" 
             >
-              <span>−</span>
+              <FontAwesomeIcon icon={faMinus}/>
             </button>
             <button 
               className="dinolabsPluginsPlotControlButton reset-zoom" 
               onClick={resetZoom}
               title="Reset Zoom"
             >
-              <span>Home</span>
+              <FontAwesomeIcon icon={faHouse}/>
             </button>
           </div>
 
@@ -732,7 +736,7 @@ const DinoLabsPluginsPlot = () => {
             onClick={findIntercepts}
             title="Find Function Intercepts"
           >
-            <span className="dinolabsPluginsPlotInterceptIcon">∩</span>
+            <FontAwesomeIcon icon={faLineChart}/>
             <span>Find Intercepts</span>
           </button>
         </div>

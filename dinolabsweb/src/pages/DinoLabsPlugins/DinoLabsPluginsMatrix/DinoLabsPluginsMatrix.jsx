@@ -666,8 +666,6 @@ export default function DinoLabsPluginsMatrix() {
                 <div className="dinolabsMatrixDimLabel">A Cols</div>
                 <input className="dinolabsMatrixNum" type="number" min="1" max="10" value={aCols} onChange={(e) => handleSetACols(e.target.value)} />
               </div>
-            </div>
-            <div className="dinolabsMatrixRow">
               <div className="dinolabsMatrixDimCol">
                 <div className="dinolabsMatrixDimLabel">B Rows</div>
                 <input className="dinolabsMatrixNum" type="number" min="1" max="10" value={bRows} onChange={(e) => handleSetBRows(e.target.value)} />
@@ -712,10 +710,8 @@ export default function DinoLabsPluginsMatrix() {
               <FontAwesomeIcon icon={faPlusMinus} />
               <span>Scalar</span>
             </div>
-            <div className="dinolabsMatrixRow">
-              <input className="dinolabsMatrixNum" type="number" step="0.1" value={scalar} onChange={(e) => setScalar(e.target.value)} />
-            </div>
             <div className="dinolabsMatrixBtnRow">
+              <input className="dinolabsMatrixNum" type="number" step="0.1" value={scalar} onChange={(e) => setScalar(e.target.value)} />
               <button type="button" className="dinolabsMatrixBtn" onClick={doScalarA}>k·A</button>
               <button type="button" className="dinolabsMatrixBtn" onClick={doScalarB}>k·B</button>
             </div>
@@ -782,7 +778,6 @@ export default function DinoLabsPluginsMatrix() {
           <div className="dinolabsMatrixResultPanel">
             <div className="dinolabsMatrixResultHeader" aria-live="polite">
               <div className="dinolabsMatrixResultTitle">
-               
                 {lastOp ? <em className="dinolabsMatrixLastOp">({lastOp})</em> : null}
               </div>
               <div className="dinolabsMatrixPillGroup">

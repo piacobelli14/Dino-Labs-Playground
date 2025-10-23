@@ -36,8 +36,8 @@
     overflow: scroll;
     padding: 0;
     box-sizing: border-box;
-    background-color: #29282D !important;
-    border-right: 2px solid rgba(255,255,255,0.1) !important;
+    background: linear-gradient(145deg, #1e293b 0%, #334155 100%) !important;
+    border-right: 1px solid #475569 !important;
 }
 
 .dinolabsAudioEditorContainerWrapper {
@@ -47,7 +47,7 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    background-color: #29282D !important;
+    background: linear-gradient(145deg, #1e293b 0%, #334155 100%) !important;
     min-height: 100%;
     max-height: 100%;
     height: 100%; 
@@ -62,10 +62,9 @@
     min-height: 100%;
     max-height: 100%;
     height: 100%; 
-    background-color: #252525;
+    background: linear-gradient(145deg, #334155 0%, #475569 100%);
     overflow: hidden;
     box-sizing: border-box;
-    background-color: #29282D !important;
 }
 
 .dinolabsAudioEditorContainerInnerStack {
@@ -84,14 +83,14 @@
     display: flex; 
     height: 100%; 
     width: 100%; 
-    padding: 20px; 
+    padding: 16px; 
     box-sizing: border-box;
     flex-direction: column;
     justify-content: flex-start;
     align-items: center;
     gap: 12px; 
     overflow: scroll !important; 
-    background-color: #0f0f0f;
+    background: linear-gradient(145deg, #334155 0%, #475569 100%) !important;
 }
 
 .dinolabsAudioEditorInnerWrapperWaveForm {
@@ -101,9 +100,10 @@
     min-height: 60%; 
     max-height: 60%; 
     border-radius: 6px; 
-    border: 1px solid #333; 
+    border: 1px solid #475569 !important; 
     position: relative; 
     overflow: hidden;
+    background: linear-gradient(145deg, #334155 0%, #475569 100%) !important;
 }
 
 .dinolabsAudioEditorInnerWrapperSupplementsFlex {
@@ -123,13 +123,14 @@
     height: 100%; 
     min-height: 100%; 
     max-height: 100%;
-    border: 1px solid #333; 
+    border: 1px solid #475569 !important; 
     border-radius: 6px;
     position: relative; 
     width: 35%;
     min-width: 35%; 
     max-width: 35%;
     overflow: hidden;
+    background: linear-gradient(145deg, #334155 0%, #475569 100%) !important;
 }
 
 .dinolabsAudioEditorInnerWrapperSupplementSmall {
@@ -137,13 +138,14 @@
     height: 100%; 
     min-height: 100%; 
     max-height: 100%;
-    border: 1px solid #333; 
+    border: 1px solid #475569 !important; 
     border-radius: 6px;
     position: relative; 
     width: 10%;
     min-width: 10%; 
     max-width: 10%; 
     overflow: hidden;
+    background: linear-gradient(145deg, #334155 0%, #475569 100%) !important;
 }
 
 .dinolabsAudioEditorCellWrapper {
@@ -154,8 +156,8 @@
     box-sizing: border-box;
     min-width: 100%;
     max-width: 100%; 
-    padding-bottom: 2rem;
-    border-bottom: 2px solid rgba(255,255,255,0.1) !important;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #475569 !important;
 }
 
 .dinolabsAudioEditorHeaderFlex {
@@ -165,21 +167,22 @@
     box-sizing: border-box;
     min-width: 100%;
     max-width: 100%;
-    padding: 0 1rem;
+    padding: 0 16px;
     min-height: 60px;
     max-height: 60px;
-    margin-bottom: 1rem;
-    background-color: #242327 !important;
-    border-bottom: 2px solid rgba(255,255,255,0.1) !important;
+    margin-bottom: 16px;
+    background: linear-gradient(145deg, #334155 0%, #475569 100%) !important;
+    border-bottom: 1px solid #475569 !important;
 }
 
 .dinolabsAudioEditorCellTitle {
-    font-size: 0.8rem;
+    font-size: 12px;
     font-weight: 700;
-    color: #c0c0c0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #f1f5f9;
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 8px;
     overflow: hidden;
 }
 
@@ -190,7 +193,7 @@
     box-sizing: border-box; 
     min-width: 100%;
     max-width: 100%;
-    padding: 0 1rem 1rem 1rem !important;
+    padding: 0 0 0 16px !important;
     overflow: scroll; 
 }
 
@@ -203,7 +206,7 @@
     min-width: 100%;
     max-width: 100%;
     overflow: scroll; 
-    padding: 0 1rem 1rem 1rem !important;
+    padding: 0 16px 16px 16px !important;
 }
 
 .dinolabsAudioEditorCellFlexStackHalf {
@@ -219,14 +222,26 @@
     max-width: 100%;
     height: 60px; 
     box-sizing: border-box;
-    padding: 0.5rem; 
-    font-size: 0.8rem; 
-    font-weight: 600; 
-    color: #c1c1c1; 
-    border: 1px solid #c1c1c1; 
+    padding: 0.6rem 1rem; 
+    font-size: 12px; 
+    font-weight: 700; 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #f1f5f9; 
+    border: 1px solid #475569; 
     border-radius: 6px; 
-    box-shadow: 0 0 8px black; 
-    background-color: rgba(255,255,255,0.05);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); 
+    background: linear-gradient(145deg, #334155 0%, #475569 100%);
+    transition: all 0.2s ease;
+}
+
+.dinolabsAudioEditorTextArea:hover {
+    opacity: 0.8;
+}
+
+.dinolabsAudioEditorTextArea:focus {
+    outline: none;
+    border-color: #1e40af;
+    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.2);
 }
 
 .dinolabsAudioEditorLargeStack,
@@ -250,19 +265,37 @@
 }
 
 .dinolabsAudioEditorBottomBarInput {
-    padding: 0.4rem 0.8rem;
-    background-color: rgba(0,0,0,0.1);
-    border: 1px solid #c1c1c1;
+    padding: 0.6rem 0.8rem;
+    background: linear-gradient(145deg, #334155 0%, #475569 100%);
+    border: 1px solid #475569;
     border-radius: 6px;
-    font-size: 0.6rem !important;
-    font-weight: 800;
-    color: #c1c1c1;
-    box-shadow: 0 0 6px black;
+    font-size: 12px !important;
+    font-weight: 700;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #f1f5f9;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
     box-sizing: border-box;
+    transition: all 0.2s ease;
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
     cursor: pointer;
+    outline: none;
+}
+
+.dinolabsAudioEditorBottomBarInput::placeholder {
+    color: #94a3b8;
+    font-weight: 700;
+}
+
+.dinolabsAudioEditorBottomBarInput:hover {
+    opacity: 0.8;
+}
+
+.dinolabsAudioEditorBottomBarInput:focus {
+    outline: none;
+    border-color: #1e40af;
+    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.2);
 }
 
 .dinolabsAudioEditorPositionInput,
@@ -271,17 +304,47 @@
 .dinolabsAudioEditorPositionInputFlexedMini,
 .dinolabsAudioEditorCSSInput {
     padding: 0.6rem 0.8rem;
-    background-color: rgba(0,0,0,0.1);
-    border: 1px solid #c1c1c1;
+    background: linear-gradient(145deg, #334155 0%, #475569 100%);
+    border: 1px solid #475569;
     border-radius: 6px;
-    font-size: 0.7rem !important;
-    font-weight: 800;
-    color: #c1c1c1;
-    box-shadow: 0 0 6px black;
+    font-size: 12px !important;
+    font-weight: 700;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #f1f5f9;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
     box-sizing: border-box;
+    transition: all 0.2s ease;
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
+    outline: none;
+}
+
+.dinolabsAudioEditorPositionInput::placeholder,
+.dinolabsAudioEditorPositionInputMini::placeholder,
+.dinolabsAudioEditorPositionInputFlexed::placeholder,
+.dinolabsAudioEditorPositionInputFlexedMini::placeholder,
+.dinolabsAudioEditorCSSInput::placeholder {
+    color: #94a3b8;
+    font-weight: 700;
+}
+
+.dinolabsAudioEditorPositionInput:hover,
+.dinolabsAudioEditorPositionInputMini:hover,
+.dinolabsAudioEditorPositionInputFlexed:hover,
+.dinolabsAudioEditorPositionInputFlexedMini:hover,
+.dinolabsAudioEditorCSSInput:hover {
+    opacity: 0.8;
+}
+
+.dinolabsAudioEditorPositionInput:focus,
+.dinolabsAudioEditorPositionInputMini:focus,
+.dinolabsAudioEditorPositionInputFlexed:focus,
+.dinolabsAudioEditorPositionInputFlexedMini:focus,
+.dinolabsAudioEditorCSSInput:focus {
+    outline: none;
+    border-color: #1e40af;
+    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.2);
 }
 
 .dinolabsAudioEditorPositionInputFlexed {
@@ -309,24 +372,25 @@
 }
 
 .dinolabsAudioEditorCellFlexTitle {
-    font-size: 0.7rem;
+    font-size: 12px;
     font-weight: 700;
-    color: #c0c0c0;
-    opacity: 0.8;
-    margin: 0.4rem 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #94a3b8;
+    opacity: 1;
+    margin: 8px 0;
 }
 
 .dinolabsAudioEditorCellFlexTitle span {
-    font-size: 0.8rem;
-    font-weight: 500;
-    margin-left: 0.6rem;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    margin-left: 8px;
 }
 
 .dinolabsAudioEditorCellFlex {
     display: flex;
     justify-content: flex-start;
     align-items: center;
-    margin-top: 0.6rem;
     min-width: 100%;
     gap: 4%;
 }
@@ -336,7 +400,7 @@
     flex-direction: column;
     justify-content: center;
     align-items: flex-start;
-    gap: 1.6rem; 
+    gap: 16px; 
     width: 100%; 
 }
 
@@ -344,7 +408,7 @@
     display: flex;
     justify-content: flex-start;
     align-items: center;
-    margin-top: 0.6rem;
+    margin-top: 8px;
     width: 100%;
     gap: 4%;
 }
@@ -353,9 +417,8 @@
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    gap: 0.6rem;
+    gap: 8px;
     height: 100%;
-
 }
 
 .dinolabsAudioEditorCellMiniInputWrapper {
@@ -363,36 +426,37 @@
     flex-direction: column;
     justify-content: center;
     align-items: flex-start;
-    gap: 0.6rem; 
+    gap: 8px; 
     min-width: 30%; 
     max-width: 30%; 
 }
 
 .dinolabsAudioEditorBrushSizeFlex {
     width: 80%;
-    display: flex;
-    justify-content: flex-start;
+    display: flex; 
+    justify-content: space-between;
     align-items: center;
-    gap: 5%;
+    gap: 8px; 
 }
 
+/* EXACT VIDEO EDITOR TOOLBAR BUTTON STYLES */
 .dinolabsAudioEditorToolButton,
-.dinolabsAudioEditorToolButtonBig,
-.dinolabsAudioEditorToolButtonBigger,
 .dinolabsAudioEditorToolButtonHeader,
-.dinolabsAudioEditorToolButtonText,
-.dinolabsAudioEditorToolButtonMini, 
-.dinolabsAudioEditorToolSelect {
-    background-color: rgba(255,255,255,0.05);
-    border: 1px solid #c1c1c1;
+.dinolabsAudioEditorBackgroundButton,
+.dinolabsAudioEditorToolButtonSection,
+.dinolabsAudioEditorToolButtonSmall,
+.dinolabsAudioEditorFiltersToolbarButton {
+    background: linear-gradient(145deg, #334155 0%, #475569 100%);
+    border: 1px solid #475569;
     border-radius: 6px;
-    font-size: 0.7rem;
+    font-size: 12px;
     font-weight: 700;
-    color: #f5f5f5;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #f1f5f9;
     cursor: pointer;
-    transition: transform 0.3s ease, opacity 0.3s ease;
+    transition: all 0.2s ease;
     outline: none;
-    box-shadow: 0 0 8px black;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
     box-sizing: border-box !important;
     display: flex;
     justify-content: center;
@@ -409,450 +473,135 @@
     padding: 0.6rem 1rem !important;
 }
 
-.dinolabsAudioEditorToolButtonBig {
-    min-width: 50%;
-    max-width: 50%;
-    padding: 0.6rem 1rem !important;
-}
-
-.dinolabsAudioEditorToolButtonBigger {
-    min-width: 40%;
-    max-width: 40%;
-    padding: 0.6rem 1rem !important;
-    gap: 0.6rem;
-}
-
 .dinolabsAudioEditorToolButtonHeader {
     width: auto;
     padding: 0.6rem 1rem !important;
     max-height: 55%;
 }
 
-.dinolabsAudioEditorToolButtonText {
+.dinolabsAudioEditorToolButtonSmall {
     min-width: 15%;
     max-width: 15%;
-    padding: 0.4rem;
-}
-
-.dinolabsAudioEditorToolButtonMini {
-    min-width: 15%;
-    max-width: 15%;
-    padding: 0.4rem;
+    padding: 8px;
 }
 
 .dinolabsAudioEditorToolButton:hover,
-.dinolabsAudioEditorToolButtonBig:hover,
-.dinolabsAudioEditorToolButtonText:hover,
-.dinolabsAudioEditorToolButtonMini:hover {
-    opacity: 0.6;
-    outline: none;
-    border: 1px solid #c0c0c0;
-}
-
-.dinolabsAudioEditorToolButton:hover,
-.dinolabsAudioEditorToolButtonText:hover,
-.dinolabsAudioEditorToolButtonMini:hover {
-    transform: scale(1.1);
+.dinolabsAudioEditorToolButtonHeader:hover,
+.dinolabsAudioEditorBackgroundButton:hover,
+.dinolabsAudioEditorToolButtonSection:hover,
+.dinolabsAudioEditorToolButtonSmall:hover,
+.dinolabsAudioEditorFiltersToolbarButton:hover {
+    background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
+    border-color: #1e40af;
+    box-shadow: 0 4px 6px -1px rgba(30, 64, 175, 0.2);
 }
 
 .dinolabsAudioEditorToolButton:focus,
-.dinolabsAudioEditorToolButtonBig:focus,
-.dinolabsAudioEditorToolButtonText:focus,
-.dinolabsAudioEditorToolButtonMini:focus {
-    opacity: 1.0;
+.dinolabsAudioEditorToolButtonHeader:focus,
+.dinolabsAudioEditorBackgroundButton:focus,
+.dinolabsAudioEditorToolButtonSection:focus,
+.dinolabsAudioEditorToolButtonSmall:focus,
+.dinolabsAudioEditorFiltersToolbarButton:focus {
     outline: none;
-    border: 1px solid #c0c0c0;
+    border-color: #1e40af;
+    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.2), 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
-.dinolabsAudioEditorColorPicker,
-.dinolabsAudioEditorColorPickerLarge {
-    border: none;
-    background: none;
-    cursor: pointer;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    box-shadow: 0 0 10px black;
-    border: 1px solid white;
-    border-radius: 6px;
-}
-
-.dinolabsAudioEditorColorPicker {
-    padding: 0;
-    min-width: 30px;
-    max-width: 30px;
-    min-height: 30px;
-    max-height: 30px;
-}
-
-.dinolabsAudioEditorColorPickerLarge {
-    padding: 0;
-    min-width: 80%;
-    max-width: 80%;
-    height: 50px;
-}
-
-.dinolabsAudioEditorSliderWrapper {
-    width: 70%;
-    padding: 0 0.4rem;
-    display: flex;
-    justify-content: center;
-}
-
-.dinolabsConfrmationCheck {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 0; 
-}
-
-.dinolabsConfrmationCheck span {
-    font-size: 0.6rem !important;
-    font-weight: 600;
-    color: #c0c0c0;
-    margin: 0; 
-    box-sizing: border-box;
-    text-overflow: ellipsis;
-    overflow: hidden; 
-    white-space: nowrap;
-    padding: 0 0.4rem; 
-}
-
-.dinolabsAudioResizer {
-    position: absolute;
-    cursor: move;
-}
-
-.dinolabsAudioEditorContent {
-    max-width: 100%;
-    max-height: 100%;
-    display: block;
-    user-select: none;
-    pointer-events: none;
-    max-width: none;
-    max-height: none;
-}
-
-.dinolabsAudioEditorResizeHandle {
-    width: 12px;
-    height: 12px;
-    background: rgba(255, 255, 255, 0.6);
-    border: 1px solid #000;
-    position: absolute;
-    z-index: 10;
-    cursor: pointer;
-    box-sizing: border-box;
-    border-radius: 50%;
-}
-
-.dinolabsAudioEditorResizeHandle.top-left,
-.dinolabsAudioEditorResizeHandle.bottom-left,
-.dinolabsAudioEditorResizeHandle.top-right,
-.dinolabsAudioEditorResizeHandle.bottom-right,
-.dinolabsAudioEditorRotationHandle.top-left,
-.dinolabsAudioEditorRotationHandle.bottom-left,
-.dinolabsAudioEditorRotationHandle.top-right,
-.dinolabsAudioEditorRotationHandle.bottom-right {
-    cursor: grab;
-}
-
-.dinolabsAudioEditorResizeHandle:hover {
-    opacity: 0.6;
-}
-
-.dinolabsAudioEditorCropRectangle .dinolabsAudioEditorResizeHandle {
-    background: rgba(31, 174, 245, 0.8);
-    border: white;
-}
-
-.dinolabsAudioEditorRotationHandle {
-    background: rgba(31, 174, 245, 0.8);
-    border: white;
-    width: 8px;
-    height: 8px;
-    border-radius: 4px;
-}
-
-.dinolabsCornerInputGridWrapper {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    justify-content: space-evenly;
-    align-items: center;
-}
-
-.dinolabsCornerInputFlex {
+.dinolabsAudioPresetPillWrapper {
     display: flex;
     justify-content: flex-start;
     align-items: center;
     width: 100%;
-    gap: 0.6rem;
-    margin-bottom: 0.6rem;
+    flex-wrap: wrap;
+    gap: 8px; 
 }
 
-
-.dinolabsAudioEditorModeIndicator {
-    width: 33%;
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: #c0c0c0;
-    display: flex;
-    justify-content: flex-end;
-    align-items: center;
-}
-
-.dinolabsAudioEditorModeIndicator span {
+.dinolabsAudioPresetPill {
+    font-size: 12px;
     font-weight: 700;
-    color: #c0c0c0;
-    font-size: 0.8rem;
-    margin-right: 0.6rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #f1f5f9;
+    background: linear-gradient(145deg, #334155 0%, #475569 100%);
+    border: 1px solid #475569;
+    border-radius: 16px;
+    padding: 8px 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    outline: none;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
-.dinolabsAudioInputBottomBar, 
-.dinolabsAudioInputTopBar {
+.dinolabsAudioPresetPill:hover {
+    opacity: 0.8;
+    transform: scale(1.02);
+}
+
+.dinolabsAudioPresetPill:focus {
+    outline: none;
+    border-color: #1e40af;
+    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.2);
+}
+
+.dinolabsAudioColorSwitchWrapper {
     display: flex;
-    justify-content: space-between;
+    justify-content: flex-start;
     align-items: center;
     width: 100%;
-    height: 10%;
-    min-height: 10%;
-    max-height: 10%;
-    bottom: 0;
-    right: 0;
-    left: 0;
-    z-index: 4;
-    box-sizing: border-box;
-    padding: 0 1rem;
-    background-color: #242327 !important;
-    overflow-x: scroll !important; 
+    flex-wrap: wrap;
+    gap: 8px; 
 }
 
-.dinolabsAudioInputBottomBar {
-    border-top: 2px solid rgba(255,255,255,0.1) !important;
+.dinolabsAudioColorSwitchPill {
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    cursor: pointer;
+    border: 2px solid #475569;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
-.dinolabsAudioInputTopBar {
-    border-bottom: 2px solid rgba(255,255,255,0.1) !important;
+.dinolabsAudioColorSwitchPill:hover {
+    transform: scale(1.1);
+    border-color: #f1f5f9;
 }
 
-.dinolabsAudioInputBottomBarTimelineSupplement {
-    display: flex;
-    flex-direction: column; 
-    justify-content: center;
-    align-items: space-between;
+.dinolabsAudioColorSwitchPill:focus {
+    outline: none;
+    border-color: #1e40af;
+    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.2);
+}
+
+.dinolabsAudioEditorTimelineWrapper {
     width: 100%;
-    height: 40%;
-    min-height: 40%;
-    max-height: 40%;
-    background-color: rgba(255, 255, 255, 0.1);
-    border-top: 1px solid rgba(0, 0, 0, 0.4);
-    position: relative;
-    padding: 0; 
-    box-sizing: border-box;
-    gap: 0;
-    border-top: 2px solid rgba(255,255,255,0.1) !important;
+    min-height: 60%;
+    max-height: 60%;
+    height: 60%; 
+    background: linear-gradient(145deg, #334155 0%, #475569 100%);
+    border-top: 1px solid #475569;
+    position: relative; 
     overflow: hidden;
 }
 
 .dinolabsAudioEditorTimelineHeader {
-    width: 100%; 
-    min-width: 100%;
-    max-width: 100%;
-    display: flex; 
-    justify-content: space-between;
-    align-items: center;
-    padding: 0.8rem 1rem; 
-    box-sizing: border-box;
-    overflow-x: scroll !important;
-    background-color: rgba(0,0,0,0.1) !important;
-    border-bottom: 2px solid rgba(255,255,255,0.1) !important;
-}
-
-.dinolabsAudioEditorTimelineHeaderSupplementLeading {
-    display: flex; 
-    justify-content: flex-start;
-    align-items: center;
-    gap: 1rem; 
-}
-
-.dinolabsAudioEditorSelectModeWrapper {
-    display: flex; 
-    justify-content: flex-start;
-    align-items: center;
-    gap: 0.4rem; 
-}
-
-.dinolabsAudioEditorSelectModeWrapper label {
-    font-size: 0.65rem; 
-    font-weight: 600; 
-    color: #c1c1c1; 
-}
-
-.dinolabsAudioEditorTimelineHeaderSupplementTrailing {
-    display: flex; 
-    justify-content: flex-start;
-    align-items: center;
-    gap: 1rem; 
-}
-
-.dinolabsAudioEditorTimelineHeaderSupplementLeading span, 
-.dinolabsAudioEditorTimelineHeaderSupplementTrailing span {
-    font-size: 0.7rem; 
-    font-weight: 700; 
-    color: #c1c1c1; 
-    padding: 0; 
-    margin: 0; 
-    text-align: center;
-}
-
-.dinolabsAudioEditorTimelineAudioTracks {
-    position: relative; 
-    height: 50%; 
-    width: 100%; 
-}
-
-.dinolabsAudioEditorTimeline {
-    flex: 1; 
-    position: relative; 
-    overflow: auto; 
-    box-sizing: border-box;
-    border-bottom: 2px solid rgba(255,255,255,0.1) !important;
-    overflow: scroll !important;
-}
-
-.dinolabsAudioEditorTimelineRuler {
     height: 30px; 
-    background-color: rgba(0,0,0,0.1) !important;
-    position: relative;
-    overflow: hidden !important;
     width: 100%; 
-}
-
-.dinolabsAudioEditorTimelineRulerItem {
-    box-sizing: border-box;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    padding: 0.4rem; 
-    position: absolute; 
-    top: 0; 
-    height: 100%; 
-    border-left: 2px solid rgba(255,255,255,0.1) !important;
-    color: #c1c1c1; 
-    font-size: 0.6rem;
-    font-weight: 700; 
-    overflow: hidden !important;
-}
-
-.dinolabsAudioEditorTimelineAudioTrackLabel {
-    position: absolute; 
-    left: 0; 
-    top: 0; 
-    width: 60px; 
-    background-color: rgba(0,0,0,0.3);
+    background: linear-gradient(145deg, #334155 0%, #475569 100%);
+    border-bottom: 1px solid #475569;
     display: flex; 
     align-items: center;
-    border-left: 2px solid rgba(255,255,255,0.1) !important;
-    border-right: 2px solid rgba(255,255,255,0.1) !important;
-    border-top: 2px solid rgba(255,255,255,0.1) !important;
-    font-size: 0.6rem; 
-    font-weight: 700;
-    color: #c1c1c1; 
-    z-index: 11;
-    height: 100%; 
+    justify-content: space-between;
+    padding: 0 16px; 
     box-sizing: border-box;
-    padding: 0.6rem;
+    position: relative; 
 }
 
-.dinolabsAudioEditorTimelineAudioTrackContent {
-        position: relative; 
-    left: 60px; 
-    top: 0; 
-    width: calc(100% - 60px); 
-    background-color: rgba(0,0,0,0.3);
-    display: flex; 
-    align-items: center;
-    border-left: none;
-    border-right: 2px solid rgba(255,255,255,0.1) !important;
-    border-top: 2px solid rgba(255,255,255,0.1) !important;
-    font-size: 0.6rem; 
-    font-weight: 700;
-    color: #c1c1c1; 
-    z-index: 11;
-    min-height: 100%; 
-    max-height: 100%; 
-    box-sizing: border-box;
-    padding: 0.6rem;
-    border-radius: none; 
-}
-
-.dinolabsAudioEditorTimelineAudioTrackTimelineClip {
-       position: absolute; 
-    left: 60px; 
-    top: 0; 
-    width: calc(100% - 60px); 
-    background-color: rgba(0,0,0,0.3);
-    display: flex; 
-    align-items: center;
-    border: 2px solid rgba(255,255,255,0.1) !important;
-    font-size: 0.6rem; 
-    font-weight: 700;
-    color: #c1c1c1; 
-    z-index: 11;
-    min-height: 100%; 
-    max-height: 100%; 
-    box-sizing: border-box;
-    padding: 0.6rem;
-    border-radius: none; 
-    height: 100%;
-    cursor: pointer; 
-}
-
-.dinolabsAudioEditorTimelineAudioTrackTimelineClip span {
-    padding: 0; 
-    margin: 0; 
-    color: #c1c1c1; 
-    font-size: 0.7rem; 
-    font-weight: 700;
-    white-space: nowrap; overflow: hidden; 
-    text-overflow: ellipsis;
-}
-
-.dinolabsAudioEditorTimelineAudioTrackTimelineClipSection {
+.dinolabsAudioEditorTimelineHeaderScrubber {
     position: absolute; 
-    right: 0.6rem; 
-    display: flex; 
-    gap: 0.4rem; 
-    box-sizing: border-box;
-    padding: 0 0.4rem;
-}
-
-.dinolabsAudioEditorTimelineAudioTrackTimelineClipSectionDelete {
-    border: none; 
-    border-radius: 2px; 
-    padding: 4px; 
-    cursor: pointer; 
-    background-color: rgba(229, 75, 75, 0.4);
-    color: #c1c1c1; 
-    font-size: 0.6rem; 
-    border: 1px solid #c1c1c1; 
-}
-
-.dinolabsAudioEditorTimelineAudioTrackTimelineClipSectionDelete:hover {
-    opacity: 0.6; 
-}
-
-
-.dinolabsAudioEditorTimelineAudioTrackContent:hover {
-    opacity: 0.6; 
-}
-
-.dinolabsAudioEditorTimelinePlayhead {
-    position: absolute; 
-    top: 0;
+    top: 0; 
     bottom: 0; 
     width: 2px; 
-    background-color: rgba(90, 11, 226, 0.8);
+    background-color: rgba(92, 43, 226, 0.8);
     z-index: 10; 
     pointer-events: none;
 }
@@ -873,23 +622,24 @@
     display: flex; 
     align-items: center;
     justify-content: flex-start;
-    gap: 0.6rem; 
-    padding: 0 0.4rem; 
+    gap: 8px; 
+    padding: 0 8px; 
     box-sizing: border-box;
 }
 
 .dinolabsAudioEditorAudioControls label {
-    font-size: 0.7rem; 
+    font-size: 12px; 
     font-weight: 700; 
-    color: #c1c1c1; 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #f1f5f9; 
 }
 
 .dinolabsAudioEditorPlaybackControls {
     display: flex; 
     align-items: center;
     justify-content: flex-start;
-    gap: 0.6rem; 
-    padding: 0 0.4rem; 
+    gap: 8px; 
+    padding: 0 8px; 
     box-sizing: border-box;
 }
 
@@ -897,8 +647,8 @@
     display: flex; 
     align-items: center;
     justify-content: flex-start;
-    gap: 0.6rem; 
-    padding: 0 0.4rem; 
+    gap: 8px; 
+    padding: 0 8px; 
     box-sizing: border-box;
 }
 
@@ -906,8 +656,8 @@
     display: flex; 
     align-items: center;
     justify-content: flex-start;
-    gap: 0.6rem; 
-    padding: 0 0.4rem; 
+    gap: 8px; 
+    padding: 0 8px; 
     box-sizing: border-box;
 }
 
@@ -920,12 +670,38 @@
     height: 20%;
     min-height: 20%;
     max-height: 20%;
-    background-color: rgba(255, 255, 255, 0.1);
-    border-top: 1px solid rgba(0, 0, 0, 0.4);
+    background: linear-gradient(145deg, #334155 0%, #475569 100%);
+    border-top: 1px solid #475569;
     position: relative;
     padding: 0.6rem 1rem;
     box-sizing: border-box;
     gap: 1rem;
+}
+
+.dinolabsAudioInputTopBar, 
+.dinolabsAudioInputBottomBar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    height: 10%;
+    min-height: 10%;
+    max-height: 10%;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    z-index: 4;
+    box-sizing: border-box;
+    padding: 0 16px;
+    background: linear-gradient(145deg, #334155 0%, #475569 100%) !important;
+}
+
+.dinolabsAudioInputBottomBar {
+    border-top: 1px solid #475569 !important;
+}
+
+.dinolabsAudioInputTopBar {
+    border-bottom: 1px solid #475569 !important;
 }
 
 .dinolabsClipSliderTrack {
@@ -937,7 +713,7 @@
 }
 
 .dinolabsClipSliderBar {
-    background-color: rgba(90, 11, 226, 0.8) !important;
+    background-color: rgba(229, 75, 75, 0.8);
     width: 0.8rem;
     height: 100%;
     cursor: col-resize;
@@ -952,18 +728,20 @@
     justify-content: space-between;
     align-items: center;
     height: 100%;
-    padding: 2rem 1rem;
+    padding: 0.4rem 1rem;
     border-radius: 6px;
     box-sizing: border-box;
 }
 
 .dinolabsAudioInputBottomBarFrameSupplementImage {
     width: auto;
-    height: 80%;
+    height: 60%;
+    min-height: 60%;
+    max-height: 60%;
     border-radius: 6px;
-    box-shadow: 0 0 20px black;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
     cursor: pointer;
-    transition: transform 0.3s ease, opacity 0.3s ease;
+    transition: all 0.2s ease;
     margin-bottom: 0.6rem;
 }
 
@@ -974,9 +752,13 @@
 }
 
 .dinolabsAudioInputBottomBarFrameSupplementImageText {
-    color: #c0c0c0;
-    font-size: 0.6rem !important;
-    font-weight: 600;
+    color: #f1f5f9;
+    font-size: 12px !important;
+    font-weight: 700;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .dinolabsAudioContentFlexBig,
@@ -985,7 +767,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 1rem;
+    gap: 16px;
 }
 
 .dinolabsAudioContentFlexBig {
@@ -1005,26 +787,25 @@
 .dinolabsAudioButtonX, 
 .dinolabsAudioPlaybackButton, 
 .dinolabsAudioTrackButton {
-    background-color: rgba(255, 255, 255, 0.0);
+    background-color: transparent;
     padding: 0;
-    color: #c0c0c0;
+    color: #94a3b8;
     transition: transform 0.3s ease, opacity 0.3s ease;
     cursor: pointer;
     outline: none;
-    order: none;
+    border: none;
 }
 
 .dinolabsAudioButton {
-    font-size: 0.8rem !important;
+    font-size: 0.8rem;
     opacity: 1.0;
 }
 
 .dinolabsAudioPlaybackButton, 
 .dinolabsAudioTrackButton {
-    font-size: 0.7rem !important;
-    font-weight: 10000; 
-    opacity: 1.0;
+    font-size: 0.7rem;
     font-weight: 700; 
+    opacity: 1.0;
 }
 
 .dinolabsAudioButtonHelper {
@@ -1034,13 +815,14 @@
 
 .dinolabsAudioButtonSupplementLeading,
 .dinolabsAudioButtonSupplementTrailing {
-    font-size: 0.7rem  !important;
-    opacity: 0.8 !important; 
+    font-size: 0.7rem;
+    opacity: 0.8;
 }
 
 .dinolabsAudioButtonX {
     font-size: 0.7rem;
-    font-weight: 600;
+    font-weight: 700;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     opacity: 0.8;
 }
 
@@ -1059,6 +841,7 @@
 .dinolabsAudioButtonX:hover, 
 .dinolabsAudioPlaybackButton:hover, 
 .dinolabsAudioTrackButton:hover {
+    color: #f1f5f9;
     opacity: 0.6;
     transform: scale(1.1);
     outline: none;
@@ -1079,8 +862,8 @@
 .dinolabsAudioWaveformDisplayBig,
 .dinolabsAudioWaveformDisplaySmall {
     width: 100%;
-    background-color: #191919;
-    border-bottom: 1px solid #191919;
+    background: linear-gradient(145deg, #334155 0%, #475569 100%) !important;
+    border: 1px solid #475569 !important;
     overflow: visible;
     position: relative;
 }
@@ -1089,15 +872,17 @@
     height: 25%;
     min-height: 25%;
     max-height: 25%;
-    border: 1px solid #c0c0c0;
+    border: 1px solid #475569 !important;
+    background: linear-gradient(145deg, #334155 0%, #475569 100%) !important;
 }
 
 .dinolabsAudioWaveformDisplaySmall {
     height: 100%;
     min-height: 100%;
     max-height: 100%;
-    border: 1px solid #c0c0c0;
-    padding: 1rem;
+    border: 1px solid #475569 !important;
+    background: linear-gradient(145deg, #334155 0%, #475569 100%) !important;
+    padding: 16px;
 }
 
 .dinolabsAudioWaveformDisplayFlex {
@@ -1111,25 +896,24 @@
 }
 
 .dinolabsAudioEditorTextOverlay {
-    font-family: arial;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     font-size: 16px;
-    font-weight: normal;
-    color: #000000;
-    border-color: #000000;
+    font-weight: 700;
+    color: #f1f5f9;
+    border-color: #475569;
     border-width: 1px;
-    border-radius: 0px;
-    background-color: #f5f5f5;
+    border-radius: 6px;
+    background: linear-gradient(145deg, #334155 0%, #475569 100%);
     width: 100%;
-    background-color: rgba(255, 255, 255, 0.0);
     box-sizing: border-box;
-    box-shadow: 0 0 20px black;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .dinolabsAudioEditorTextDragSectionTop,
 .dinolabsAudioEditorTextDragSectionBottom {
     width: 100%;
     height: 10%;
-    background-color: #c1c1c1;
+    background-color: #475569;
     cursor: grab;
     user-select: none;
     position: relative;
@@ -1140,7 +924,7 @@
     box-sizing: border-box;
     border: none;
     outline: none;
-    padding: 0.4rem;
+    padding: 8px;
 }
 
 .dinolabsAudioEditorTextSpace:hover,
@@ -1153,14 +937,12 @@
     position: absolute;
     top: 0;
     right: 0;
-    background-color: rgba(255, 255, 255, 0.0);
-    color: white;
+    background-color: transparent;
+    color: #f1f5f9;
     border: none;
-    padding: none;
-    cursor: pointer;
     padding: 0;
-    color: black;
-    font-size: 0.8rem;
+    cursor: pointer;
+    font-size: 12px;
 }
 
 .dinolabsAudioEditorTextResizeHandle {
@@ -1168,7 +950,7 @@
     bottom: 0;
     right: 0;
     height: 40%;
-    background-color: black;
+    background-color: #475569;
     cursor: nwse-resize;
 }
 
@@ -1185,7 +967,7 @@
 .dinolabsTextEditorLayerList li, 
 .dinolabsTextEditorHistoryItem {
     width: 100%; 
-    padding: 1rem 1rem;
+    padding: 16px;
     overflow: scroll;
     display: flex; 
     flex-direction: column; 
@@ -1194,31 +976,85 @@
     box-sizing: border-box;
     margin: 0;
     cursor: pointer;
-    border-bottom: 1px solid rgba(255,255,255,0.3); 
+    border-bottom: 1px solid #475569; 
+    transition: all 0.2s ease;
 }
 
 .dinolabsTextEditorLayerList li:hover, 
 .dinolabsTextEditorHistoryItem:hover {
-    opacity: 0.6;
+    background: rgba(30, 64, 175, 0.15);
+    transform: translateX(1px);
 }
 
 .dinolabsTextEditorLayerListFlex {
     display: flex; 
     justify-content: flex-start;
     align-items: center;
-    gap: 1rem; 
-    margin: 0.8rem 0; 
+    gap: 16px; 
+    margin: 8px 0; 
     width: 100%; 
 }
 
 .dinolabsTextEditorLayerList li small, 
 .dinolabsTextEditorHistoryItem small {
-    font-size: 0.6rem !important; 
+    font-size: 16px !important; 
     font-weight: 700; 
-    color: #c1c1c1;
-    padding: 0rem; 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #94a3b8;
+    padding: 0; 
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;
     box-sizing: border-box;
+}
+
+/* Override any remaining black backgrounds in audio visualization panels */
+.dinolabsAudioEditorInnerWrapper canvas,
+.dinolabsAudioEditorInnerWrapperWaveForm canvas,
+.dinolabsAudioEditorInnerWrapperSupplementBig canvas,
+.dinolabsAudioEditorInnerWrapperSupplementSmall canvas {
+    background: transparent !important;
+}
+
+/* Ensure all audio visualization containers have proper gstyle backgrounds */
+.dinolabsAudioEditorInnerWrapper,
+.dinolabsAudioEditorInnerWrapperWaveForm,
+.dinolabsAudioEditorInnerWrapperSupplementBig,
+.dinolabsAudioEditorInnerWrapperSupplementSmall {
+    background: linear-gradient(145deg, #334155 0%, #475569 100%) !important;
+    border: 1px solid #475569 !important;
+}
+
+/* Fix for timeline track labels - prevent line breaking */
+.dinolabsVideoEditorTimelineVideoTrackTimelineClip span,
+.dinolabsVideoEditorTimelineVideoTrackTimelineClip,
+.dinolabsAudioEditorTimelineClip span,
+.dinolabsAudioEditorTimelineClip {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: #f1f5f9; 
+    font-size: 12px; 
+    font-weight: 700;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    margin: 0; 
+    padding: 4px 8px;
+    max-width: 100%;
+    box-sizing: border-box;
+}
+
+/* Additional timeline track styling */
+.dinolabsVideoEditorTimelineVideoTrackLabel,
+.dinolabsAudioEditorTimelineTrackLabel {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 60px;
+    padding: 0.6rem;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #f1f5f9;
+    background: linear-gradient(145deg, #334155 0%, #475569 100%);
+    border: 1px solid #475569;
 }

@@ -1541,6 +1541,7 @@ function DinoLabsVideoEditor({ fileHandle }) {
                 opacity: opacityGlobal / 100
               }}
             />
+            
             {textOverlays.map((overlay, index) => {
               if (currentTime >= overlay.startTime && currentTime < overlay.startTime + overlay.duration) {
                 return (

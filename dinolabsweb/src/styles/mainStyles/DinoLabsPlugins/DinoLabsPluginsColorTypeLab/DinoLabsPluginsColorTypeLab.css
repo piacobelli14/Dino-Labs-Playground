@@ -1,104 +1,157 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+.dinolabsColorTypeLabApp,
+.dinolabsColorTypeLabApp *,
+.dinolabsColorTypeLabApp *::before,
+.dinolabsColorTypeLabApp *::after {
+  box-sizing: border-box;
+}
+
+.dinolabsColorTypeLabApp button {
+  padding: 0.6rem 0.8rem;
+}
+
 .dinolabsColorTypeLabApp {
   width: 100%;
-  min-height: calc(100vh - 60px);
-  max-height: calc(100vh - 60px);
-  height: calc(100vh - 60px);
-  background: var(--ua-bg);
-  color: var(--ua-text);
+  min-height: 100vh;
+  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+  color: #f1f5f9;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-weight: 600;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  font-family: -apple-system, BlinkMacSystemFont, Segoe UI, Roboto, Helvetica, Arial, sans-serif;
-  --dlCtlRadius: 6px;
-  --dlCtlGap: 14px;
-  --dlCtlGapSm: 8px;
-  --dlCtlTiny: 10px;
-  --dlCtlSm: 12px;
-  --dlCtlMd: 13px;
-  --dlCtlLg: 15px;
 }
-.dinolabsColorTypeLabApp *,
-.dinolabsColorTypeLabApp *::before,
-.dinolabsColorTypeLabApp *::after { box-sizing: border-box; }
-.dinolabsColorTypeLabApp button { padding: 0.6rem 0.8rem; }
 
 .dinolabsColorTypeLabShell {
   flex: 1;
   display: grid;
   grid-template-columns: clamp(240px, 26vw, 340px) minmax(0, 1fr);
-  min-height: 100%;
+  border-top: 1px solid #475569;
   min-height: 0;
-  border-top: 1px solid var(--ua-border);
   overflow: hidden;
-
 }
 
 .dinolabsColorTypeLabSidebar {
-  background: var(--ua-panel);
-  border-right: 1px solid var(--ua-border);
-  padding: 12px;
-  overflow: auto;
-  min-width: 0;
+  background: linear-gradient(145deg, #334155 0%, #475569 100%);
+  border-right: 1px solid #475569;
+  padding: 20px;
   min-height: 0;
+  max-height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .dinolabsColorTypeLabSection {
-  background: var(--ua-panel-2);
-  border: 1px solid var(--ua-border-2);
-  border-radius: var(--dlCtlRadius);
-  padding: 12px;
-  margin-bottom: var(--dlCtlGap);
-  box-shadow: var(--ua-shadow);
-  padding: 20px 10px; 
+  background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
+  border: 1px solid #475569;
+  border-radius: 6px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .dinolabsColorTypeLabSectionTitle {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-weight: 800;
-  color: #eaf2fb;
-  margin-bottom: 16px;
-  font-size: var(--dlCtlSm);
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 24px;
+  color: #f1f5f9;
+}
 
+.dinolabsColorTypeLabSectionTitle svg {
+  font-size: 0.9rem;
+  margin-right: 0.4rem;
 }
 
 .dinolabsColorTypeLabRow {
   display: flex;
   flex-direction: column;
-  gap: var(--dlCtlGapSm);
-  margin-bottom: var(--dlCtlGapSm);
+  gap: 8px;
+  margin-bottom: 8px;
   min-width: 0;
-  margin-bottom: 8px; 
-  padding: 6px; 
+  background-color: rgba(0, 0, 0, 0.1); 
+  padding: 16px 12px;
+  border-radius: 6px;  
 }
 
-.dinolabsColorTypeLabLabel { font-size: var(--dlCtlSm); color: var(--ua-muted); font-weight: 700; }
-.dinolabsColorTypeLabSmall { font-size: var(--dlCtlTiny); color: var(--ua-muted); }
+.dinolabsColorTypeLabLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: #94a3b8;
+  margin-left: 4px;
+}
+
+.dinolabsColorTypeLabSmall {
+  font-size: 0.7rem;
+  font-weight: 800; 
+  color: #94a3b8;
+  padding: 0 0.4rem; 
+}
 
 .dinolabsColorTypeLabInput,
 .dinolabsColorTypeLabSelect,
 .dinolabsColorTypeLabTextArea,
 .dinolabsColorTypeLabNumber {
   width: 100%;
-  background: #203142;
-  border: 1px solid var(--ua-border-2);
-  color: var(--ua-text);
-  border-radius: var(--dlCtlRadius);
-  padding: 8px 10px;
+  background: linear-gradient(145deg, #334155 0%, #475569 100%);
+  border: 1px solid #475569;
+  color: #f1f5f9;
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
   outline: none;
-  font-size: var(--dlCtlMd);
+  font-weight: 700;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   height: 34px;
   min-width: 0;
 }
-.dinolabsColorTypeLabSelect { height: 34px; }
-.dinolabsColorTypeLabTextArea { height: auto; resize: vertical; min-height: 72px; }
+
+.dinolabsColorTypeLabSelect {
+  height: 44px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: none !important;
+}
+
+.dinolabsColorTypeLabSelect::-ms-expand {
+  display: none;
+}
+
+.dinolabsColorTypeLabTextArea {
+  height: auto;
+  resize: vertical;
+  min-height: 72px;
+}
+
 .dinolabsColorTypeLabInput:focus,
 .dinolabsColorTypeLabSelect:focus,
 .dinolabsColorTypeLabTextArea:focus,
 .dinolabsColorTypeLabNumber:focus {
-  border-color: var(--ua-accent);
-  box-shadow: 0 0 0 2px rgba(52, 152, 219, 0.22);
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2), 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.dinolabsColorTypeLabInput::placeholder,
+.dinolabsColorTypeLabSelect::placeholder,
+.dinolabsColorTypeLabTextArea::placeholder,
+.dinolabsColorTypeLabNumber::placeholder {
+  color: #94a3b8;
+  font-weight: 700;
 }
 
 .dinolabsColorTypeLabColorRow {
@@ -112,16 +165,26 @@
 .dinolabsColorTypeLabColorChip {
   width: 34px;
   height: 34px;
-  border-radius: var(--dlCtlRadius);
+  border-radius: 6px;
   cursor: pointer;
-  border: 1px solid #162334;
-  box-shadow: inset 0 0 0 1px #162334;
+  border: 1px solid #475569;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
 }
 
-.dinolabsColorTypeLabActions { display: flex; gap: 10px; flex-wrap: wrap; }
+.dinolabsColorTypeLabColorChip:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+}
+
+.dinolabsColorTypeLabActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
 
 .dinolabsColorTypeLabMain {
-  background: var(--ua-panel);
+  background: linear-gradient(145deg, #334155 0%, #475569 100%);
   overflow: auto;
   min-width: 0;
   min-height: 0;
@@ -137,38 +200,45 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  border-bottom: 1px solid var(--ua-border);
-  background: var(--ua-panel-2);
+  border-bottom: 1px solid #475569;
+  background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .dinolabsColorTypeLabHeadTitle {
   display: flex;
   align-items: center;
   gap: 8px;
-  font-weight: 900;
-  font-size: var(--dlCtlLg);
+  font-weight: 700;
+  font-size: 15px;
   letter-spacing: 0.1px;
   min-width: 0;
+  color: #f1f5f9;
 }
 
-.dinolabsColorTypeLabHeadActions { display: flex; gap: 10px; flex-wrap: wrap; }
+.dinolabsColorTypeLabHeadActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 0.6rem 0; 
+}
 
 .dinolabsColorTypeLabMainGrid {
-  padding: 12px;
+  padding: 20px;
   width: min(1200px, 100%);
   margin-inline: auto;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--dlCtlGap);
+  gap: 20px;
   min-width: 0;
 }
 
 .dinolabsColorTypeLabCard {
-  background: var(--ua-panel-2);
-  border: 1px solid var(--ua-border-2);
-  border-radius: var(--dlCtlRadius);
-  box-shadow: var(--ua-shadow);
-  padding: 12px;
+  background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
+  border: 1px solid #475569;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  padding: 32px 20px;
   display: flex;
   flex-direction: column;
   gap: 12px;
@@ -180,21 +250,32 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-weight: 800;
-  font-size: var(--dlCtlSm);
-  color: #e9f3ff;
+  font-weight: 700;
+  font-size: 1rem !important;
+  margin-bottom: 10px;
+  color: #f1f5f9;
   min-width: 0;
 }
 
 .dinolabsColorTypeLabBrandGrid {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
-  gap: var(--dlCtlGap);
+  gap: 20px;
   min-width: 0;
 }
 
-.dinolabsColorTypeLabBrandColumn { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-.dinolabsColorTypeLabBrandLabel { font-weight: 800; color: #e9f3ff; font-size: var(--dlCtlSm); }
+.dinolabsColorTypeLabBrandColumn {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.dinolabsColorTypeLabBrandLabel {
+  font-weight: 700;
+  color: #f1f5f9;
+  font-size: 12px;
+}
 
 .dinolabsColorTypeLabSwatchGrid {
   display: grid;
@@ -204,108 +285,144 @@
 }
 
 .dinolabsColorTypeLabSwatch {
-  border: 1px solid #162334;
-  border-radius: var(--dlCtlRadius);
+  border: 1px solid #475569;
+  border-radius: 6px;
   display: flex;
   align-items: flex-end;
   justify-content: center;
   cursor: pointer;
-  box-shadow: var(--ua-shadow);
-  transition: transform 0.08s ease, filter 0.08s ease;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
   min-height: 50px;
-  font-weight: 800;
-  font-size: var(--dlCtlTiny);
+  font-weight: 700;
+  font-size: 10px;
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
   padding: 0.6rem 0.8rem;
 }
-.dinolabsColorTypeLabSwatch:hover { transform: translateY(-1px); filter: brightness(1.04); }
+
+.dinolabsColorTypeLabSwatch:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+}
 
 .dinolabsColorTypeLabGradientBlock {
-  border: 1px solid #162334;
-  border-radius: var(--dlCtlRadius);
+  border: 1px solid #475569;
+  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 14px;
   min-height: 120px;
-}
-.dinolabsColorTypeLabGradientText {
-  background: #0b1622cc;
-  border: 1px solid #0c1a28;
-  border-radius: 6px;
-  padding: 4px 8px;
-  font-weight: 800;
-  font-size: var(--dlCtlSm);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
-.dinolabsColorTypeLabContrastRow { display: flex; gap: 10px; flex-wrap: wrap; }
+.dinolabsColorTypeLabGradientText {
+  background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
+  border: 1px solid #475569;
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-weight: 700;
+  font-size: 12px;
+  color: #f1f5f9;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.dinolabsColorTypeLabContrastRow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .dinolabsColorTypeLabContrastChip {
   flex: 1 1 180px;
-  border-radius: var(--dlCtlRadius);
-  border: 1px solid #162334;
-  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #475569;
+  padding: 16px 16px;
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-weight: 800;
+  font-weight: 700;
   min-width: 0;
-  margin: 6px 0; 
-  padding: 8px; 
-  font-size: 0.8rem; 
+  margin: 2px 0;
+  font-size: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
-.dinolabsColorTypeLabMini { font-size: var(--dlCtlTiny); opacity: 0.9; }
+
+.dinolabsColorTypeLabMini {
+  font-size: 12px;
+  font-weight: 700;
+  opacity: 0.9;
+}
 
 .dinolabsColorTypeLabContrastStack {
   display: flex;
   flex-direction: column;
   gap: 12px;
 }
+
 .dinolabsColorTypeLabContrastTop {
   display: grid;
   grid-template-columns: 1fr;
   gap: 10px;
 }
+
 .dinolabsColorTypeLabContrastValue {
-  background: #0b1622cc;
-  border: 1px solid #0c1a28;
+  background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
+  border: 1px solid #475569;
   border-radius: 6px;
   padding: 8px 10px;
-  font-weight: 900;
+  font-weight: 700;
   width: max-content;
-  font-size: 0.8rem; 
-  color: #c1c1c1; 
-  margin: 6px 0; 
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 6px 0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
+
 .dinolabsColorTypeLabContrastBadges {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(108px, 1fr));
   gap: 8px;
-  margin: 6px 0; 
+  margin: 6px 0;
 }
+
 .dinolabsColorTypeLabBadge {
   padding: 0.6rem 0.8rem;
-  border-radius: 999px;
-  border: 1px solid #1a2b3b;
-  background: #223244;
-  color: #d7e5ef;
-  font-size: var(--dlCtlTiny);
-  font-weight: 800;
+  border-radius: 6px;
+  border: 1px solid #475569;
+  background: linear-gradient(145deg, #334155 0%, #475569 100%);
+  color: #f1f5f9;
+  font-size: 10px;
+  font-weight: 700;
   line-height: 1;
   text-align: center;
   white-space: nowrap;
-  border-radius: 6px; 
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
-.dinolabsColorTypeLabBadge.good { background: #193825; border-color: #215b35; color: #c5f3d8; }
-.dinolabsColorTypeLabBadge.bad { background: #3a1c1c; border-color: #5a2a2a; color: #ffd6d6; }
+
+.dinolabsColorTypeLabBadge.good {
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.6) 0%, rgba(5, 150, 105, 0.6) 100%);
+  border-color: #059669;
+  color: #ffffff;
+}
+
+.dinolabsColorTypeLabBadge.bad {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.6) 0%, rgba(220, 38, 38, 0.6) 100%);
+  border-color: #dc2626;
+  color: #ffffff;
+}
+
 .dinolabsColorTypeLabContrastPreview {
-  border: 1px solid #162334;
-  border-radius: var(--dlCtlRadius);
+  border: 1px solid #475569;
+  border-radius: 6px;
   min-height: 140px;
   aspect-ratio: 4 / 3;
   overflow: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
+
 .dinolabsColorTypeLabContrastPairs {
   display: grid;
   grid-template-columns: 1fr;
@@ -313,135 +430,341 @@
 }
 
 .dinolabsColorTypeLabTypeBox {
-  background: #13202d;
-  border: 1px solid #162334;
-  border-radius: var(--dlCtlRadius);
+  background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
+  border: 1px solid #475569;
+  border-radius: 6px;
   padding: 12px;
   display: flex;
   flex-direction: column;
   gap: 10px;
   min-width: 0;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
+
 .dinolabsColorTypeLabTypeSample {
   font-size: 16px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: 0.2px;
-  background: #0f1b27;
-  border: 1px solid #0c1622;
-  border-radius: var(--dlCtlRadius);
+  background: linear-gradient(145deg, #334155 0%, #475569 100%);
+  border: 1px solid #475569;
+  border-radius: 6px;
   padding: 8px 10px;
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
+  color: #f1f5f9;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
+
 .dinolabsColorTypeLabScaleList {
   display: flex;
   flex-direction: column;
   gap: 8px;
   max-height: min(36vh, 320px);
   overflow: auto;
-  border-top: 1px dashed #243444;
+  border-top: 1px dashed #475569;
   padding-top: 10px;
   min-width: 0;
 }
+
 .dinolabsColorTypeLabScaleItem {
-  background: #0f1b27;
-  border: 1px solid #0c1622;
-  border-radius: var(--dlCtlRadius);
+  background: linear-gradient(145deg, #334155 0%, #475569 100%);
+  border: 1px solid #475569;
+  border-radius: 6px;
   padding: 10px;
   display: flex;
   flex-direction: column;
   gap: 6px;
   min-width: 0;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
+
 .dinolabsColorTypeLabScaleMeta {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  font-size: var(--dlCtlSm);
-  color: #c8dae9;
+  font-size: 12px;
+  color: #94a3b8;
   font-weight: 700;
   min-width: 0;
 }
-.dinolabsColorTypeLabScaleText { font-weight: 700; min-width: 0; overflow-wrap: anywhere; }
 
-.dinolabsColorTypeLabExportBlock { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-.dinolabsColorTypeLabExportHeader { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 0; flex-wrap: wrap; }
-.dinolabsColorTypeLabExportTitle { font-weight: 800; font-size: var(--dlCtlSm); }
-.dinolabsColorTypeLabExportActions { display: flex; gap: 10px; flex-wrap: wrap; }
+.dinolabsColorTypeLabScaleText {
+  font-weight: 700;
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: #f1f5f9;
+}
+
+.dinolabsColorTypeLabExportBlock {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  min-width: 0;
+}
+
+.dinolabsColorTypeLabExportHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+  flex-wrap: wrap;
+}
+
+.dinolabsColorTypeLabExportTitle {
+  font-weight: 700;
+  font-size: 12px;
+  color: #f1f5f9;
+}
+
+.dinolabsColorTypeLabExportActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
 .dinolabsColorTypeLabCode {
-  background: #0b1622;
-  border: 1px solid #0c1a28;
-  border-radius: var(--dlCtlRadius);
+  background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
+  border: 1px solid #475569;
+  border-radius: 6px;
   padding: 10px;
   font-size: 11px;
-  color: #d8e6f5;
+  color: #f1f5f9;
   white-space: pre-wrap;
   max-height: 200px;
   overflow: auto;
   font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
   word-break: break-word;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .dinolabsColorTypeLabBtn {
-  background: #2a3a4a;
-  border: 1px solid #1f2a36;
-  color: #eef6ff;
-  border-radius: var(--dlCtlRadius);
-  font-weight: 800;
-  font-size: var(--dlCtlSm);
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border: 1px solid #2563eb;
+  color: #ffffff;
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
+  font-weight: 700;
+  font-size: 12px;
   cursor: pointer;
-  box-shadow: var(--ua-shadow);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
   display: inline-flex;
   align-items: center;
+  justify-content: center;
   gap: 8px;
-  transition: transform 0.08s ease, filter 0.08s ease, box-shadow 0.08s ease;
-  padding: 0.6rem 0.8rem;
+  min-height: 34px;
+  line-height: 1.2;
+  text-align: center;
+  word-break: break-word;
 }
-.dinolabsColorTypeLabBtn:hover { transform: translateY(-1px); filter: brightness(1.05); }
-.dinolabsColorTypeLabBtn:active { transform: translateY(0); filter: brightness(0.98); }
-.dinolabsColorTypeLabSubtle { background: #1c2936; color: #d2e5f2; box-shadow: none; }
 
-.dinolabsColorTypeLabSwatchRow { display: flex; gap: 10px; flex-wrap: wrap; padding: 0 10px;  }
+.dinolabsColorTypeLabBtn:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  border-color: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+}
+
+.dinolabsColorTypeLabBtn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.dinolabsColorTypeLabBtn.subtle,
+.dinolabsColorTypeLabSubtle {
+  background: linear-gradient(145deg, #334155 0%, #475569 100%);
+  border-color: #475569;
+  color: #f1f5f9;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.dinolabsColorTypeLabBtn.subtle:hover,
+.dinolabsColorTypeLabSubtle:hover {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border-color: #3b82f6;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+}
+
+.dinolabsColorTypeLabSwatchRow {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  padding: 0 0px;
+}
 
 .dinolabsColorTypeLabSidebar::-webkit-scrollbar,
 .dinolabsColorTypeLabScaleList::-webkit-scrollbar,
 .dinolabsColorTypeLabMain::-webkit-scrollbar,
-.dinolabsColorTypeLabCode::-webkit-scrollbar { width: 8px; height: 8px; }
+.dinolabsColorTypeLabCode::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
 .dinolabsColorTypeLabSidebar::-webkit-scrollbar-thumb,
 .dinolabsColorTypeLabScaleList::-webkit-scrollbar-thumb,
 .dinolabsColorTypeLabMain::-webkit-scrollbar-thumb,
-.dinolabsColorTypeLabCode::-webkit-scrollbar-thumb { background: #4a6175; border-radius: 6px; }
+.dinolabsColorTypeLabCode::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border-radius: 6px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.dinolabsColorTypeLabSidebar::-webkit-scrollbar-thumb:hover,
+.dinolabsColorTypeLabScaleList::-webkit-scrollbar-thumb:hover,
+.dinolabsColorTypeLabMain::-webkit-scrollbar-thumb:hover,
+.dinolabsColorTypeLabCode::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+}
+
 .dinolabsColorTypeLabSidebar::-webkit-scrollbar-track,
 .dinolabsColorTypeLabScaleList::-webkit-scrollbar-track,
 .dinolabsColorTypeLabMain::-webkit-scrollbar-track,
-.dinolabsColorTypeLabCode::-webkit-scrollbar-track { background: #243444; }
+.dinolabsColorTypeLabCode::-webkit-scrollbar-track {
+  background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
+}
 
 @media (max-width: 1280px) {
-  .dinolabsColorTypeLabMainGrid { grid-template-columns: 1fr; }
+  .dinolabsColorTypeLabMainGrid {
+    grid-template-columns: 1fr;
+  }
 }
+
 @media (max-width: 1100px) {
-  .dinolabsColorTypeLabShell { grid-template-columns: minmax(0, 1fr); }
-  .dinolabsColorTypeLabSidebar { order: 2; }
-  .dinolabsColorTypeLabMain { order: 1; }
+  .dinolabsColorTypeLabShell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dinolabsColorTypeLabSidebar {
+    order: 2;
+  }
+  .dinolabsColorTypeLabMain {
+    order: 1;
+  }
 }
+
+@media (max-width: 1024px) {
+  .dinolabsColorTypeLabBrandGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
 @media (max-width: 560px) {
-  .dinolabsColorTypeLabHeadBar { flex-direction: column; align-items: stretch; gap: 10px; }
+  .dinolabsColorTypeLabHeadBar {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+  
+  .dinolabsColorTypeLabSection {
+    padding: 12px;
+  }
+  
+  .dinolabsColorTypeLabMainGrid {
+    padding: 12px;
+    gap: 14px;
+  }
+  
+  .dinolabsColorTypeLabSidebar {
+    padding: 12px;
+  }
+  
+  .dinolabsColorTypeLabCard {
+    padding: 12px;
+  }
+  
+  .dinolabsColorTypeLabInput,
+  .dinolabsColorTypeLabSelect,
+  .dinolabsColorTypeLabTextArea,
+  .dinolabsColorTypeLabNumber {
+    font-size: 16px;
+    padding: 8px 12px;
+  }
 }
+
+@media (min-width: 561px) and (max-width: 768px) {
+  .dinolabsColorTypeLabSection {
+    padding: 16px;
+  }
+  
+  .dinolabsColorTypeLabMainGrid {
+    padding: 16px;
+    gap: 16px;
+  }
+  
+  .dinolabsColorTypeLabSidebar {
+    padding: 16px;
+  }
+  
+  .dinolabsColorTypeLabCard {
+    padding: 16px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .dinolabsColorTypeLabSection {
+    padding: 18px;
+  }
+  
+  .dinolabsColorTypeLabMainGrid {
+    padding: 18px;
+    gap: 18px;
+  }
+  
+  .dinolabsColorTypeLabSidebar {
+    padding: 18px;
+  }
+  
+  .dinolabsColorTypeLabCard {
+    padding: 18px;
+  }
+}
+
+@media (min-width: 1025px) {
+  .dinolabsColorTypeLabSection {
+    padding: 22px;
+  }
+  
+  .dinolabsColorTypeLabMainGrid {
+    padding: 22px;
+    gap: 22px;
+  }
+  
+  .dinolabsColorTypeLabSidebar {
+    padding: 22px;
+  }
+  
+  .dinolabsColorTypeLabCard {
+    padding: 22px;
+  }
+}
+
+@media (prefers-contrast: high) {
+  .dinolabsColorTypeLabInput,
+  .dinolabsColorTypeLabSelect,
+  .dinolabsColorTypeLabTextArea,
+  .dinolabsColorTypeLabNumber,
+  .dinolabsColorTypeLabColorChip {
+    border-width: 2px;
+  }
+  
+  .dinolabsColorTypeLabSection,
+  .dinolabsColorTypeLabCard,
+  .dinolabsColorTypeLabContrastPreview,
+  .dinolabsColorTypeLabCode {
+    border-width: 2px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .dinolabsColorTypeLabBtn, .dinolabsColorTypeLabSwatch { transition: none; }
+  .dinolabsColorTypeLabBtn,
+  .dinolabsColorTypeLabSwatch,
+  .dinolabsColorTypeLabInput,
+  .dinolabsColorTypeLabSelect,
+  .dinolabsColorTypeLabTextArea,
+  .dinolabsColorTypeLabNumber,
+  .dinolabsColorTypeLabColorChip {
+    transition: none;
+  }
 }
-
-.dinolabsColorTypeLabApp{
-  min-height: 100dvh;
-  height: 100dvh;
-}
-
-.dinolabsColorTypeLabSelect{
-  -webkit-appearance:none;
-  -moz-appearance:none;
-  appearance:none;
-  background-image:none !important;
-  font-weight: 700; 
-}
-.dinolabsColorTypeLabSelect::-ms-expand{ display:none; }

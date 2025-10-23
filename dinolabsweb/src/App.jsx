@@ -13,14 +13,8 @@ import DinoLabsPluginsDictionary from "./pages/DinoLabsPlugins/DinoLabsPluginsDi
 import DinoLabsPluginsThesaurus from "./pages/DinoLabsPlugins/DinoLabsPluginsThesaurus/DinoLabsPluginsThesaurus";
 import DinoLabsPluginsCalculator from "./pages/DinoLabsPlugins/DinoLabsPluginsCalculator/DinoLabsPluginsCalculator";
 import DinoLabsPluginsMatrix from "./pages/DinoLabsPlugins/DinoLabsPluginsMatrix/DinoLabsPluginsMatrix";
-import DinoLabsPluginsUnitLab from "./pages/DinoLabsPlugins/DinoLabsPluginsUnitLab/DinoLabsPluginsUnitLab";
 import DinoLabsPluginsColorTypeLab from "./pages/DinoLabsPlugins/DinoLabsPluginsColorTypeLab/DinoLabsPluginsColorTypeLab";
-import DinoLabsPluginsAssetOptimizer from "./pages/DinoLabsPlugins/DinoLabsPluginsAssetOptimizer/DinoLabsPluginsAssetOptimizer";
-import DinoLabsPluginsVisualDiff from "./pages/DinoLabsPlugins/DinoLabsPluginsVisualDiff/DinoLabsPluginsVisualDiff";
-import DinoLabsPluginsRegexDataLab from "./pages/DinoLabsPlugins/DinoLabsPluginsRegexDataLab/DinoLabsPluginsRegexDataLab";
 import DinoLabsPluginsPlot from "./pages/DinoLabsPlugins/DinoLabsPluginsPlot/DinoLabsPluginsPlot";
-
-
 
 function App() {
   const [osClass, setOsClass] = useState("");
@@ -48,6 +42,7 @@ function App() {
           <Route path="/register" element={<Register/>}/>
           <Route path="/reset" element={<Reset/>}/>
           <Route path="/verify" element={<Verification/>}/>
+
           <Route path="/dinolabs" element={
             <ProtectedRoute>
               <DinoLabs />
@@ -83,29 +78,9 @@ function App() {
               <DinoLabsPluginsMatrix />
             </ProtectedRoute>
           } />
-          <Route path="/unitlab" element={
-            <ProtectedRoute>
-              <DinoLabsPluginsUnitLab />
-            </ProtectedRoute>
-          } />
           <Route path="/colortypelab" element={
             <ProtectedRoute>
               <DinoLabsPluginsColorTypeLab />
-            </ProtectedRoute>
-          } />
-          <Route path="/assetoptimizer" element={
-            <ProtectedRoute>
-              <DinoLabsPluginsAssetOptimizer />
-            </ProtectedRoute>
-          } />
-          <Route path="/visualdiff" element={
-            <ProtectedRoute>
-              <DinoLabsPluginsVisualDiff />
-            </ProtectedRoute>
-          } />
-          <Route path="/regexdatalab" element={
-            <ProtectedRoute>
-              <DinoLabsPluginsRegexDataLab />
             </ProtectedRoute>
           } />
           <Route path="/plot" element={

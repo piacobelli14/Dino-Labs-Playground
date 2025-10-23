@@ -7,7 +7,7 @@ import { showDialog } from "../../../helpers/Alert.jsx";
 import Tippy from "@tippyjs/react";
 import "tippy.js/dist/tippy.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faArrowLeft, faArrowRight, faArrowsLeftRightToLine, faArrowsRotate, faArrowsUpToLine, faBorderTopLeft, faCircle, faCropSimple, faDownload, faLeftRight, faMagnifyingGlassMinus, faMagnifyingGlassPlus, faMinus, faBrush, faPenRuler, faPlus, faRightLeft, faRotate, faRotateLeft, faRotateRight, faRuler, faRulerCombined, faSave, faSquareCaretLeft, faSwatchbook, faTabletScreenButton, faUpDown, faEye, faEyeSlash, faLock, faLockOpen, faArrowUp, faArrowDown, faImage, faTrash, faFileImport, faLayerGroup, faFont, faAlignLeft, faAlignCenter, faAlignRight, faBold, faItalic, faUnderline, faSquare, faPlay, faDrawPolygon, faVectorSquare, faShapes, faArrowRightLong, faBezierCurve, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { faArrowLeft, faArrowRight, faArrowsLeftRightToLine, faArrowsRotate, faArrowsUpToLine, faBorderTopLeft, faCircle, faCropSimple, faDownload, faLeftRight, faMagnifyingGlassMinus, faMagnifyingGlassPlus, faMinus, faBrush, faPenRuler, faPlus, faRightLeft, faRotate, faRotateLeft, faRotateRight, faRuler, faRulerCombined, faSave, faSquareCaretLeft, faSwatchbook, faTabletScreenButton, faUpDown, faEye, faEyeSlash, faLock, faLockOpen, faArrowUp, faArrowDown, faImage, faTrash, faFileImport, faLayerGroup, faFont, faAlignLeft, faAlignCenter, faAlignRight, faBold, faItalic, faUnderline, faSquare, faPlay, faDrawPolygon, faVectorSquare, faShapes, faArrowRightLong, faBezierCurve, faXmark, faBook } from "@fortawesome/free-solid-svg-icons";
 
 function drawRoundedRect(ctx, x, y, width, height, radius) {
     ctx.beginPath();
@@ -31,8 +31,8 @@ function SliderControl({ label, value, onChange, min, max, buttonStep }) {
                 <button onClick={() => onChange(Math.max(value - buttonStep, min))} className="dinolabsImageEditorToolButton">
                     <FontAwesomeIcon icon={faMinus} />
                 </button>
-                <div className="dinolabsImageEditorSliderWrapper">
 
+                <div className="dinolabsImageEditorSliderWrapper">
                     <input
                         className="dinolabsSettingsSlider"
                         type="range"
@@ -4029,8 +4029,9 @@ function DinoLabsImageEditor({ fileHandle }) {
                                         }}
                                         min="0"
                                         max="50"
+                                        className="dinolabsImageEditorPositionInput"
                                     />
-                                    <label style={{ fontSize: '12px', marginLeft: '5px' }}>px</label>
+                                    <label>px</label>
                                 </div>
                             </div>
                         )}
@@ -4254,26 +4255,6 @@ function DinoLabsImageEditor({ fileHandle }) {
                             </li>
                         ))}
                     </ul>
-                </div>
-                <div className="dinolabsImageEditorCellWrapper">
-                    <div className="dinolabsImageEditorHeaderFlex" style={{ marginBottom: 0 }}>
-                        <label className="dinolabsImageEditorCellTitle">
-                            <FontAwesomeIcon icon={faRotate} /> History
-                        </label>
-                    </div>
-                    <div className="dinolabsTextEditorHistoryTimeline">
-                        {history.map((h, i) => (
-                            <div
-                                key={i}
-                                className="dinolabsTextEditorHistoryItem"
-                                onClick={() => restoreHistory(i)}
-                            >
-                                <small>
-                                    {h.description || "Edit"}
-                                </small>
-                            </div>
-                        ))}
-                    </div>
                 </div>
             </div>
             <div className="dinolabsImageEditorContainerWrapper">

@@ -617,7 +617,7 @@ const DinoLabsPluginsColorTypeLab = () => {
                 onChange={(e) => setDvCount(+e.target.value)}
                 className="dinolabsSettingsSlider"
               />
-              <div className="dinolabsColorTypeLabSmall">{dvCount}</div>
+              <div className="dinolabsColorTypeLabSmall">{dvCount} Colors</div>
             </div>
 
             {dvType !== "qualitative" ? (
@@ -778,29 +778,11 @@ const DinoLabsPluginsColorTypeLab = () => {
         </aside>
 
         <main className="dinolabsColorTypeLabMain">
-
-          <div className="dinolabsColorTypeLabHeadBar">
-            <div className="dinolabsColorTypeLabHeadTitle">
-              <FontAwesomeIcon icon={faChevronRight} /> <span>Color And Type Lab</span>
-            </div>
-            <div className="dinolabsColorTypeLabHeadActions">
-              <button className="dinolabsColorTypeLabBtn" onClick={() => copyText(tokensJson)}>
-                <FontAwesomeIcon icon={faCopy} /> Copy Tokens
-              </button>
-              <button
-                className="dinolabsColorTypeLabBtn"
-                onClick={() => downloadTextFile("design-tokens.json", tokensJson)}
-              >
-                <FontAwesomeIcon icon={faDownload} /> Download JSON
-              </button>
-            </div>
-          </div>
-
           <div className="dinolabsColorTypeLabMainGrid">
 
             <section className="dinolabsColorTypeLabCard">
               <div className="dinolabsColorTypeLabCardTitle">
-                <FontAwesomeIcon icon={faPalette} /> Brand Palette (Simulation: {simTypeLabel})
+                Brand Palette (Simulation: {simTypeLabel})
               </div>
 
               <div className="dinolabsColorTypeLabBrandGrid">
@@ -829,7 +811,7 @@ const DinoLabsPluginsColorTypeLab = () => {
 
             <section className="dinolabsColorTypeLabCard">
               <div className="dinolabsColorTypeLabCardTitle">
-                <FontAwesomeIcon icon={faWaveSquare} /> Data Visualization Palette
+                Data Visualization Palette
               </div>
 
               <div className="dinolabsColorTypeLabSwatchGrid">
@@ -849,7 +831,7 @@ const DinoLabsPluginsColorTypeLab = () => {
 
             <section className="dinolabsColorTypeLabCard">
               <div className="dinolabsColorTypeLabCardTitle">
-                <FontAwesomeIcon icon={faDroplet} /> Gradient And Contrast
+                Gradient And Contrast
               </div>
 
               <div className="dinolabsColorTypeLabGradientBlock" style={{ background: gradientCss }}>
@@ -870,7 +852,7 @@ const DinoLabsPluginsColorTypeLab = () => {
 
             <section className="dinolabsColorTypeLabCard">
               <div className="dinolabsColorTypeLabCardTitle">
-                <FontAwesomeIcon icon={faFont} /> Typography
+                Typography
               </div>
 
               <div
@@ -899,7 +881,7 @@ const DinoLabsPluginsColorTypeLab = () => {
 
             <section className="dinolabsColorTypeLabCard">
               <div className="dinolabsColorTypeLabCardTitle">
-                <FontAwesomeIcon icon={faFireFlameCurved} /> Exports
+                Exports
               </div>
 
               <div className="dinolabsColorTypeLabExportBlock">

@@ -1756,7 +1756,7 @@ const DinoLabs = () => {
                     <input
                       type="text"
                       className="directorySearchInput"
-                      placeholder="🔎 Search the directory..."
+                      placeholder="Search the directory..."
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                     />

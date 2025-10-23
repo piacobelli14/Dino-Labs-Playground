@@ -36,8 +36,8 @@
     overflow: scroll;
     padding: 0;
     box-sizing: border-box;
-    background-color: #29282D !important;
-    border-right: 2px solid rgba(255,255,255,0.1) !important;
+    background: linear-gradient(145deg, #1e293b 0%, #334155 100%) !important;
+    border-right: 1px solid #475569 !important;
 }
 
 .dinolabsImageEditorContainerWrapper {
@@ -48,7 +48,7 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    background-color: #29282D !important;
+    background: linear-gradient(145deg, #1e293b 0%, #334155 100%) !important;
 }
 
 .dinolabsImageEditorContainer {
@@ -57,10 +57,9 @@
     align-items: center;
     justify-content: center;
     width: 100% !important;
-    background-color: #252525;
+    background: linear-gradient(145deg, #334155 0%, #475569 100%);
     overflow: hidden;
     box-sizing: border-box;
-    background-color: #29282D !important;
 }
 
 .dinolabsImageEditorContainerInnerStack {
@@ -81,8 +80,8 @@
     box-sizing: border-box;
     min-width: 100%;
     max-width: 100%; 
-    padding-bottom: 2rem;
-    border-bottom: 2px solid rgba(255,255,255,0.1) !important;
+    padding-bottom: 24px;
+    border-bottom: 1px solid #475569 !important;
 }
 
 .dinolabsImageEditorHeaderFlex {
@@ -92,21 +91,22 @@
     box-sizing: border-box;
     min-width: 100%;
     max-width: 100%;
-    padding: 0 1rem;
+    padding: 0 16px;
     min-height: 60px;
     max-height: 60px;
-    margin-bottom: 1rem;
-    background-color: #242327 !important;
-    border-bottom: 2px solid rgba(255,255,255,0.1) !important;
+    margin-bottom: 16px;
+    background: linear-gradient(145deg, #334155 0%, #475569 100%) !important;
+    border-bottom: 1px solid #475569 !important;
 }
 
 .dinolabsImageEditorCellTitle {
-    font-size: 0.8rem;
+    font-size: 12px;
     font-weight: 700;
-    color: #c0c0c0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #f1f5f9;
     display: flex;
     align-items: center;
-    gap: 0.6rem;
+    gap: 8px;
     overflow: hidden;
 }
 
@@ -117,7 +117,7 @@
     box-sizing: border-box; 
     min-width: 100%;
     max-width: 100%;
-    padding: 0 1rem 1rem 1rem !important;
+    padding: 0 0 0 16px !important;
     overflow: scroll; 
 }
 
@@ -130,7 +130,7 @@
     min-width: 100%;
     max-width: 100%;
     overflow: scroll; 
-    padding: 0 1rem 1rem 1rem !important;
+    padding: 0 16px 16px 16px !important;
 }
 
 .dinolabsImageEditorCellFlexStackHalf {
@@ -146,14 +146,28 @@
     max-width: 100%;
     height: 60px; 
     box-sizing: border-box;
-    padding: 0.5rem; 
-    font-size: 0.8rem; 
-    font-weight: 600; 
-    color: #c1c1c1; 
-    border: 1px solid #c1c1c1; 
+    padding: 0.6rem 1rem; 
+    font-size: 12px; 
+    font-weight: 700; 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #f1f5f9; 
+    border: 1px solid #475569; 
     border-radius: 6px; 
-    box-shadow: 0 0 8px black; 
-    background-color: rgba(255,255,255,0.05);
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); 
+    background: linear-gradient(145deg, #334155 0%, #475569 100%);
+    transition: all 0.2s ease;
+}
+
+.dinolabsImageEditorTextArea:hover {
+    
+    box-shadow: 0 4px 6px -1px rgba(30, 64, 175, 0.2);
+}
+
+.dinolabsImageEditorTextArea:focus {
+    outline: none;
+    border-color: #1e40af;
+    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.2), 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    
 }
 
 .dinolabsImageEditorLargeStack,
@@ -182,17 +196,49 @@
 .dinolabsImageEditorPositionInputFlexedMini,
 .dinolabsImageEditorCSSInput {
     padding: 0.6rem 0.8rem;
-    background-color: rgba(0,0,0,0.1);
-    border: 1px solid #c1c1c1;
+    background: linear-gradient(145deg, #334155 0%, #475569 100%);
+    border: 1px solid #475569;
     border-radius: 6px;
-    font-size: 0.7rem !important;
-    font-weight: 800;
-    color: #c1c1c1;
-    box-shadow: 0 0 6px black;
+    font-size: 12px !important;
+    font-weight: 700;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #f1f5f9;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
     box-sizing: border-box;
+    transition: all 0.2s ease;
     -webkit-appearance: none;
     -moz-appearance: none;
     appearance: none;
+    outline: none;
+}
+
+.dinolabsImageEditorPositionInput::placeholder,
+.dinolabsImageEditorPositionInputMini::placeholder,
+.dinolabsImageEditorPositionInputFlexed::placeholder,
+.dinolabsImageEditorPositionInputFlexedMini::placeholder,
+.dinolabsImageEditorCSSInput::placeholder {
+    color: #94a3b8;
+    font-weight: 700;
+}
+
+.dinolabsImageEditorPositionInput:hover,
+.dinolabsImageEditorPositionInputMini:hover,
+.dinolabsImageEditorPositionInputFlexed:hover,
+.dinolabsImageEditorPositionInputFlexedMini:hover,
+.dinolabsImageEditorCSSInput:hover {
+    
+    box-shadow: 0 4px 6px -1px rgba(30, 64, 175, 0.2);
+}
+
+.dinolabsImageEditorPositionInput:focus,
+.dinolabsImageEditorPositionInputMini:focus,
+.dinolabsImageEditorPositionInputFlexed:focus,
+.dinolabsImageEditorPositionInputFlexedMini:focus,
+.dinolabsImageEditorCSSInput:focus {
+    outline: none;
+    border-color: #1e40af;
+    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.2), 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    
 }
 
 .dinolabsImageEditorPositionInputFlexed {
@@ -214,30 +260,32 @@
 .dinolabsImageEditorPositionInputMini {
     max-width: 20%;
 }
+
 .dinolabsImageEditorCSSInput {
     min-width: 100%;
     max-width: 100%;
 }
 
 .dinolabsImageEditorCellFlexTitle {
-    font-size: 0.7rem;
+    font-size: 12px;
     font-weight: 700;
-    color: #c0c0c0;
-    opacity: 0.8;
-    margin: 0.4rem 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #94a3b8;
+    opacity: 1;
+    margin: 8px 0;
 }
 
 .dinolabsImageEditorCellFlexTitle span {
-    font-size: 0.8rem;
-    font-weight: 500;
-    margin-left: 0.6rem;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    margin-left: 8px;
 }
 
 .dinolabsImageEditorCellFlex {
     display: flex;
     justify-content: flex-start;
     align-items: center;
-    margin-top: 0.6rem;
     min-width: 100%;
     gap: 4%;
 }
@@ -247,7 +295,7 @@
     flex-direction: column;
     justify-content: center;
     align-items: flex-start;
-    gap: 1.6rem; 
+    gap: 16px; 
     width: 100%; 
 }
 
@@ -255,7 +303,7 @@
     display: flex;
     justify-content: flex-start;
     align-items: center;
-    margin-top: 0.6rem;
+    margin-top: 8px;
     width: 100%;
     gap: 4%;
 }
@@ -264,9 +312,8 @@
     display: flex;
     justify-content: flex-end;
     align-items: center;
-    gap: 0.6rem;
+    gap: 8px;
     height: 100%;
-
 }
 
 .dinolabsImageEditorCellMiniInputWrapper {
@@ -274,7 +321,7 @@
     flex-direction: column;
     justify-content: center;
     align-items: flex-start;
-    gap: 0.6rem; 
+    gap: 8px; 
     min-width: 30%; 
     max-width: 30%; 
 }
@@ -294,21 +341,22 @@
 .dinolabsImageEditorToolButtonText,
 .dinolabsImageEditorToolButtonMini, 
 .dinolabsImageEditorToolSelect {
-    background-color: rgba(255,255,255,0.05);
-    border: 1px solid #c1c1c1;
+    background: linear-gradient(145deg, #334155 0%, #475569 100%);
+    border: 1px solid #475569;
     border-radius: 6px;
-    font-size: 0.7rem;
+    font-size: 12px;
     font-weight: 700;
-    color: #f5f5f5;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #f1f5f9;
     cursor: pointer;
-    transition: transform 0.3s ease, opacity 0.3s ease;
+    transition: all 0.2s ease;
     outline: none;
-    box-shadow: 0 0 8px black;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
     box-sizing: border-box !important;
     display: flex;
     justify-content: center;
     align-items: center;
-    padding: 0.6rem 1rem !important;
+    padding: 0.6rem 0.8rem !important;
     white-space: nowrap;
     text-overflow: ellipsis;
     overflow: hidden;
@@ -317,100 +365,89 @@
 .dinolabsImageEditorToolButton {
     min-width: 10%;
     max-width: 10%;
-    padding: 0.6rem 1rem !important;
+    padding: 0.6rem 0.8rem !important;
 }
 
 .dinolabsImageEditorToolButtonBig {
     min-width: 50%;
     max-width: 50%;
-    padding: 0.6rem 1rem !important;
+    padding: 0.6rem 0.8rem !important;
 }
 
 .dinolabsImageEditorToolButtonBigger {
     min-width: 40%;
     max-width: 40%;
-    padding: 0.6rem 1rem !important;
-    gap: 0.6rem;
+    padding: 0.6rem 0.8rem !important;
+    gap: 8px;
 }
 
 .dinolabsImageEditorToolButtonHeader {
     width: auto;
-    padding: 0.6rem 1rem !important;
+    padding: 0.6rem 0.8rem !important;
     max-height: 55%;
 }
 
 .dinolabsImageEditorToolButtonText {
     min-width: 15%;
     max-width: 15%;
-    padding: 0.4rem;
+    padding: 0.6rem 0.8rem;
 }
 
 .dinolabsImageEditorToolButtonMini {
     min-width: 15%;
     max-width: 15%;
-    padding: 0.4rem;
+    padding: 0.6rem 0.8rem;
 }
 
 .dinolabsImageEditorToolButton:hover,
 .dinolabsImageEditorToolButtonBig:hover,
+.dinolabsImageEditorToolButtonBigger:hover,
+.dinolabsImageEditorToolButtonHeader:hover,
 .dinolabsImageEditorToolButtonText:hover,
-.dinolabsImageEditorToolButtonMini:hover {
-    opacity: 0.6;
+.dinolabsImageEditorToolButtonMini:hover,
+.dinolabsImageEditorToolSelect:hover {
+    background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
+    border-color: #1e40af;
+    
+    box-shadow: 0 4px 6px -1px rgba(30, 64, 175, 0.2);
     outline: none;
-    border: 1px solid #c0c0c0;
-}
-
-.dinolabsImageEditorToolButton:hover,
-.dinolabsImageEditorToolButtonText:hover,
-.dinolabsImageEditorToolButtonMini:hover {
-    transform: scale(1.1);
 }
 
 .dinolabsImageEditorToolButton:focus,
 .dinolabsImageEditorToolButtonBig:focus,
+.dinolabsImageEditorToolButtonBigger:focus,
+.dinolabsImageEditorToolButtonHeader:focus,
 .dinolabsImageEditorToolButtonText:focus,
-.dinolabsImageEditorToolButtonMini:focus {
-    opacity: 1.0;
+.dinolabsImageEditorToolButtonMini:focus,
+.dinolabsImageEditorToolSelect:focus {
     outline: none;
-    border: 1px solid #c0c0c0;
-}
-
-.dinolabsImageEditorColorPicker,
-.dinolabsImageEditorColorPickerLarge {
-    border: none;
-    background: none;
-    cursor: pointer;
-    -webkit-appearance: none;
-    -moz-appearance: none;
-    appearance: none;
-    box-shadow: 0 0 10px black;
-    border: 1px solid white;
-    border-radius: 6px;
+    border-color: #1e40af;
+    box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.2), 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    
 }
 
 .dinolabsImageEditorColorPicker {
-    padding: 0;
-    min-width: 30px;
-    max-width: 30px;
-    min-height: 30px;
-    max-height: 30px;
+    width: 35px;
+    height: 35px;
+    min-width: 35px;
+    min-height: 35px;
+    border: 1px solid #475569;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
-.dinolabsImageEditorColorPickerLarge {
-    padding: 0;
-    min-width: 80%;
-    max-width: 80%;
-    height: 50px;
+.dinolabsImageEditorColorPicker:hover {
+    
+    box-shadow: 0 4px 6px -1px rgba(30, 64, 175, 0.2);
+    border-color: #1e40af;
 }
 
 .dinolabsImageEditorSliderWrapper {
-    width: 70%;
-    padding: 0 0.4rem;
-    display: flex;
-    justify-content: center;
-}
-
-.dinolabsConfrmationCheck {
+    width: 60%;
+    max-width: 60%;
+    min-width: 60%;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -418,15 +455,16 @@
 }
 
 .dinolabsConfrmationCheck span {
-    font-size: 0.6rem !important;
-    font-weight: 600;
-    color: #c0c0c0;
+    font-size: 12px !important;
+    font-weight: 700;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #94a3b8;
     margin: 0; 
     box-sizing: border-box;
     text-overflow: ellipsis;
     overflow: hidden; 
     white-space: nowrap;
-    padding: 0 0.4rem; 
+    padding: 0 8px; 
 }
 
 .dinolabsImageResizer {
@@ -497,16 +535,16 @@
     justify-content: flex-start;
     align-items: center;
     width: 100%;
-    gap: 0.6rem;
-    margin-bottom: 0.6rem;
+    gap: 8px;
+    margin-bottom: 8px;
 }
-
 
 .dinolabsImageEditorModeIndicator {
     width: 33%;
-    font-size: 0.7rem;
-    font-weight: 600;
-    color: #c0c0c0;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #94a3b8;
     display: flex;
     justify-content: flex-end;
     align-items: center;
@@ -514,9 +552,10 @@
 
 .dinolabsImageEditorModeIndicator span {
     font-weight: 700;
-    color: #c0c0c0;
-    font-size: 0.8rem;
-    margin-right: 0.6rem;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #f1f5f9;
+    font-size: 12px;
+    margin-right: 8px;
 }
 
 .dinolabsVideoInputBottomBar {
@@ -532,9 +571,9 @@
     left: 0;
     z-index: 4;
     box-sizing: border-box;
-    padding: 0 1rem;
-    background-color: #242327 !important;
-    border-top: 2px solid rgba(255,255,255,0.1) !important;
+    padding: 0 16px;
+    background: linear-gradient(145deg, #334155 0%, #475569 100%) !important;
+    border-top: 1px solid #475569 !important;
 }
 
 .dinolabsClipSliderTrack {
@@ -547,7 +586,7 @@
 
 .dinolabsClipSliderBar {
     background-color: rgba(229, 75, 75, 0.8);
-    width: 0.8rem;
+    width: 12px;
     height: 100%;
     cursor: col-resize;
     z-index: 2;
@@ -561,7 +600,7 @@
     display: flex;
     justify-content: center;
     align-items: center;
-    gap: 1rem;
+    gap: 16px;
 }
 
 .dinolabsVideoContentFlexBig {
@@ -579,44 +618,45 @@
 .dinolabsVideoButtonSupplementLeading,
 .dinolabsVideoButtonSupplementTrailing,
 .dinolabsVideoButtonX {
-    background-color: rgba(255, 255, 255, 0.0);
+    background-color: transparent;
     padding: 0;
-    color: #c0c0c0;
-    transition: transform 0.3s ease, opacity 0.3s ease;
+    color: #94a3b8;
+    transition: all 0.2s ease;
     cursor: pointer;
     outline: none;
-    order: none;
+    border: none;
 }
 
 .dinolabsVideoButton {
-    font-size: 1rem;
+    font-size: 16px;
     opacity: 1.0;
 }
 
 .dinolabsVideoButtonHelper {
-    font-size: 1rem;
+    font-size: 16px;
     opacity: 1.0;
 }
 
 .dinolabsVideoButtonSupplementLeading,
 .dinolabsVideoButtonSupplementTrailing {
-    font-size: 0.9rem;
+    font-size: 14px;
     opacity: 0.9;
 }
 
 .dinolabsVideoButtonX {
-    font-size: 0.7rem;
-    font-weight: 600;
+    font-size: 12px;
+    font-weight: 700;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     opacity: 0.8;
 }
 
 .dinolabsVideoButtonSupplementLeading {
-    margin-right: 0.6rem;
+    margin-right: 8px;
 }
 
 .dinolabsVideoButtonSupplementTrailing {
-    margin-left: 0.6rem;
-    margin-right: 1rem;
+    margin-left: 8px;
+    margin-right: 16px;
 }
 
 .dinolabsVideoButton:hover,
@@ -624,8 +664,8 @@
 .dinolabsVideoButtonSupplementLeading:hover,
 .dinolabsVideoButtonSupplementTrailing:hover,
 .dinolabsVideoButtonX:hover {
-    opacity: 0.6;
-    transform: scale(1.1);
+    color: #f1f5f9;
+    
     outline: none;
     border: none;
 }
@@ -642,8 +682,8 @@
 .dinolabsAudioWaveformDisplayBig,
 .dinolabsAudioWaveformDisplaySmall {
     width: 100%;
-    background-color: #191919;
-    border-bottom: 1px solid #191919;
+    background: linear-gradient(145deg, #334155 0%, #475569 100%);
+    border-bottom: 1px solid #475569;
     overflow: visible;
     position: relative;
 }
@@ -652,15 +692,15 @@
     height: 25%;
     min-height: 25%;
     max-height: 25%;
-    border: 1px solid #c0c0c0;
+    border: 1px solid #475569;
 }
 
 .dinolabsAudioWaveformDisplaySmall {
     height: 100%;
     min-height: 100%;
     max-height: 100%;
-    border: 1px solid #c0c0c0;
-    padding: 1rem;
+    border: 1px solid #475569;
+    padding: 16px;
 }
 
 .dinolabsAudioWaveformDisplayFlex {
@@ -674,25 +714,24 @@
 }
 
 .dinolabsImageEditorTextOverlay {
-    font-family: arial;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
     font-size: 16px;
-    font-weight: normal;
-    color: #000000;
-    border-color: #000000;
+    font-weight: 700;
+    color: #f1f5f9;
+    border-color: #475569;
     border-width: 1px;
-    border-radius: 0px;
-    background-color: #f5f5f5;
+    border-radius: 6px;
+    background: linear-gradient(145deg, #334155 0%, #475569 100%);
     width: 100%;
-    background-color: rgba(255, 255, 255, 0.0);
     box-sizing: border-box;
-    box-shadow: 0 0 20px black;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .dinolabsImageEditorTextDragSectionTop,
 .dinolabsImageEditorTextDragSectionBottom {
     width: 100%;
     height: 10%;
-    background-color: #c1c1c1;
+    background-color: #475569;
     cursor: grab;
     user-select: none;
     position: relative;
@@ -703,7 +742,7 @@
     box-sizing: border-box;
     border: none;
     outline: none;
-    padding: 0.4rem;
+    padding: 8px;
 }
 
 .dinolabsImageEditorTextSpace:hover,
@@ -716,14 +755,12 @@
     position: absolute;
     top: 0;
     right: 0;
-    background-color: rgba(255, 255, 255, 0.0);
-    color: white;
+    background-color: transparent;
+    color: #f1f5f9;
     border: none;
-    padding: none;
-    cursor: pointer;
     padding: 0;
-    color: black;
-    font-size: 0.8rem;
+    cursor: pointer;
+    font-size: 12px;
 }
 
 .dinolabsImageEditorTextResizeHandle {
@@ -731,7 +768,7 @@
     bottom: 0;
     right: 0;
     height: 40%;
-    background-color: black;
+    background-color: #475569;
     cursor: nwse-resize;
 }
 
@@ -748,7 +785,7 @@
 .dinolabsTextEditorLayerList li, 
 .dinolabsTextEditorHistoryItem {
     width: 100%; 
-    padding: 1rem 1rem;
+    padding: 16px;
     overflow: scroll;
     display: flex; 
     flex-direction: column; 
@@ -757,29 +794,32 @@
     box-sizing: border-box;
     margin: 0;
     cursor: pointer;
-    border-bottom: 1px solid rgba(255,255,255,0.3); 
+    border-bottom: 1px solid #475569; 
+    transition: all 0.2s ease;
 }
 
 .dinolabsTextEditorLayerList li:hover, 
 .dinolabsTextEditorHistoryItem:hover {
-    opacity: 0.6;
+    background: rgba(30, 64, 175, 0.15);
+    transform: translateX(1px);
 }
 
 .dinolabsTextEditorLayerListFlex {
     display: flex; 
     justify-content: flex-start;
     align-items: center;
-    gap: 1rem; 
-    margin: 0.8rem 0; 
+    gap: 16px; 
+    margin: 8px 0; 
     width: 100%; 
 }
 
 .dinolabsTextEditorLayerList li small, 
 .dinolabsTextEditorHistoryItem small {
-    font-size: 0.6rem !important; 
+    font-size: 16px !important; 
     font-weight: 700; 
-    color: #c1c1c1;
-    padding: 0rem; 
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    color: #94a3b8;
+    padding: 0; 
     text-overflow: ellipsis;
     overflow: hidden;
     white-space: nowrap;

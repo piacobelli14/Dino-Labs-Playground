@@ -1,3 +1,16 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+.dinolabsPageWrapper,
+.dinolabsPageWrapper *,
+.dinolabsPageWrapper *::before,
+.dinolabsPageWrapper *::after {
+  box-sizing: border-box;
+}
+
 .dinolabsPageWrapper {
   display: flex;
   flex-direction: column;
@@ -5,7 +18,10 @@
   align-items: center;
   flex-grow: 1;
   min-height: 100vh;
-  background-color: #191919;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+  color: #f1f5f9;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-weight: 600;
 }
 
 .dinolabsHeaderContainer {
@@ -33,6 +49,7 @@
   box-sizing: border-box;
 }
 
+/* Sidebar Styling */
 .leadingIDEDirectoryStack {
   min-width: 25%;
   max-width: 25%;
@@ -43,8 +60,9 @@
   align-items: flex-start;
   justify-content: flex-start;
   box-sizing: border-box;
-  border-right: 1px solid rgba(255, 255, 255, 0.2);
-  background: linear-gradient(to bottom, #1B1526, #29282D);
+  border-right: 1px solid #475569;
+  background: linear-gradient(145deg, #334155 0%, #475569 100%);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .leadingDirectoryTopBar,
@@ -53,7 +71,8 @@
   max-height: 2.5rem;
   width: 100%;
   box-sizing: border-box;
-  background: linear-gradient(to right, #1B1526, #29282D);
+  background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
+  border-bottom: 1px solid #475569;
 }
 
 .leadingDirectoryZoomButtonFlex,
@@ -66,36 +85,36 @@
   align-items: center;
   box-sizing: border-box;
   padding: 0 1rem;
-  gap: 1rem;
+  gap: 0;
 }
 
 .leadingDirectoryZoomButton {
-  background-color: rgba(255, 255, 255, 0.0);
+  background: transparent;
   border: none;
-  border-radius: 0;
-  padding: 0;
-  font-size: 0.7rem;
-  color: #c1c1c1;
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
+  font-size: 12px;
+  font-weight: 700;
+  color: #f1f5f9;
   cursor: pointer;
-  transition: transform 0.3s ease, opacity 0.3s ease;
+  transition: all 0.2s ease;
 }
 
 .leadingDirectoryZoomButton:hover {
-  opacity: 0.6;
-  transform: scale(1.1);
-  border: none;
-  outline: none;
+  opacity: 0.7;
+  transform: translateY(-1px);
 }
 
 .leadingDirectoryZoomButton:focus {
-  opacity: 1.0; 
-  border: none;
   outline: none;
+  transform: translateY(-1px);
 }
 
 .leadingDirectoryZoomButton:disabled {
-  opacity: 0.3;
+  opacity: 0.5;
   cursor: not-allowed;
+  background: linear-gradient(145deg, #334155 0%, #475569 100%);
+  transform: none;
 }
 
 .leadingDirectoryStack {
@@ -105,8 +124,10 @@
   width: 100%;
   flex-grow: 1;
   box-sizing: border-box;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-top: 1px solid #475569;
+  border-bottom: 1px solid #475569;
+  display: flex;
+  flex-direction: column;
 }
 
 .leadingDirectoryTabsWrapper {
@@ -116,37 +137,36 @@
   min-height: 2.5rem;
   max-height: 2.5rem;
   box-sizing: border-box;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid #475569;
 }
 
 .leadingDirectoryTabButton {
   width: 100%;
   border: none;
   border-radius: 0;
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: #c1c1c1;
+  font-size: 12px;
+  font-weight: 700;
+  color: #f1f5f9;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
-  gap: 1rem;
+  gap: 8px;
   box-sizing: border-box;
   min-height: 2.5rem;
   max-height: 2.5rem;
-  background-color: rgba(255, 255, 255, 0.01);
+  background: transparent;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .leadingDirectoryTabButton:hover {
-  border: none;
-  outline: none;
-  opacity: 0.6;
+  opacity: 0.7;
+  transform: translateY(-1px);
 }
 
 .leadingDirectoryTabButton:focus {
-  border: none;
   outline: none;
-  opacity: 1.0;
 }
 
 .leadingDirectorySearchWrapper,
@@ -154,7 +174,7 @@
   display: flex;
   align-items: center;
   box-sizing: border-box;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid #475569;
 }
 
 .leadingDirectorySearchWrapper {
@@ -165,15 +185,16 @@
 
 .leadingDirectoryGlobalSearchWrapper {
   flex-direction: column;
-  justify-content: space-evenly;
+  justify-content: center;
   height: 10rem;
   min-height: 10rem;
   max-height: 10rem;
+  gap: 1rem;
 }
 
 .directorySearchInput {
-  background-color: rgba(255, 255, 255, 0.02);
-  border: 1px solid #c1c1c1;
+  background: linear-gradient(145deg, #334155 0%, #475569 100%);
+  border: 1px solid #475569;
   border-radius: 6px;
   padding: 0.6rem 1rem;
   width: 90%;
@@ -182,27 +203,33 @@
   align-items: center;
   justify-content: center;
   outline: none;
-  font-size: 0.7rem;
+  font-size: 12px;
   font-weight: 700;
-  color: #c1c1c1;
-  outline: none;
+  color: #f1f5f9;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
 .directorySearchInput:hover {
-  outline: none;
-  border: 1px solid #c1c1c1;
-  opacity: 0.8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(30, 64, 175, 0.2);
 }
 
 .directorySearchInput:focus {
   outline: none;
-  border: 1px solid #c1c1c1;
-  opacity: 1.0;
+  border-color: #1e40af;
+  box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.2), 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.directorySearchInput::placeholder {
+  color: #94a3b8;
+  font-weight: 700;
 }
 
 .leadingDirectoryGlobalSearchFlex {
-  background-color: rgba(255, 255, 255, 0.02);
-  border: 1px solid #c1c1c1;
+  background: linear-gradient(145deg, #334155 0%, #475569 100%);
+  border: 1px solid #475569;
   border-radius: 6px;
   width: 90%;
   box-sizing: border-box;
@@ -210,32 +237,27 @@
   align-items: center;
   justify-content: center;
   outline: none;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
 .leadingDirectoryGlobalSearchInput {
   width: 70%;
   box-sizing: border-box;
   height: 100%;
-  font-size: 0.7rem;
+  font-size: 12px;
   font-weight: 700;
-  color: #c1c1c1;
+  color: #f1f5f9;
   padding: 0.6rem 1rem;
   border-top-left-radius: 6px;
   border-bottom-left-radius: 6px;
   border: none;
-  background-color: rgba(255, 255, 255, 0.02)
+  background: transparent;
+  outline: none;
 }
 
-.leadingDirectoryGlobalSearchInput:hover {
-  border: none;
-  outline: none;
-  opacity: 0.8;
-}
-
-.leadingDirectoryGlobalSearchInput:focus {
-  border: none;
-  outline: none;
-  opacity: 1.0;
+.leadingDirectoryGlobalSearchInput::placeholder {
+  color: #94a3b8;
+  font-weight: 700;
 }
 
 .leadingDirectoryGlobalSearchTrailingButtons {
@@ -244,43 +266,40 @@
   justify-content: space-evenly;
   align-items: center;
   box-sizing: border-box;
-  background-color: rgba(0, 0, 0, 0.5);
+  background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
   border-top-right-radius: 6px;
   border-bottom-right-radius: 6px;
-  border-left: 1px solid #c1c1c1;
+  border-left: 1px solid #475569;
   height: 100%;
   padding: 0 0.6rem;
 }
 
 .leadingDirectoryGlobalSearchButton {
-  background-color: rgba(255, 255, 255, 0.0);
+  background: transparent;
   border: none;
-  border-radius: 0;
   padding: 0;
-  font-size: 0.8rem;
-  color: #c1c1c1;
+  font-size: 12px;
+  color: #f1f5f9;
   outline: none;
-  transition: transform 0.3s ease, opacity 0.3s ease;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
 .leadingDirectoryGlobalSearchButton:hover {
-  opacity: 0.6;
-  border: none;
-  outline: none;
+  color: #1e40af;
   transform: scale(1.1);
 }
 
 .leadingDirectoryGlobalSearchButton:focus {
-  opacity: 1.0;
-  border: none;
   outline: none;
 }
 
+/* File List Styling */
 .directoryListItemRoot,
 .directoryListItem {
-  font-size: 0.7rem;
+  font-size: 12px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.7);
+  color: #e2e8f0;
   display: flex;
   width: 100%;
   justify-content: flex-start;
@@ -290,38 +309,57 @@
   position: relative;
   overflow: hidden;
   text-overflow: ellipsis;
-  padding: 0.5rem 1rem;
+  padding: 8px 16px;
   line-height: 1.2;
   box-sizing: border-box;
   z-index: 1;
+  transition: all 0.2s ease;
+}
+
+/* Add indentation for first level nested items */
+.directoryListItem[style*="padding-left: 20px"],
+.directoryListItem[data-depth="1"] {
+  padding-left: 40px !important;
+}
+
+/* Add indentation for second level nested items */
+.directoryListItem[style*="padding-left: 40px"],
+.directoryListItem[data-depth="2"] {
+  padding-left: 56px !important;
+}
+
+/* Add indentation for third level nested items */
+.directoryListItem[style*="padding-left: 60px"],
+.directoryListItem[data-depth="3"] {
+  padding-left: 72px !important;
 }
 
 .directoryListItemRoot {
   position: sticky;
   top: 0;
   z-index: 10;
-  background-color: black;
-  padding: 1rem;
-  background-color: rgba(0,0,0,0.2) !important; 
-  padding-left: 0.6rem;
-  box-sizing: border-box;
+  background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
+  color: #f1f5f9;
+  border-bottom: 1px solid #475569;
 }
 
 .directoryListItemRoot:hover,
 .directoryListItem:hover {
-  background-color: black;
+  background: rgba(30, 64, 175, 0.25);
+  color: #ffffff;
+  transform: translateX(2px);
 }
 
 .directoryListItem svg,
 .directoryListItemRoot svg {
-  font-size: 0.7rem;
-  margin-right: 0.4rem;
+  font-size: 12px;
+  margin-right: 8px;
   vertical-align: middle;
 }
 
 .directoryListItemFileIcon {
-  height: 1rem;
-  margin-right: 0.6rem;
+  height: 16px;
+  margin-right: 8px;
 }
 
 .leadingDirectoryFiles,
@@ -347,11 +385,12 @@
 }
 
 .leadingDirectoryFilesSupplement p {
-  font-size: 0.8rem; 
-  font-weight: 600; 
-  color: #c1c1c1; 
-  width: 80%; 
+  font-size: 14px;
+  font-weight: 700;
+  color: #94a3b8;
+  width: 80%;
   margin-top: 2rem;
+  text-align: center;
 }
 
 .nestedDirectoryFileStack {
@@ -374,176 +413,42 @@
   flex-direction: column;
 }
 
-.leadingDirectoryStack {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-}
-
-.leadingDirectoryFileStackContent>.directoryListItem::before {
-  display: none;
-}
-
-.leadingDirectoryFileStackContent>.directoryListItemRoot::before {
-  display: none;
-}
-
-.directoryListItemRoot:hover {
-  opacity: 0.6;
-}
-
-.directoryListNestedFiles {
-  font-size: 0.7rem;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.7);
+/* Enhanced hover effects for all nested items */
+.directoryListNestedFiles,
+.directoryListItem[style*="padding-left"],
+.directoryListItem[data-depth],
+li[style*="padding-left"] {
+  font-size: 12px;
+  font-weight: 700;
+  color: #e2e8f0;
   white-space: nowrap;
   cursor: pointer;
   margin-bottom: 0;
   position: relative;
-  padding-left: 1rem;
-  padding-top: 0.2rem;
-  padding-bottom: 0.2rem;
-  padding-right: 1rem;
+  padding: 4px 16px 4px 40px;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.directoryListNestedFiles:hover,
+.directoryListItem[style*="padding-left"]:hover,
+.directoryListItem[data-depth]:hover,
+li[style*="padding-left"]:hover {
+  background: rgba(30, 64, 175, 0.35) !important;
+  color: #ffffff !important;
+  transform: translateX(2px);
 }
 
 .directoryListCaret {
-  font-size: 0.7rem;
-  margin-right: 0.4rem;
+  font-size: 12px;
+  margin-right: 8px;
   vertical-align: middle;
 }
 
-.driectoryListNestedFiles {
-  list-style-type: none;
-  margin: 0;
-  padding-left: 1rem;
-  position: relative;
-}
-
-.driectoryListNestedFiles::before {
-  content: '';
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0.6rem;
-  bottom: 0;
-  width: 0.06rem;
-  background-color: rgba(255, 255, 255, 0.2);
-}
-
-.dinolabsFileUnsavedDot {
-  display: inline-block;
-  width: 0.5rem;
-  height: 0.5rem;
-  background-color: #D7BA7D;
-  border-radius: 50%;
-  margin-right: 0.8rem;
-}
-
-.dinolabsControlStack {
-  min-width: 75%;
-  max-width: 75%;
-  height: 100%;
-}
-
-.resizablePaneDivider {
-  width: 1px;
-  cursor: col-resize;
-  background-color: rgba(255, 255, 255, 0.6);
-  box-sizing: border-box;
-}
-
-.topIDEControlBarWrapper,
-.bottomIDEControlBar {
-  min-height: 2.5rem;
-  max-height: 2.5rem;
-  width: 100%;
-  box-sizing: border-box;
-  background: linear-gradient(to left, #1B1526, #29282D);
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  overflow: scroll;
-}
-
-.topIDEControlBar,
-.bottomIDEControlBar {
-  width: 100%;
-  display: flex;
-  justify-content: flex-start;
-  align-items: flex-end;
-  background: linear-gradient(to left, #1B1526, #29282D);
-  overflow: scroll;
-}
-
-.topIDEControlBar {
-  height: 100%;
-}
-
-.dinolabsTabItem {
-  height: 2.5rem;
-  padding: 0 1rem;
-  box-sizing: border-box;
-  font-size: 0.7rem;
-  font-weight: 700;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  cursor: pointer;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #c0c0c0;
-  background-color: rgba(255, 255, 255, 0.05);
-  white-space: nowrap;
-}
-
-.dinolabsTabItem svg {
-  font-size: 0.7rem;
-  margin-right: 0.4rem;
-}
-
-.dinolabsFileIcon {
-  height: 0.9rem;
-  margin-right: 0.4rem;
-}
-
-.dinolabsCloseTab {
-  font-size: 1rem;
-  color: #c0c0c0;
-  margin-left: 2rem;
-}
-
-.dinolabsTabItem:hover {
-  opacity: 0.6;
-}
-
-.dinolabsTabItem.activeTab {
-  background-color: rgba(173, 106, 221, 0.2);
-  color: #f5f5f5;
-}
-
-.dinolabsTabItem.unsavedTab {
-  background-color: rgba(215, 186, 125, 0.1);
-}
-
-.dinolabsTabItem.activeUnsavedTab {
-  background-color: rgba(215, 186, 125, 0.1);
-  background-color: rgba(184, 154, 91, 0.2);
-  color: #D7BA7D !important;
-}
-
-.dinolabsFileUnsaved {
-  color: #D7BA7D !important;
-  font-weight: bolder !important;
-}
-
-.dinolabsFileUnsavedDot {
-  display: inline-block;
-  width: 0.5vw;
-  height: 0.5vw;
-  background-color: #D7BA7D;
-  border-radius: 50%;
-  margin-right: 0.8vw;
-}
-
+/* Main Editor Area */
 .dinolabsControlStack {
   min-width: 75%;
   max-width: 75%;
@@ -551,6 +456,104 @@
   height: 100%;
 }
 
+.topIDEControlBar {
+  min-height: 2.5rem;
+  max-height: 2.5rem;
+  width: 100%;
+  box-sizing: border-box;
+  background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
+  border-bottom: 1px solid #475569;
+  overflow-x: auto;
+  overflow-y: hidden;
+  display: flex;
+}
+
+.bottomIDEControlBar {
+  min-height: 2.5rem;
+  max-height: 2.5rem;
+  width: 100%;
+  box-sizing: border-box;
+  background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
+  border-top: 1px solid #475569;
+}
+
+/* Tab Styling */
+.dinolabsTabItem {
+  height: 2.5rem;
+  padding: 0 16px;
+  box-sizing: border-box;
+  font-size: 12px;
+  font-weight: 700;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  border-right: 1px solid #475569;
+  color: #94a3b8;
+  background: linear-gradient(145deg, #334155 0%, #475569 100%);
+  white-space: nowrap;
+  transition: all 0.2s ease;
+  min-width: 120px;
+}
+
+.dinolabsTabItem svg {
+  font-size: 12px;
+  margin-right: 8px;
+}
+
+.dinolabsFileIcon {
+  height: 14px;
+  margin-right: 8px;
+}
+
+.dinolabsCloseTab {
+  font-size: 14px;
+  color: #94a3b8;
+  margin-left: 12px;
+  transition: all 0.2s ease;
+}
+
+.dinolabsCloseTab:hover {
+  color: #ef4444;
+}
+
+.dinolabsTabItem:hover {
+  background: rgba(30, 64, 175, 0.2);
+  color: #ffffff;
+  transform: translateY(-1px);
+}
+
+.dinolabsTabItem.activeTab {
+  background: rgba(30, 64, 175, 0.25);
+  color: #ffffff;
+  border-color: rgba(30, 64, 175, 0.3);
+}
+
+.dinolabsTabItem.unsavedTab {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.4) 0%, rgba(245, 158, 11, 0.2) 100%);
+  color: #ffffff;
+}
+
+.dinolabsTabItem.activeUnsavedTab {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.4) 0%, rgba(245, 158, 11, 0.2) 100%);
+  color: #ffffff;
+}
+
+.dinolabsFileUnsaved {
+  color: rgba(245, 158, 11, 1) !important;
+  font-weight: 700 !important;
+}
+
+.dinolabsFileUnsavedDot {
+  display: inline-block;
+  width: 6px;
+  height: 6px;
+  background-color: rgba(245, 158, 11, 1);
+  border-radius: 50%;
+  margin-right: 8px;
+}
+
+/* Editor Wrapper */
 .dinolabsMarkdownWrapper {
   min-height: calc(100% - 5rem);
   max-height: calc(100% - 5rem);
@@ -558,14 +561,12 @@
   width: 100%;
   flex-grow: 1;
   box-sizing: border-box;
-  border-top: 1px solid rgba(255, 255, 255, 0.2);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-top: 1px solid #475569;
+  border-bottom: 1px solid #475569;
   overflow: auto;
-  box-sizing: border-box;
   display: flex;
   position: relative;
-  background: linear-gradient(135deg, #0f172a 0%, #463366 100%);
-  position: relative;
+  background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
 }
 
 .dinolabsMarkdownPaneWrapper {
@@ -596,6 +597,19 @@
   right: 0;
 }
 
+/* Resizable Pane Divider */
+.resizablePaneDivider {
+  width: 4px;
+  background: linear-gradient(145deg, #475569 0%, #64748b 100%);
+  cursor: col-resize;
+  transition: all 0.2s ease;
+}
+
+.resizablePaneDivider:hover {
+  background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
+}
+
+/* Welcome Screen */
 .dinolabsNoFileSelectedWrapper {
   min-height: 100%;
   max-height: 100%;
@@ -609,7 +623,6 @@
   flex-grow: 1;
   padding: 2rem 0;
 }
-
 
 .dinolabsGetStartedStack {
   width: 100%;
@@ -643,11 +656,11 @@
   justify-content: flex-start;
   align-items: flex-start;
   box-sizing: border-box;
-  background-color: rgba(255, 255, 255, 0.1);
-  border: 1px solid #c1c1c1;
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.05);
+  background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
+  border: 1px solid #475569;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   border-radius: 6px;
-  padding: 1.5rem;
+  padding: 24px;
 }
 
 .accountUsagePlot {
@@ -658,21 +671,20 @@
   align-items: center;
   justify-content: center;
   box-sizing: border-box;
-  position: relative;  
-  background-color: rgba(255, 255, 255, 0.00);
-  box-sizing: border-box;
-  padding: 0.5rem;
+  position: relative;
+  background: transparent;
+  padding: 8px;
 }
 
 .getStartedLinePlot {
   height: 48%;
   width: 96%;
-  background-color: rgba(255, 255, 255, 0.05);
-  border: 1px solid #c1c1c1;
+  background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
+  border: 1px solid #475569;
   box-sizing: border-box;
-  padding: 1.5rem;
+  padding: 24px;
   border-radius: 6px;
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.05);
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
 }
 
 .getStartedStack {
@@ -707,11 +719,11 @@
   justify-content: flex-start;
   align-items: flex-start;
   box-sizing: border-box;
-  background-color: rgba(255, 255, 255, 0.1);
-  border: 1px solid #c1c1c1;
-  box-shadow: 0 0 8px rgba(255, 255, 255, 0.05);
+  background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
+  border: 1px solid #475569;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   border-radius: 6px;
-  padding: 1.5rem;
+  padding: 24px;
 }
 
 .dinolabsUsageLanguagesContainer {
@@ -724,13 +736,12 @@
 }
 
 .dinolabsTopLanguagesLabel {
-  font-size: 1rem;
-  font-weight: 900;
-  color: #f5f5f5;
+  font-size: 16px;
+  font-weight: 700;
+  color: #f1f5f9;
   width: 100%;
   text-align: center;
-  margin-top: 1rem;
-  text-shadow: 0 0 1.5px grey;
+  margin-top: 16px;
 }
 
 .dinolabsUsageLanguageList {
@@ -743,7 +754,7 @@
   align-items: flex-start;
   width: 100%;
   height: 100%;
-  overflow: scroll;
+  overflow: auto;
 }
 
 .dinolabsLanguageItem {
@@ -754,50 +765,50 @@
   flex-direction: column;
   justify-content: center;
   align-items: flex-start;
-  margin-bottom: 1rem;
+  margin-bottom: 16px;
 }
 
 .dinolabsLanguageLabel {
   display: flex;
   justify-content: space-between;
-  font-size: 0.8rem;
+  font-size: 12px;
   font-weight: 700;
-  font-style: italic;
-  color: rgba(255, 255, 255, 0.7);
-  margin-bottom: 0.4rem;
+  color: #94a3b8;
+  margin-bottom: 8px;
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  gap: 1rem;
+  gap: 16px;
   width: 100%;
 }
 
 .dinolabsLanguageLabel span {
-  font-size: 0.8rem;
-  font-weight: 500;
+  font-size: 12px;
+  font-weight: 700;
   padding: 0;
   margin: 0;
 }
 
 .dinolabsLanguageBar {
-  height: 0.5vw;
+  height: 8px;
   border-radius: 6px;
-  transition: width 0.3s ease;
+  transition: all 0.2s ease;
   width: 100%;
+  background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
 }
 
 .dinolabsLanguageUsageUnavailable {
-  font-size: 1.2vw;
+  font-size: 14px;
   font-weight: 700;
-  color: rgba(255, 255, 255, 0.7);
+  color: #94a3b8;
   width: 100%;
   text-align: center;
 }
 
 .dinolabsTitle {
-  font-size: 2vw;
-  font-weight: 600;
-  color: rgba(255, 255, 255, 0.7);
+  font-size: 24px;
+  font-weight: 700;
+  color: #f1f5f9;
 }
 
 .dinolabsStartButtonWrapper {
@@ -805,84 +816,201 @@
   flex-direction: column;
   justify-content: flex-start;
   align-items: flex-start;
-  margin-top: 2rem;
-  margin-left: 0.4rem;
+  margin-left: 8px;
+  padding: 12px 0; 
 }
 
 .dinolabsStartButton {
-  padding: 0;
-  background-color: rgba(255, 255, 255, 0.0);
+  padding: 0.6rem 0.8rem;
+  background: linear-gradient(145deg, #334155 0%, #475569 100%);
+  border: 1px solid #475569;
+  border-radius: 6px;
   display: flex;
   justify-content: flex-start;
   align-items: center;
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #AD6ADD;
-  border: none;
-  outline: none;
+  font-size: 12px;
+  font-weight: 700;
+  color: #f1f5f9;
   cursor: pointer;
-  transition: transform 0.3s ease, opacity 0.3s ease;
-  margin-bottom: 1.6rem;
+  transition: all 0.2s ease;
+  margin-bottom: 16px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
 }
 
 .dinolabsStartButton svg {
-  font-size: 0.8rem;
-  margin-right: 0.8rem;
+  font-size: 12px;
+  margin-right: 8px;
 }
 
 .dinolabsStartButton:hover {
-  transform: scale(1.1);
-  opacity: 0.6;
-  border: none;
-  outline: none;
+  background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
+  border-color: #1e40af;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(30, 64, 175, 0.2);
 }
 
 .dinolabsStartButton:focus {
-  border: none;
   outline: none;
+  border-color: #1e40af;
+  box-shadow: 0 0 0 3px rgba(30, 64, 175, 0.2), 0 4px 6px -1px rgba(0, 0, 0, 0.1);
 }
 
 .searchHighlight {
-  background-color: yellow;
-  color: black;
+  background: linear-gradient(135deg, #fbbf24 0%, rgba(245, 158, 11, 0.4) 100%);
+  color: #1f2937;
+  padding: 1px 2px;
+  border-radius: 2px;
 }
 
 .dinolabsContextMenu {
   position: fixed;
   z-index: 4;
-  background-color: #29282D;
-  background: linear-gradient(to left, #1B1526, #29282D);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
+  border: 1px solid #475569;
   border-radius: 6px;
-  box-shadow: 0 0 20px black;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
   list-style: none;
-  padding: 1rem;
+  padding: 8px;
   margin: 0;
   min-width: 150px;
 }
 
 .dinolabsContextMenuItem {
-  padding: 0.4rem 1rem;
+  padding: 8px 12px;
   cursor: pointer;
   white-space: nowrap;
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: #c0c0c0;
+  font-size: 12px;
+  font-weight: 700;
+  color: #f1f5f9;
   box-sizing: border-box;
   margin-bottom: 4px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.4);
+  border-bottom: 1px solid #475569;
   display: flex;
   align-items: center;
-  min-height: 30px; 
-  max-height: 30px; 
-  gap: 1rem; 
+  min-height: 30px;
+  max-height: 30px;
+  gap: 8px;
+  border-radius: 0;
+  transition: all 0.2s ease;
 }
 
 .dinolabsContextMenuItem:hover {
-  background-color: rgba(255, 255, 255, 0.2);
+  background: rgba(30, 64, 175, 0.15);
+  transform: translateX(1px);
 }
 
 .dinolabsContextMenuItem:last-child {
   border-bottom: none;
   margin-bottom: 0;
+}
+
+/* Scrollbars */
+.leadingDirectoryFiles::-webkit-scrollbar,
+.leadingDirectoryFilesSupplement::-webkit-scrollbar,
+.nestedDirectoryFileStack::-webkit-scrollbar,
+.leadingDirectoryFileStack::-webkit-scrollbar,
+.dinolabsUsageLanguageList::-webkit-scrollbar,
+.topIDEControlBar::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.leadingDirectoryFiles::-webkit-scrollbar-thumb,
+.leadingDirectoryFilesSupplement::-webkit-scrollbar-thumb,
+.nestedDirectoryFileStack::-webkit-scrollbar-thumb,
+.leadingDirectoryFileStack::-webkit-scrollbar-thumb,
+.dinolabsUsageLanguageList::-webkit-scrollbar-thumb,
+.topIDEControlBar::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
+  border-radius: 6px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.leadingDirectoryFiles::-webkit-scrollbar-thumb:hover,
+.leadingDirectoryFilesSupplement::-webkit-scrollbar-thumb:hover,
+.nestedDirectoryFileStack::-webkit-scrollbar-thumb:hover,
+.leadingDirectoryFileStack::-webkit-scrollbar-thumb:hover,
+.dinolabsUsageLanguageList::-webkit-scrollbar-thumb:hover,
+.topIDEControlBar::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
+}
+
+.leadingDirectoryFiles::-webkit-scrollbar-track,
+.leadingDirectoryFilesSupplement::-webkit-scrollbar-track,
+.nestedDirectoryFileStack::-webkit-scrollbar-track,
+.leadingDirectoryFileStack::-webkit-scrollbar-track,
+.dinolabsUsageLanguageList::-webkit-scrollbar-track,
+.topIDEControlBar::-webkit-scrollbar-track {
+  background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .dinolabsGetStartedStack {
+    flex-direction: column;
+    gap: 20px;
+  }
+  
+  .dinolabsGetStartedFlex,
+  .dinolabsLanguageDisplayFlex {
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .leadingIDEDirectoryStack {
+    min-width: 30%;
+    max-width: 30%;
+  }
+  
+  .dinolabsControlStack {
+    min-width: 70%;
+    max-width: 70%;
+  }
+}
+
+@media (max-width: 520px) {
+  .dinolabsControlFlex {
+    flex-direction: column;
+  }
+  
+  .leadingIDEDirectoryStack {
+    min-width: 100%;
+    max-width: 100%;
+    min-height: 40%;
+    max-height: 40%;
+  }
+  
+  .dinolabsControlStack {
+    min-width: 100%;
+    max-width: 100%;
+    min-height: 60%;
+    max-height: 60%;
+  }
+}
+
+@media (prefers-contrast: high) {
+  .leadingIDEDirectoryStack,
+  .dinolabsTabItem,
+  .directorySearchInput,
+  .leadingDirectoryGlobalSearchFlex,
+  .dinolabsContextMenu {
+    border-width: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .leadingDirectoryZoomButton,
+  .leadingDirectoryTabButton,
+  .directorySearchInput,
+  .directoryListItemRoot,
+  .directoryListItem,
+  .directoryListNestedFiles,
+  .dinolabsTabItem,
+  .dinolabsStartButton,
+  .dinolabsContextMenuItem,
+  .resizablePaneDivider,
+  .dinolabsLanguageBar {
+    transition: none;
+  }
 }

@@ -76,7 +76,7 @@ const DinoLabsNav = ({ activePage }) => {
 
   return (
     <>
-      <div className="homeHeaderContainer" style={{ "background": activePage === "plugins" ? "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)" : "linear-gradient(135deg, #15171C 0%, #322842 100%)"}}>
+      <div className="homeHeaderContainer" style={{ "background": "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)" }}>
         <div className="homeTopNavBarContainer">
           <div className="homeSkipToContent">
             <img
@@ -84,7 +84,7 @@ const DinoLabsNav = ({ activePage }) => {
               src="./DinoLabsLogo-White.png"
               alt="Logo"
             />
-            <label className="homeHeader" style={{ color: "#c0c0c0" }}>
+            <label className="homeHeader" style={{ color: "#f1f5f9" }}>
               Dino Labs
             </label>
           </div>
@@ -99,7 +99,7 @@ const DinoLabsNav = ({ activePage }) => {
               <FontAwesomeIcon
                 icon={isHamburger ? faXmark : faBars}
                 className="homeHamburgerIcon"
-                style={{ color: "white" }}
+                style={{ color: "#f1f5f9" }}
               />
             </button>
           )}
@@ -114,15 +114,15 @@ const DinoLabsNav = ({ activePage }) => {
                 <button
                   className="navigationButtonWrapper"
                   onClick={() => navigate("/dinolabs")}
-                  style={{ "background": activePage === "plugins" ? "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)" : "linear-gradient(135deg, #15171C 0%, #322842 100%)"}}
+                  style={{ "background": "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)" }}
                 >
-                  <div className="navigationButton" style={{ color: "#ced6dd" }}>
+                  <div className="navigationButton" style={{ color: "#f1f5f9" }}>
                     <FontAwesomeIcon icon={faCode} className="navigationButtonIcon" />
                     Playground
                   </div>
                   <div
                     className="navigationButtonDivider"
-                    style={{ backgroundColor: "#ced6dd" }}
+                    style={{ backgroundColor: "#94a3b8" }}
                   />
                 </button>
               )}
@@ -131,15 +131,15 @@ const DinoLabsNav = ({ activePage }) => {
                 <button
                   className="navigationButtonWrapper"
                   onClick={() => navigate("/monitoring")}
-                  style={{ "background": activePage === "plugins" ? "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)" : "linear-gradient(135deg, #15171C 0%, #322842 100%)"}}
+                  style={{ "background": "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)" }}
                 >
-                  <div className="navigationButton" style={{ color: "#ced6dd" }}>
+                  <div className="navigationButton" style={{ color: "#f1f5f9" }}>
                     <FontAwesomeIcon icon={faComputer} className="navigationButtonIcon" />
                     Monitoring
                   </div>
                   <div
                     className="navigationButtonDivider"
-                    style={{ backgroundColor: "#ced6dd" }}
+                    style={{ backgroundColor: "#94a3b8" }}
                   />
                 </button>
               )}
@@ -148,15 +148,15 @@ const DinoLabsNav = ({ activePage }) => {
                 <button
                   className="navigationButtonWrapper"
                   onClick={() => navigate("/plugins")}
-                  style={{ "background": activePage === "plugins" ? "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)" : "linear-gradient(135deg, #15171C 0%, #322842 100%)"}}
+                  style={{ "background": "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)" }}
                 >
-                  <div className="navigationButton" style={{ color: "#ced6dd" }}>
+                  <div className="navigationButton" style={{ color: "#f1f5f9" }}>
                     <FontAwesomeIcon icon={faSquarePlus} className="navigationButtonIcon" />
                     Add Ons
                   </div>
                   <div
                     className="navigationButtonDivider"
-                    style={{ backgroundColor: "#ced6dd" }}
+                    style={{ backgroundColor: "#94a3b8" }}
                   />
                 </button>
               )}
@@ -165,15 +165,15 @@ const DinoLabsNav = ({ activePage }) => {
                 <button
                   className="navigationButtonWrapper"
                   onClick={() => navigate("/register")}
-                  style={{ "background": activePage === "plugins" ? "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)" : "linear-gradient(135deg, #15171C 0%, #322842 100%)"}}
+                  style={{ "background": "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)" }}
                 >
-                  <div className="navigationButton" style={{ color: "white" }}>
+                  <div className="navigationButton" style={{ color: "#f1f5f9" }}>
                     <FontAwesomeIcon icon={faIdCard} className="navigationButtonIcon" />
                     Sign Up
                   </div>
                   <div
                     className="navigationButtonDivider"
-                    style={{ backgroundColor: "#ced6dd" }}
+                    style={{ backgroundColor: "#94a3b8" }}
                   />
                 </button>
               )}
@@ -182,9 +182,9 @@ const DinoLabsNav = ({ activePage }) => {
                 <button
                   className="navigationButtonWrapper"
                   onClick={() => navigate("/login")}
-                  style={{ "background": activePage === "plugins" ? "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)" : "linear-gradient(135deg, #15171C 0%, #322842 100%)"}}
+                  style={{ "background": "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)" }}
                 >
-                  <div className="navigationButton" style={{ color: "white" }}>
+                  <div className="navigationButton" style={{ color: "#f1f5f9" }}>
                     <FontAwesomeIcon
                       icon={faRightToBracket}
                       className="navigationButtonIcon"
@@ -193,12 +193,12 @@ const DinoLabsNav = ({ activePage }) => {
                   </div>
                   <div
                     className="navigationButtonDivider"
-                    style={{ backgroundColor: "#ced6dd" }}
+                    style={{ backgroundColor: "#94a3b8" }}
                   />
                 </button>
               ) : (
-                <button className="navigationButtonWrapper" onClick={handleLogout} style={{ "background": activePage === "plugins" ? "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)" : "linear-gradient(135deg, #15171C 0%, #322842 100%)"}}>
-                  <div className="navigationButton" style={{ color: "#ced6dd" }}>
+                <button className="navigationButtonWrapper" onClick={handleLogout} style={{ "background": "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)" }}>
+                  <div className="navigationButton" style={{ color: "#f1f5f9" }}>
                     <FontAwesomeIcon
                       icon={faRightFromBracket}
                       className="navigationButtonIcon"
@@ -207,7 +207,7 @@ const DinoLabsNav = ({ activePage }) => {
                   </div>
                   <div
                     className="navigationButtonDivider"
-                    style={{ backgroundColor: "#ced6dd" }}
+                    style={{ backgroundColor: "#94a3b8" }}
                   />
                 </button>
               )}
@@ -220,20 +220,36 @@ const DinoLabsNav = ({ activePage }) => {
                 <button
                   className="navigationButtonWrapper"
                   onClick={() => navigate("/dinolabs")}
-                  style={{ "background": activePage === "plugins" ? "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)" : "linear-gradient(135deg, #15171C 0%, #322842 100%)"}}
+                  style={{ "background": "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)" }}
                 >
-                  <div className="navigationButton" style={{ color: "#ced6dd" }}>
+                  <div className="navigationButton" style={{ color: "#f1f5f9" }}>
                     <FontAwesomeIcon icon={faCode} className="navigationButtonIcon" />
-                    DinoLabs IDE
+                    Playground
                   </div>
                   <div
                     className="navigationButtonDivider"
-                    style={{ backgroundColor: "#ced6dd" }}
+                    style={{ backgroundColor: "#94a3b8" }}
                   />
                 </button>
               )}
-              <button className="navigationButtonWrapper" onClick={handleLogout} style={{ "background": activePage === "plugins" ? "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)" : "linear-gradient(135deg, #15171C 0%, #322842 100%)"}}>
-                <div className="navigationButton" style={{ color: "#ced6dd" }}>
+              {isAdmin && token && !isTokenExpired && (
+                <button
+                  className="navigationButtonWrapper"
+                  onClick={() => navigate("/monitoring")}
+                  style={{ "background": "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)" }}
+                >
+                  <div className="navigationButton" style={{ color: "#f1f5f9" }}>
+                    <FontAwesomeIcon icon={faComputer} className="navigationButtonIcon" />
+                    Monitoring
+                  </div>
+                  <div
+                    className="navigationButtonDivider"
+                    style={{ backgroundColor: "#94a3b8" }}
+                  />
+                </button>
+              )}
+              <button className="navigationButtonWrapper" onClick={handleLogout} style={{ "background": "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)" }}>
+                <div className="navigationButton" style={{ color: "#f1f5f9" }}>
                   <FontAwesomeIcon
                     icon={faRightFromBracket}
                     className="navigationButtonIcon"
@@ -242,7 +258,7 @@ const DinoLabsNav = ({ activePage }) => {
                 </div>
                 <div
                   className="navigationButtonDivider"
-                  style={{ backgroundColor: "#ced6dd" }}
+                  style={{ backgroundColor: "#94a3b8" }}
                 />
               </button>
             </div>
