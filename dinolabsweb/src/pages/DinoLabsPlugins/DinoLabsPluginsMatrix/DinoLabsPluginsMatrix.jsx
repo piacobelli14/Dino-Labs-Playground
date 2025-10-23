@@ -164,25 +164,34 @@ export default function DinoLabsPluginsMatrix() {
     const LU = deepClone(A);
     const P = Array.from({ length: n }, (_, i) => i);
     let pivSign = 1;
+    
     for (let j = 0; j < n; j++) {
-      for (let i = 0; i < n; i++) {
-        const kmax = Math.min(i, j);
-        let s = 0;
-        for (let k = 0; k < kmax; k++) s += LU[i][k] * LU[k][j];
-        LU[i][j] -= s;
-      }
+      // Find pivot row
       let p = j;
-      for (let i = j + 1; i < n; i++) if (Math.abs(LU[i][j]) > Math.abs(LU[p][j])) p = i;
+      for (let i = j + 1; i < n; i++) {
+        if (Math.abs(LU[i][j]) > Math.abs(LU[p][j])) {
+          p = i;
+        }
+      }
+      
+      // Swap rows if needed
       if (p !== j) {
         [LU[p], LU[j]] = [LU[j], LU[p]];
         [P[p], P[j]] = [P[j], P[p]];
         pivSign = -pivSign;
       }
-      if (j < n && LU[j][j] !== 0) {
-        for (let i = j + 1; i < n; i++) LU[i][j] /= LU[j][j];
+      
+      // Check for singular matrix
+      if (Math.abs(LU[j][j]) < 1e-14) {
+        throw new Error("Matrix Is Singular For LU Decomposition.");
       }
+      
+      // Compute multipliers and eliminate column entries below pivot
       for (let i = j + 1; i < n; i++) {
-        for (let k = j + 1; k < n; k++) LU[i][k] -= LU[i][j] * LU[j][k];
+        LU[i][j] /= LU[j][j];
+        for (let k = j + 1; k < n; k++) {
+          LU[i][k] -= LU[i][j] * LU[j][k];
+        }
       }
     }
     return { LU, P, pivSign };
@@ -191,10 +200,14 @@ export default function DinoLabsPluginsMatrix() {
   const determinant = (A) => {
     const n = A.length;
     if (n === 0 || A[0].length !== n) throw new Error("Determinant Requires A Square Matrix.");
-    const { LU, pivSign } = luDecompose(A);
-    let det = pivSign;
-    for (let i = 0; i < n; i++) det *= LU[i][i];
-    return det;
+    try {
+      const { LU, pivSign } = luDecompose(A);
+      let det = pivSign;
+      for (let i = 0; i < n; i++) det *= LU[i][i];
+      return det;
+    } catch (error) {
+      return 0;
+    }
   };
 
   const luSolve = (LU, P, b) => {
@@ -208,6 +221,7 @@ export default function DinoLabsPluginsMatrix() {
     for (let i = n - 1; i >= 0; i--) {
       let sum = x[i];
       for (let j = i + 1; j < n; j++) sum -= LU[i][j] * x[j];
+      if (Math.abs(LU[i][i]) < 1e-14) throw new Error("Matrix Is Singular.");
       x[i] = sum / LU[i][i];
     }
     return x;
@@ -227,7 +241,7 @@ export default function DinoLabsPluginsMatrix() {
     if (n === 0 || A[0].length !== n) throw new Error("Inverse Requires A Square Matrix.");
     const Aug = A.map((row, i) => row.concat(identity(n)[i]));
     const { R } = rref(Aug);
-    const tol = 1e-8;
+    const tol = 1e-10;
     for (let i = 0; i < n; i++) {
       for (let j = 0; j < n; j++) {
         if (i === j && Math.abs(R[i][j] - 1) > tol) throw new Error("Matrix Is Singular; No Inverse.");
@@ -240,17 +254,32 @@ export default function DinoLabsPluginsMatrix() {
   const powerIteration = (A, maxIter = 1000, tol = 1e-10) => {
     const [n, m] = shape(A);
     if (n !== m) throw new Error("Eigen Computation Requires A Square Matrix.");
-    let v = Array.from({ length: n }, () => 1 / Math.sqrt(n));
-    let lambdaOld = 0;
+    if (n === 0) throw new Error("Matrix Cannot Be Empty.");
+    
+    let v = Array.from({ length: n }, () => Math.random() - 0.5);
     const dot = (x, y) => x.reduce((s, xi, i) => s + xi * y[i], 0);
     const norm = (x) => Math.sqrt(dot(x, x));
+    
+    // Normalize initial vector
+    let vnorm = norm(v);
+    if (vnorm < tol) throw new Error("Cannot Initialize Eigenvector.");
+    v = v.map(x => x / vnorm);
+    
+    let lambdaOld = 0;
     for (let it = 0; it < maxIter; it++) {
       const w = Array(n).fill(0);
-      for (let i = 0; i < n; i++) for (let j = 0; j < n; j++) w[i] += A[i][j] * v[j];
+      for (let i = 0; i < n; i++) {
+        for (let j = 0; j < n; j++) {
+          w[i] += A[i][j] * v[j];
+        }
+      }
+      
       const nv = norm(w);
-      if (nv < tol) break;
+      if (nv < tol) throw new Error("Power Iteration Failed To Converge.");
+      
       const vNext = w.map((x) => x / nv);
       const lambda = dot(vNext, w);
+      
       if (Math.abs(lambda - lambdaOld) < tol) {
         v = vNext;
         lambdaOld = lambda;
@@ -635,16 +664,24 @@ export default function DinoLabsPluginsMatrix() {
 
   const importToA = () => {
     const M = parseTextToMatrix(importText);
-    setARows(M.length);
-    setACols(M[0]?.length || 1);
-    setA(M);
+    const [rows, cols] = shape(M);
+    const limitedRows = clamp(rows, 1, 10);
+    const limitedCols = clamp(cols, 1, 10);
+    const limitedMatrix = resizeMatrix(M, limitedRows, limitedCols);
+    setARows(limitedRows);
+    setACols(limitedCols);
+    setA(limitedMatrix);
   };
 
   const importToB = () => {
     const M = parseTextToMatrix(importText);
-    setBRows(M.length);
-    setBCols(M[0]?.length || 1);
-    setB(M);
+    const [rows, cols] = shape(M);
+    const limitedRows = clamp(rows, 1, 10);
+    const limitedCols = clamp(cols, 1, 10);
+    const limitedMatrix = resizeMatrix(M, limitedRows, limitedCols);
+    setBRows(limitedRows);
+    setBCols(limitedCols);
+    setB(limitedMatrix);
   };
 
   return (
@@ -781,8 +818,6 @@ export default function DinoLabsPluginsMatrix() {
                 {lastOp ? <em className="dinolabsMatrixLastOp">({lastOp})</em> : null}
               </div>
               <div className="dinolabsMatrixPillGroup">
-                <button type="button" className="dinolabsMatrixBtn subtle" onClick={() => setA(deepClone(Result))}>Send → A</button>
-                <button type="button" className="dinolabsMatrixBtn subtle" onClick={() => setB(deepClone(Result))}>Send → B</button>
                 <button type="button" className="dinolabsMatrixBtn subtle" onClick={() => setResult(zeros(1, 1))}><FontAwesomeIcon icon={faDeleteLeft} /> Clear</button>
               </div>
             </div>

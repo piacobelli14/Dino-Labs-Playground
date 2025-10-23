@@ -19,7 +19,9 @@ import {
   faChevronDown,
   faChevronRight,
   faFolderOpen,
-  faPenToSquare
+  faPenToSquare,
+  faUsersCog,
+  faComputer
 } from "@fortawesome/free-solid-svg-icons";
 import { openDB } from "idb";
 import { fileTypeMap } from "./DinoLabsFileTypeMap.jsx";
@@ -893,9 +895,6 @@ const DinoLabs = () => {
       next[activePaneIndex].activeTabId = newTab.id;
       return next;
     });
-  };
-  const openAddOns = () => {
-    navigate("/plugins")
   };
   const handleFileClick = (file) => openFile(file.handle, file.name, file.fullPath);
   const closeTab = async (paneIndex, tabId) => {
@@ -1890,14 +1889,27 @@ const DinoLabs = () => {
               </div>
               <div className="leadingDirectoryBottomBar">
                 <div className="leadingDirectorySettingsButtonFlex" style={{ borderRight: "0.2vh solid rgba(255,255,255,0.1)" }}>
-                  <Tippy content="Account" theme="tooltip-light">
-                    <button className="leadingDirectoryZoomButton" onClick={openAccount}>
-                      <FontAwesomeIcon icon={faUserCircle} />
+                  <Tippy content="Monitoring" theme="tooltip-light">
+                    <button className="leadingDirectoryZoomButton" onClick={() => {navigate("/monitoring");}}>
+                      <FontAwesomeIcon icon={faComputer} style={{ color: "" }} />
                     </button>
                   </Tippy>
+
                   <Tippy content="Add Ons" theme="tooltip-light">
-                    <button className="leadingDirectoryZoomButton" onClick={(openAddOns)}>
+                    <button className="leadingDirectoryZoomButton" onClick={(() => {navigate("/plugins");})}>
                       <FontAwesomeIcon icon={faPlusSquare} style={{ color: "" }} />
+                    </button>
+                  </Tippy>
+
+                  <Tippy content="My Account" theme="tooltip-light">
+                    <button className="leadingDirectoryZoomButton" onClick={(() => {navigate("/account");})}>
+                      <FontAwesomeIcon icon={faUserCircle} style={{ color: "" }} />
+                    </button>
+                  </Tippy>
+
+                  <Tippy content="My Team" theme="tooltip-light">
+                    <button className="leadingDirectoryZoomButton" onClick={(() => {navigate("/team");})}>
+                      <FontAwesomeIcon icon={faUsersCog} style={{ color: "" }} />
                     </button>
                   </Tippy>
                 </div>
@@ -1945,9 +1957,8 @@ const DinoLabs = () => {
                                     <span className="dinolabsFileUnsavedDot" />
                                   </Tippy>
                                 )}
-                                {tab.isAccount ? (
-                                  <FontAwesomeIcon icon={faUserCircle} className="directoryListItemFileIcon" />
-                                ) : (
+                              
+                                {(
                                   getFileIcon(tab.name)
                                 )}
                                 {tab.name}

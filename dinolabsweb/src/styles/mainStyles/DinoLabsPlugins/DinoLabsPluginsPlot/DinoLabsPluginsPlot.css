@@ -338,19 +338,26 @@
 
 .dinolabsPluginsPlotMissingVars {
   padding: 0.6rem 0.8rem;
-  background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
+  background: rgba(255,255,255,0.05);
   border-top: 1px solid #475569;
   font-size: 11px;
   display: flex;
   align-items: center;
   gap: 8px;
   flex-wrap: wrap;
+  margin: 2rem 1rem 1rem 1rem; 
+  border: 1px solid #A3A3A3; 
+  border-radius: 6px; 
+  padding: 0.6rem 1rem;
+  box-sizing: border-box;
+
 }
 
 .dinolabsPluginsPlotMissingVars span {
   color: #94a3b8;
   font-style: italic;
-  font-weight: 600;
+  font-weight: 700;
+  font-size: 0.7rem; 
 }
 
 .dinolabsPluginsPlotVarButton {
@@ -397,6 +404,14 @@
   align-items: center;
   justify-content: space-between;
   margin-bottom: 8px;
+}
+
+.dinolabsPluginsPlotVariableHeader small {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 1rem; 
+  padding: 0 1rem;
 }
 
 .dinolabsPluginsPlotVariableName {

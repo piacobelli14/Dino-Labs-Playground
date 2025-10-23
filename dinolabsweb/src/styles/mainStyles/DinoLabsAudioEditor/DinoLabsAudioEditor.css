@@ -439,7 +439,6 @@
     gap: 8px; 
 }
 
-/* EXACT VIDEO EDITOR TOOLBAR BUTTON STYLES */
 .dinolabsAudioEditorToolButton,
 .dinolabsAudioEditorToolButtonHeader,
 .dinolabsAudioEditorBackgroundButton,
@@ -1008,7 +1007,6 @@
     box-sizing: border-box;
 }
 
-/* Override any remaining black backgrounds in audio visualization panels */
 .dinolabsAudioEditorInnerWrapper canvas,
 .dinolabsAudioEditorInnerWrapperWaveForm canvas,
 .dinolabsAudioEditorInnerWrapperSupplementBig canvas,
@@ -1016,7 +1014,6 @@
     background: transparent !important;
 }
 
-/* Ensure all audio visualization containers have proper gstyle backgrounds */
 .dinolabsAudioEditorInnerWrapper,
 .dinolabsAudioEditorInnerWrapperWaveForm,
 .dinolabsAudioEditorInnerWrapperSupplementBig,
@@ -1025,7 +1022,6 @@
     border: 1px solid #475569 !important;
 }
 
-/* Fix for timeline track labels - prevent line breaking */
 .dinolabsVideoEditorTimelineVideoTrackTimelineClip span,
 .dinolabsVideoEditorTimelineVideoTrackTimelineClip,
 .dinolabsAudioEditorTimelineClip span,
@@ -1043,7 +1039,6 @@
     box-sizing: border-box;
 }
 
-/* Additional timeline track styling */
 .dinolabsVideoEditorTimelineVideoTrackLabel,
 .dinolabsAudioEditorTimelineTrackLabel {
     white-space: nowrap;

@@ -109,7 +109,7 @@ export default function DinoLabsPdfViewer({ fileHandle }) {
   const LoadingUI = (
     <div className="loading-wrapper">
       <div className="loading-circle" />
-      <label className="loading-title">Dino Labs Web IDE</label>
+      <label className="loading-title">Dino Labs</label>
     </div>
   );
 

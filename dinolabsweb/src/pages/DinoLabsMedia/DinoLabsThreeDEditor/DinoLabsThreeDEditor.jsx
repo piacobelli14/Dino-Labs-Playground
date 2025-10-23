@@ -774,7 +774,7 @@ export default function DinoLabs3DViewer({ fileHandle }) {
   const LoadingUI = (
     <div className="dinolabs3DModelLoadingWrapper">
       <div className="dinolabs3DModelLoadingCircle" />
-      <label className="dinolabs3DModelLoadingTitle">Dino Labs Web IDE</label>
+      <label className="dinolabs3DModelLoadingTitle">Dino Labs</label>
     </div>
   );
 

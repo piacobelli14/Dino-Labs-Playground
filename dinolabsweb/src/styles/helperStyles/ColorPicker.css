@@ -264,7 +264,6 @@
   font-weight: 700;
 }
 
-/* Mobile responsiveness */
 @media (max-width: 768px) {
   .dinolabsColorPickerBackground {
     padding: 16px;

@@ -19,10 +19,10 @@ const DinoLabsUnavailable = ({ screenSize }) => {
           />
           <div className="dinolabsUnavailableTextStack">
             <h1 className="dinolabsUnavailableTitle">
-              Dino Labs IDE Unavailable
+              Dino Labs Unavailable
             </h1>
             <p className="dinolabsUnavailableMessage">
-              The IDE is currently unavailable at this screen size.
+              The platform is currently unavailable at this screen size.
             </p>
             <p className="dinolabsUnavailableSubMessage">
               Please sign in on a {safeScreenSize < 700 ? "larger" : "smaller"} screen to continue.

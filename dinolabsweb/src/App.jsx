@@ -7,6 +7,8 @@ import Register from "./pages/Authentication/AuthRegister";
 import Reset from "./pages/Authentication/AuthReset";
 import Verification from "./pages/Authentication/AuthVerifyEmail";
 import DinoLabs from "./pages/DinoLabs"; 
+import DinoLabsAccount from "./pages/DinoLabsAccount/DinoLabsAccount";
+import DinoLabsTeam from "./pages/DinoLabsAccount/DinoLabsTeam";
 import DinoLabsMonitor from "./pages/DinoLabsAccount/DinoLabsMonitoring";
 import DinoLabsPlugins from "./pages/DinoLabsPlugins/DinoLabsPlugins";
 import DinoLabsPluginsDictionary from "./pages/DinoLabsPlugins/DinoLabsPluginsDictionary/DinoLabsPluginsDictionary";
@@ -46,6 +48,16 @@ function App() {
           <Route path="/dinolabs" element={
             <ProtectedRoute>
               <DinoLabs />
+            </ProtectedRoute>
+          } />
+          <Route path="/account" element={
+            <ProtectedRoute>
+              <DinoLabsAccount />
+            </ProtectedRoute>
+          } />
+          <Route path="/team" element={
+            <ProtectedRoute>
+              <DinoLabsTeam />
             </ProtectedRoute>
           } />
           <Route path="/monitoring" element={

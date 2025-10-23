@@ -6,7 +6,7 @@ import DinoLabsColorPicker from "../../../helpers/ColorPicker.jsx";
 import "../../../styles/mainStyles/DinoLabsPlugins/DinoLabsPluginsPlot/DinoLabsPluginsPlot.css";
 import "../../../styles/helperStyles/Slider.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faEye, faEyeSlash, faHouse, faKeyboard, faLineChart, faMinus, faPlus, faXmark } from "@fortawesome/free-solid-svg-icons";
+import { faEye, faEyeSlash, faHouse, faKeyboard, faLineChart, faMinus, faPlus, faRotate, faXmark } from "@fortawesome/free-solid-svg-icons";
 
 const KNOWN_FUNCTIONS = [
   "sin", "cos", "tan", "sec", "csc", "cot",
@@ -171,8 +171,10 @@ const DinoLabsPluginsPlot = () => {
     
     let result = expression;
 
+
     for (const [varName, value] of Object.entries(allVars)) {
-      const regex = new RegExp(`\\b${varName}\\b`, "g");
+      // Use word boundary only after variable name to avoid partial matches
+      const regex = new RegExp(`${varName}\\b`, "g");
       result = result.replace(regex, `(${value})`);
     }
 
@@ -189,6 +191,13 @@ const DinoLabsPluginsPlot = () => {
       const re = new RegExp(`\\b${fname}\\s*\\(`, "g");
       result = result.replace(re, `SAFE.${fname}(`);
     }
+
+    // Add implicit multiplication for patterns like 2x, 3(x+1), etc.
+    result = result.replace(/(\d)([a-zA-Z])/g, "$1*$2");
+    result = result.replace(/(\d)(\()/g, "$1*$2");
+    result = result.replace(/(\))(\d)/g, "$1*$2");
+    result = result.replace(/(\))(\()/g, "$1*$2");
+    result = result.replace(/([a-zA-Z])(\d)/g, "$1*$2");
 
     try {
       const value = eval(result);
@@ -298,73 +307,38 @@ const DinoLabsPluginsPlot = () => {
     const vars = Object.fromEntries(variables.map(v => [v.name, v.value]));
     
     for (let i = 0; i < formulas.length; i++) {
-      const formula1 = formulas[i];
-      if (formula1.isHidden) continue;
+      const formula = formulas[i];
+      if (formula.isHidden) continue;
       
-      let prevY = NaN;
-      let prevX = mathMinX;
+      let prevY = evaluateFunction(formula, mathMinX, vars);
       
-      for (let j = 0; j <= sampleCount; j++) {
-        const x0 = mathMinX + j * dx;
-        const y = evaluateFunction(formula1, x0, vars);
-        if (isFinite(y) && isFinite(prevY)) {
-          if ((prevY > 0 && y <= 0) || (prevY < 0 && y >= 0)) {
-            const interceptX = prevX + (0 - prevY) * (x0 - prevX) / (y - prevY);
-            foundIntercepts.push({ 
-              x: interceptX, 
-              y: 0, 
-              formulaColor: formula1.color,
-              id: `${formula1.id}-x-${j}`
-            });
+      for (let j = 1; j <= sampleCount; j++) {
+        const x = mathMinX + j * dx;
+        const y = evaluateFunction(formula, x, vars);
+        
+        if (isFinite(prevY) && isFinite(y)) {
+          if (prevY * y < 0) {
+            const root = x - dx * (y / (y - prevY));
+            if (root >= mathMinX && root <= mathMaxX) {
+              foundIntercepts.push({
+                x: parseFloat(root.toFixed(4)),
+                y: 0,
+                formulaColor: formula.color
+              });
+            }
           }
         }
         prevY = y;
-        prevX = x0;
       }
       
       if (mathMinX <= 0 && mathMaxX >= 0) {
-        const yAtZero = evaluateFunction(formula1, 0, vars);
-        if (isFinite(yAtZero)) {
-          foundIntercepts.push({ 
-            x: 0, 
-            y: yAtZero, 
-            formulaColor: formula1.color,
-            id: `${formula1.id}-y-intercept`
+        const yInt = evaluateFunction(formula, 0, vars);
+        if (isFinite(yInt) && yInt >= mathMinY && yInt <= mathMaxY) {
+          foundIntercepts.push({
+            x: 0,
+            y: parseFloat(yInt.toFixed(4)),
+            formulaColor: formula.color
           });
-        }
-      }
-      
-      for (let k = i + 1; k < formulas.length; k++) {
-        const formula2 = formulas[k];
-        if (formula2.isHidden) continue;
-        
-        let prevY1 = NaN, prevY2 = NaN;
-        let prevXPos = mathMinX;
-        
-        for (let j = 0; j <= sampleCount; j++) {
-          const x0 = mathMinX + j * dx;
-          const y1 = evaluateFunction(formula1, x0, vars);
-          const y2 = evaluateFunction(formula2, x0, vars);
-          
-          if (isFinite(y1) && isFinite(y2) && isFinite(prevY1) && isFinite(prevY2)) {
-            if ((prevY1 > prevY2 && y1 <= y2) || (prevY1 < prevY2 && y1 >= y2)) {
-              const t = (prevY2 - prevY1) / ((y1 - prevY1) - (y2 - prevY2));
-              if (t >= 0 && t <= 1) {
-                const interceptX = prevXPos + t * dx;
-                const interceptY = prevY1 + t * (y1 - prevY1);
-                foundIntercepts.push({ 
-                  x: interceptX, 
-                  y: interceptY, 
-                  formulaColor: formula1.color,
-                  id: `${formula1.id}-${formula2.id}-${j}`
-                });
-              }
-            }
-          }
-          
-          prevY1 = y1;
-          prevY2 = y2;
-          prevXPos = x0;
         }
       }
     }
@@ -465,13 +439,6 @@ const DinoLabsPluginsPlot = () => {
         const xv = mathMinX + i * dx;
         let y = evaluateFunction(formula, xv, vars);
         
-        if (formula.mode === "derv" && i > 0 && i < samples) {
-          const h = dx;
-          const y1 = evaluateFunction(formula, xv - h, vars);
-          const y2 = evaluateFunction(formula, xv + h, vars);
-          y = (y2 - y1) / (2 * h);
-        }
-        
         if (isFinite(y) && Math.abs(y) < 1e6) {
           const point = transform(xv, y);
           if (point.y >= -height && point.y <= 2 * height) {
@@ -526,18 +493,30 @@ const DinoLabsPluginsPlot = () => {
         ctx.fillText(text, point.x, point.y - 22);
       }
     });
-    
   }, [formulas, variables, intercepts, mathMinX, mathMaxX, mathMinY, mathMaxY]);
 
   const extractMissingVariables = (text) => {
     if (!text) return [];
-    const matches = text.match(/[a-zA-Z_][a-zA-Z0-9_]*/g) || [];
+    
+    // Remove prefix first
+    let expression = text;
+    const prefixes = ["y = ", "y' = ", "∫y = "];
+    for (const prefix of prefixes) {
+      if (expression.startsWith(prefix)) {
+        expression = expression.substring(prefix.length);
+        break;
+      }
+    }
+    
+    if (!expression.trim()) return [];
+    
+    const matches = expression.match(/[a-zA-Z_][a-zA-Z0-9_]*/g) || [];
     const variableNames = matches.filter(match => 
       !KNOWN_FUNCTIONS.includes(match) &&
       !KNOWN_CONSTANTS.includes(match) &&
       match !== "Math" &&
       !match.startsWith("y") &&
-      match !== "x"
+      match !== "x"  // x is the independent variable, not controllable
     );
     const existingVars = variables.map(v => v.name);
     return [...new Set(variableNames)].filter(name => !existingVars.includes(name));
@@ -668,8 +647,10 @@ const DinoLabsPluginsPlot = () => {
             {variables.map(variable => (
               <div key={variable.id} className="dinolabsPluginsPlotVariableItem">
                 <div className="dinolabsPluginsPlotVariableHeader">
+                  <small>
                   <span className="dinolabsPluginsPlotVariableName">{variable.name}: </span>
                   <span className="dinolabsPluginsPlotVariableValue">{variable.value.toFixed(1)}</span>
+                  </small>
                   <button 
                     className="dinolabsPluginsPlotRemoveButton"
                     onClick={() => removeVariable(variable.id)}
@@ -727,7 +708,7 @@ const DinoLabsPluginsPlot = () => {
               onClick={resetZoom}
               title="Reset Zoom"
             >
-              <FontAwesomeIcon icon={faHouse}/>
+              <FontAwesomeIcon icon={faRotate}/>
             </button>
           </div>
 

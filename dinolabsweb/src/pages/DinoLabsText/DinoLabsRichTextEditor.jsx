@@ -1230,11 +1230,11 @@ export default function DinoLabsTextEditor({ fileHandle, keyBinds, onSaveStatusC
 
   if (loading) return <div className="loading-wrapper">
                 <div className="loading-circle" />
-                <label className="loading-title">Dino Labs Web IDE</label>
+                <label className="loading-title">Dino Labs</label>
             </div>;
   if (error) return <div className="loading-wrapper">
                 <div className="loading-circle" />
-                <label className="loading-title">Dino Labs Web IDE</label>
+                <label className="loading-title">Dino Labs</label>
             </div>;
 
   const saveBannerText = saveStatus === "saving" ? "Saving..." : saveStatus === "saved" ? "Saved!" : saveStatus === "failed" ? "Save failed!" : saveStatus === "no-handle" ? "No file handle" : "";

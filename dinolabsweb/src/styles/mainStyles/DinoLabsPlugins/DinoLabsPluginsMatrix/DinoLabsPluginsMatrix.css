@@ -470,6 +470,8 @@
   font-weight: 700;
   color: #f1f5f9;
   font-size: 14px;
+  white-space: nowrap;
+  margin-right: 2rem;
 }
 
 .dinolabsMatrixHistoryGrid {

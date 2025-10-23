@@ -400,7 +400,6 @@
     background: linear-gradient(135deg, #1d4ed8 0%, #1e3a8a 100%);
 }
 
-/* ALL TABLE/COLUMN HEADER CSS PRESERVED EXACTLY AS ORIGINAL */
 .dinolabsTableColumnHeaderContainer {
     position: absolute;
     top: 0;

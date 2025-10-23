@@ -590,14 +590,13 @@ function DinoLabsAudioEditor({ fileHandle }) {
             canvas.height = height * dpr;
             ctx.scale(dpr, dpr);
             
-            // Add gstyle padding
             const padding = 16;
             const labelHeight = 25;
             const plotHeight = height - labelHeight;
             const plotWidth = width - padding * 2;
             
             ctx.clearRect(0, 0, width, height);
-            // Removed black background fill to let CSS gradient show through
+
             ctx.strokeStyle = "#475569";
             ctx.lineWidth = 1;
             ctx.beginPath();
@@ -605,7 +604,6 @@ function DinoLabsAudioEditor({ fileHandle }) {
             ctx.lineTo(width - padding, plotHeight / 2);
             ctx.stroke();
             
-            // Use gstyle typography
             ctx.font = "700 10px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
             ctx.fillStyle = "#94a3b8";
             const tickInterval = Math.max(1, Math.ceil(duration / 8));
@@ -662,7 +660,7 @@ function DinoLabsAudioEditor({ fileHandle }) {
                 ctx.lineWidth = 1;
                 ctx.stroke();
             }
-            // Fix current time indicator position with padding
+
             const progress = currentTime / duration;
             const xPos = padding + progress * plotWidth;
             ctx.beginPath();
@@ -672,7 +670,6 @@ function DinoLabsAudioEditor({ fileHandle }) {
             ctx.lineWidth = 2;
             ctx.stroke();
             
-            // Fix selection area with padding
             if (selectionStart !== null && selectionEnd !== null) {
                 const left = padding + Math.min(selectionStart, selectionEnd) / duration * plotWidth;
                 const w = Math.abs(selectionEnd - selectionStart) / duration * plotWidth;
@@ -906,18 +903,23 @@ function DinoLabsAudioEditor({ fileHandle }) {
         if (!spectrogramSetupRef.current) return;
         spectrogramSetupRef.current.panner.pan.value = pan;
     }, [pan]);
+    
+    // FIXED: Frequency bars visualization - runs continuously after audio setup
     useEffect(() => {
-        if (tracks.length <= 0 || duration <= 0) return;
         if (!spectrogramSetupRef.current) return;
         if (frequencyBarsSetupRef.current) return;
+        
         const freqAnalyser = spectrogramSetupRef.current.freqAnalyser;
         if (!freqAnalyser) return;
+        
         const canvas = frequencyBarsCanvasRef.current;
         if (!canvas) return;
+        
         const ctx = canvas.getContext("2d");
         const bufferLength = freqAnalyser.frequencyBinCount;
         const dataArray = new Uint8Array(bufferLength);
         let animationFrameId;
+        
         function drawFrequencyBars() {
             freqAnalyser.getByteFrequencyData(dataArray);
             const rect = canvas.getBoundingClientRect();
@@ -926,14 +928,13 @@ function DinoLabsAudioEditor({ fileHandle }) {
             canvas.height = rect.height * dpr;
             ctx.scale(dpr, dpr);
             
-            // Add gstyle padding
             const padding = 16;
             const labelHeight = 20;
             const plotHeight = rect.height - labelHeight;
             const plotWidth = rect.width - padding * 2;
             
             ctx.clearRect(0, 0, rect.width, rect.height);
-            // Removed black background fill to let CSS gradient show through
+
             const barWidth = (plotWidth / bufferLength) * 2.5;
             let x = padding;
             for (let i = 0; i < bufferLength / 2; i++) {
@@ -947,7 +948,6 @@ function DinoLabsAudioEditor({ fileHandle }) {
                 x += barWidth + 1;
             }
             
-            // Use gstyle typography
             ctx.font = "700 10px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
             ctx.fillStyle = "#94a3b8";
             const { audioCtx } = spectrogramSetupRef.current;
@@ -966,24 +966,32 @@ function DinoLabsAudioEditor({ fileHandle }) {
             });
             animationFrameId = requestAnimationFrame(drawFrequencyBars);
         }
+        
         drawFrequencyBars();
         frequencyBarsSetupRef.current = { animationFrameId };
+        
         return () => {
             if (animationFrameId) cancelAnimationFrame(animationFrameId);
             frequencyBarsSetupRef.current = null;
         };
-    }, [duration]);
+    }, [spectrogramSetupRef.current]); // Fixed: Depend on audio setup being ready
+    
+    // FIXED: Oscilloscope visualization - runs continuously after audio setup
     useEffect(() => {
-        if (tracks.length <= 0 || duration <= 0) return;
         if (!spectrogramSetupRef.current) return;
         if (oscilloscopeSetupRef.current) return;
+        
         const oscAnalyser = spectrogramSetupRef.current.oscAnalyser;
         if (!oscAnalyser) return;
+        
         const canvas = oscilloscopeCanvasRef.current;
         if (!canvas) return;
+        
         const ctx = canvas.getContext("2d");
         const bufferLength = oscAnalyser.fftSize;
         const dataArray = new Uint8Array(bufferLength);
+        let animationFrameId;
+        
         const handleDraw = () => {
             const rect = canvas.getBoundingClientRect();
             const dpr = window.devicePixelRatio || 1;
@@ -991,7 +999,6 @@ function DinoLabsAudioEditor({ fileHandle }) {
             canvas.height = rect.height * dpr;
             ctx.scale(dpr, dpr);
             
-            // Add gstyle padding
             const padding = 16;
             const labelWidth = 35;
             const titleHeight = 0;
@@ -999,9 +1006,7 @@ function DinoLabsAudioEditor({ fileHandle }) {
             const plotHeight = rect.height - titleHeight - padding;
             
             ctx.clearRect(0, 0, rect.width, rect.height);
-            // Removed black background fill to let CSS gradient show through
             
-            // Draw grid lines with proper padding
             const thresholds = [0.25, 0.5, 0.75];
             ctx.lineWidth = 0.5;
             ctx.strokeStyle = "#475569";
@@ -1018,7 +1023,6 @@ function DinoLabsAudioEditor({ fileHandle }) {
                 ctx.stroke();
             });
             
-            // Use gstyle typography with proper spacing
             ctx.font = "700 10px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
             ctx.fillStyle = "#94a3b8";
             ctx.textAlign = "right";
@@ -1030,7 +1034,6 @@ function DinoLabsAudioEditor({ fileHandle }) {
             });
             ctx.textAlign = "left";
             
-            // Draw waveform with proper padding
             oscAnalyser.getByteTimeDomainData(dataArray);
             ctx.beginPath();
             const sliceWidth = plotWidth / bufferLength;
@@ -1045,97 +1048,34 @@ function DinoLabsAudioEditor({ fileHandle }) {
             ctx.strokeStyle = "#ffffff";
             ctx.lineWidth = 1.5;
             ctx.stroke();
-            requestAnimationFrame(handleDraw);
+            animationFrameId = requestAnimationFrame(handleDraw);
         };
+        
         handleDraw();
-        oscilloscopeSetupRef.current = { running: true };
+        oscilloscopeSetupRef.current = { animationFrameId };
+        
         return () => {
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
             oscilloscopeSetupRef.current = null;
         };
-    }, [duration]);
+    }, [spectrogramSetupRef.current]); // Fixed: Depend on audio setup being ready
+    
+    // FIXED: Stereo left visualization - runs continuously after audio setup
     useEffect(() => {
-        if (tracks.length <= 0 || duration <= 0) return;
-        if (!spectrogramSetupRef.current) return;
-        if (loudnessSetupRef.current) return;
-        const loudnessAnalyser = spectrogramSetupRef.current.loudnessAnalyser;
-        if (!loudnessAnalyser) return;
-        const dataArray = new Uint8Array(loudnessAnalyser.fftSize);
-        const canvas = loudnessCanvasRef.current;
-        if (!canvas) return;
-        const ctx = canvas.getContext("2d");
-        const totalBars = 30;
-        const drawLoudness = () => {
-            const rect = canvas.getBoundingClientRect();
-            const dpr = window.devicePixelRatio || 1;
-            canvas.width = rect.width * dpr;
-            canvas.height = rect.height * dpr;
-            ctx.scale(dpr, dpr);
-            
-            // Add gstyle padding
-            const padding = 8;
-            const labelWidth = 18;
-            const meterHeight = rect.height - padding * 2;
-            const meterWidth = rect.width - labelWidth - padding;
-            
-            loudnessAnalyser.getByteTimeDomainData(dataArray);
-            let sum = 0;
-            for (let i = 0; i < dataArray.length; i++) {
-                const val = dataArray[i] - 128;
-                sum += val * val;
-            }
-            let rms = (Math.sqrt(sum / dataArray.length) / 128) * 4;
-            if (rms > 1) rms = 1;
-            const activeBars = Math.floor(rms * totalBars);
-            ctx.clearRect(0, 0, rect.width, rect.height);
-            // Removed black background fill to let CSS gradient show through
-            
-            const barHeight = meterHeight / totalBars;
-            for (let i = 0; i < totalBars; i++) {
-                const y = padding + meterHeight - (i + 1) * barHeight;
-                if (i < activeBars) {
-                    const ratio = i / (totalBars - 1);
-                    // Simple gstyle gradient: darker purple to accent purple
-                    if (ratio < 0.3) {
-                        ctx.fillStyle = "#475569"; // Border color for low
-                    } else if (ratio < 0.7) {
-                        ctx.fillStyle = "#5C2BE2"; // Accent for medium  
-                    } else {
-                        ctx.fillStyle = "#f1f5f9"; // Light for high
-                    }
-                } else {
-                    ctx.fillStyle = "#334155"; // Darker background
-                }
-                ctx.fillRect(labelWidth, y, meterWidth, barHeight - 1);
-            }
-            
-            // Add rotated label with proper positioning
-            ctx.save();
-            ctx.translate(padding + 2, rect.height / 2);
-            ctx.rotate(-Math.PI / 2);
-            ctx.font = "700 10px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
-            ctx.fillStyle = "#94a3b8";
-            ctx.textAlign = "center";
-            ctx.fillText("Loudness", 0, 0);
-            ctx.restore();
-            requestAnimationFrame(drawLoudness);
-        };
-        drawLoudness();
-        loudnessSetupRef.current = { running: true };
-        return () => {
-            loudnessSetupRef.current = null;
-        };
-    }, [duration]);
-    useEffect(() => {
-        if (tracks.length <= 0 || duration <= 0) return;
         if (!spectrogramSetupRef.current) return;
         if (stereoLeftSetupRef.current) return;
+        
         const { leftAnalyser } = spectrogramSetupRef.current;
         if (!leftAnalyser) return;
+        
         const canvas = stereoLeftCanvasRef.current;
         if (!canvas) return;
+        
         const ctx = canvas.getContext("2d");
         const dataArray = new Uint8Array(leftAnalyser.fftSize);
         const totalBars = 30;
+        let animationFrameId;
+        
         const drawLeftMeter = () => {
             const rect = canvas.getBoundingClientRect();
             const dpr = window.devicePixelRatio || 1;
@@ -1143,7 +1083,6 @@ function DinoLabsAudioEditor({ fileHandle }) {
             canvas.height = rect.height * dpr;
             ctx.scale(dpr, dpr);
             
-            // Add gstyle padding
             const padding = 8;
             const labelHeight = 15;
             const meterHeight = rect.height - labelHeight - padding;
@@ -1158,52 +1097,58 @@ function DinoLabsAudioEditor({ fileHandle }) {
             if (rmsLeft > 1) rmsLeft = 1;
             const activeBarsLeft = Math.floor(rmsLeft * totalBars);
             ctx.clearRect(0, 0, rect.width, rect.height);
-            // Removed black background fill to let CSS gradient show through
             
             const barHeight = meterHeight / totalBars;
             for (let i = 0; i < totalBars; i++) {
                 const y = padding + meterHeight - (i + 1) * barHeight;
                 if (i < activeBarsLeft) {
                     const ratio = i / (totalBars - 1);
-                    // Simple gstyle gradient: darker purple to accent purple
                     if (ratio < 0.3) {
-                        ctx.fillStyle = "#475569"; // Border color for low
+                        ctx.fillStyle = "#475569"; 
                     } else if (ratio < 0.7) {
-                        ctx.fillStyle = "#5C2BE2"; // Accent for medium  
+                        ctx.fillStyle = "#5C2BE2";   
                     } else {
-                        ctx.fillStyle = "#f1f5f9"; // Light for high
+                        ctx.fillStyle = "#f1f5f9"; 
                     }
                 } else {
-                    ctx.fillStyle = "#334155"; // Darker background
+                    ctx.fillStyle = "#334155";
                 }
                 ctx.fillRect(padding, y, rect.width - padding * 2, barHeight - 1);
             }
             
-            // Use gstyle typography
             ctx.font = "700 10px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
             ctx.fillStyle = "#94a3b8";
             ctx.textAlign = "center";
             ctx.fillText("L", rect.width / 2, rect.height - 4);
             ctx.textAlign = "left";
-            requestAnimationFrame(drawLeftMeter);
+            animationFrameId = requestAnimationFrame(drawLeftMeter);
         };
+        
         drawLeftMeter();
-        stereoLeftSetupRef.current = { running: true };
+        stereoLeftSetupRef.current = { animationFrameId };
+        
         return () => {
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
             stereoLeftSetupRef.current = null;
         };
-    }, [duration]);
+    }, [spectrogramSetupRef.current]); // Fixed: Depend on audio setup being ready
+    
+    // FIXED: Stereo right visualization - runs continuously after audio setup
     useEffect(() => {
-        if (tracks.length <= 0 || duration <= 0) return;
         if (!spectrogramSetupRef.current) return;
         if (stereoRightSetupRef.current) return;
+        
         const { rightAnalyser } = spectrogramSetupRef.current;
         if (!rightAnalyser) return;
+        
         const canvas = stereoRightCanvasRef.current;
         if (!canvas) return;
+        
         const ctx = canvas.getContext("2d");
         const dataArray = new Uint8Array(rightAnalyser.fftSize);
         const totalBars = 30;
+        let animationFrameId;
+        
         const drawRightMeter = () => {
             const rect = canvas.getBoundingClientRect();
             const dpr = window.devicePixelRatio || 1;
@@ -1211,7 +1156,6 @@ function DinoLabsAudioEditor({ fileHandle }) {
             canvas.height = rect.height * dpr;
             ctx.scale(dpr, dpr);
             
-            // Add gstyle padding
             const padding = 8;
             const labelHeight = 15;
             const meterHeight = rect.height - labelHeight - padding;
@@ -1226,41 +1170,42 @@ function DinoLabsAudioEditor({ fileHandle }) {
             if (rmsRight > 1) rmsRight = 1;
             const activeBarsRight = Math.floor(rmsRight * totalBars);
             ctx.clearRect(0, 0, rect.width, rect.height);
-            // Removed black background fill to let CSS gradient show through
             
             const barHeight = meterHeight / totalBars;
             for (let i = 0; i < totalBars; i++) {
                 const y = padding + meterHeight - (i + 1) * barHeight;
                 if (i < activeBarsRight) {
                     const ratio = i / (totalBars - 1);
-                    // Simple gstyle gradient: darker purple to accent purple
                     if (ratio < 0.3) {
-                        ctx.fillStyle = "#475569"; // Border color for low
+                        ctx.fillStyle = "#475569"; 
                     } else if (ratio < 0.7) {
-                        ctx.fillStyle = "#5C2BE2"; // Accent for medium  
+                        ctx.fillStyle = "#5C2BE2";  
                     } else {
-                        ctx.fillStyle = "#f1f5f9"; // Light for high
+                        ctx.fillStyle = "#f1f5f9"; 
                     }
                 } else {
-                    ctx.fillStyle = "#334155"; // Darker background
+                    ctx.fillStyle = "#334155"; 
                 }
                 ctx.fillRect(padding, y, rect.width - padding * 2, barHeight - 1);
             }
             
-            // Use gstyle typography
             ctx.font = "700 10px -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif";
             ctx.fillStyle = "#94a3b8";
             ctx.textAlign = "center";
             ctx.fillText("R", rect.width / 2, rect.height - 4);
             ctx.textAlign = "left";
-            requestAnimationFrame(drawRightMeter);
+            animationFrameId = requestAnimationFrame(drawRightMeter);
         };
+        
         drawRightMeter();
-        stereoRightSetupRef.current = { running: true };
+        stereoRightSetupRef.current = { animationFrameId };
+        
         return () => {
+            if (animationFrameId) cancelAnimationFrame(animationFrameId);
             stereoRightSetupRef.current = null;
         };
-    }, [duration]);
+    }, [spectrogramSetupRef.current]); // Fixed: Depend on audio setup being ready
+    
     useEffect(() => {
         if (tracks.length <= 0 || duration <= 0) return;
         if (!spectrogramSetupRef.current) return;
@@ -1282,7 +1227,7 @@ function DinoLabsAudioEditor({ fileHandle }) {
             canvas.height = rect.height * dpr;
             ctx.scale(dpr, dpr);
             ctx.clearRect(0, 0, rect.width, rect.height);
-            // Removed black background fill to let CSS gradient show through
+
             ctx.strokeStyle = "#475569";
             ctx.lineWidth = 0.5;
             const gridLines = 5;
@@ -1360,13 +1305,13 @@ function DinoLabsAudioEditor({ fileHandle }) {
             const sliceHeight = rect.height / bufferLength;
             for (let i = 0; i < bufferLength; i++) {
                 const magnitude = dataArray[i] / 255;
-                // Simple gstyle gradient based on magnitude
+
                 if (magnitude < 0.3) {
-                    ctx.fillStyle = "#334155"; // Background for low
+                    ctx.fillStyle = "#334155"; 
                 } else if (magnitude < 0.7) {
-                    ctx.fillStyle = "#5C2BE2"; // Accent for medium
+                    ctx.fillStyle = "#5C2BE2"; 
                 } else {
-                    ctx.fillStyle = "#f1f5f9"; // Light for high
+                    ctx.fillStyle = "#f1f5f9"; 
                 }
                 const y = (bufferLength - i - 1) * sliceHeight;
                 ctx.fillRect(rect.width - 1, y, 1, sliceHeight + 1);
@@ -1401,7 +1346,7 @@ function DinoLabsAudioEditor({ fileHandle }) {
             canvas.height = rect.height * dpr;
             ctx.scale(dpr, dpr);
             ctx.clearRect(0, 0, rect.width, rect.height);
-            // Removed black background fill to let CSS gradient show through
+            
             const sustainTime = 5;
             const totalTime = attack + decay + sustainTime + release;
             let x = 0;

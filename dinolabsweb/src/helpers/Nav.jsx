@@ -10,6 +10,11 @@ import {
   faCode,
   faSquarePlus,
   faComputer,
+  faUsers,
+  faUser,
+  faUserCircle,
+  faUsersCog,
+  faUserCog,
 } from "@fortawesome/free-solid-svg-icons";
 import "../styles/helperStyles/NavBar.css";
 import useAuth from "../UseAuth.jsx";
@@ -18,7 +23,7 @@ import useIsTouchDevice from "../TouchDevice.jsx";
 const DinoLabsNav = ({ activePage }) => {
   const navigate = useNavigate();
   const isTouchDevice = useIsTouchDevice();
-  const { token, isAdmin, loading } = useAuth();
+  const { token, isAdmin, loading, userID, organizationID } = useAuth();
   const [isHamburger, setIsHamburger] = useState(false);
   const [isTokenExpired, setIsTokenExpired] = useState(false);
 
@@ -130,12 +135,63 @@ const DinoLabsNav = ({ activePage }) => {
               {token && !isTokenExpired && (
                 <button
                   className="navigationButtonWrapper"
+                  onClick={() => navigate("/account")}
+                  style={{ "background": "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)" }}
+                >
+                  <div className="navigationButton" style={{ color: "#f1f5f9" }}>
+                    <FontAwesomeIcon icon={faUserCog} className="navigationButtonIcon" />
+                    My Account
+                  </div>
+                  <div
+                    className="navigationButtonDivider"
+                    style={{ backgroundColor: "#94a3b8" }}
+                  />
+                </button>
+              )}
+
+              {token && !isTokenExpired && organizationID && (
+                <button
+                  className="navigationButtonWrapper"
+                  onClick={() => navigate("/team")}
+                  style={{ "background": "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)" }}
+                >
+                  <div className="navigationButton" style={{ color: "#f1f5f9" }}>
+                    <FontAwesomeIcon icon={faUsersCog} className="navigationButtonIcon" />
+                    My Team
+                  </div>
+                  <div
+                    className="navigationButtonDivider"
+                    style={{ backgroundColor: "#94a3b8" }}
+                  />
+                </button>
+              )}
+
+              {token && !isTokenExpired && (
+                <button
+                  className="navigationButtonWrapper"
                   onClick={() => navigate("/monitoring")}
                   style={{ "background": "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)" }}
                 >
                   <div className="navigationButton" style={{ color: "#f1f5f9" }}>
                     <FontAwesomeIcon icon={faComputer} className="navigationButtonIcon" />
                     Monitoring
+                  </div>
+                  <div
+                    className="navigationButtonDivider"
+                    style={{ backgroundColor: "#94a3b8" }}
+                  />
+                </button>
+              )}
+
+              {token && !isTokenExpired && (
+                <button
+                  className="navigationButtonWrapper"
+                  onClick={() => navigate("/plugins")}
+                  style={{ "background": "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)" }}
+                >
+                  <div className="navigationButton" style={{ color: "#f1f5f9" }}>
+                    <FontAwesomeIcon icon={faSquarePlus} className="navigationButtonIcon" />
+                    Add Ons
                   </div>
                   <div
                     className="navigationButtonDivider"
@@ -232,6 +288,41 @@ const DinoLabsNav = ({ activePage }) => {
                   />
                 </button>
               )}
+
+              {token && !isTokenExpired && (
+                <button
+                  className="navigationButtonWrapper"
+                  onClick={() => navigate("/account")}
+                  style={{ "background": "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)" }}
+                >
+                  <div className="navigationButton" style={{ color: "#f1f5f9" }}>
+                    <FontAwesomeIcon icon={faUserCog} className="navigationButtonIcon" />
+                    My Account
+                  </div>
+                  <div
+                    className="navigationButtonDivider"
+                    style={{ backgroundColor: "#94a3b8" }}
+                  />
+                </button>
+              )}
+
+              {token && !isTokenExpired && organizationID && (
+                <button
+                  className="navigationButtonWrapper"
+                  onClick={() => navigate("/team")}
+                  style={{ "background": "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)" }}
+                >
+                  <div className="navigationButton" style={{ color: "#f1f5f9" }}>
+                    <FontAwesomeIcon icon={faUsersCog} className="navigationButtonIcon" />
+                    My Team
+                  </div>
+                  <div
+                    className="navigationButtonDivider"
+                    style={{ backgroundColor: "#94a3b8" }}
+                  />
+                </button>
+              )}
+
               {isAdmin && token && !isTokenExpired && (
                 <button
                   className="navigationButtonWrapper"
@@ -248,6 +339,24 @@ const DinoLabsNav = ({ activePage }) => {
                   />
                 </button>
               )}
+
+              {token && !isTokenExpired && (
+                <button
+                  className="navigationButtonWrapper"
+                  onClick={() => navigate("/plugins")}
+                  style={{ "background": "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)" }}
+                >
+                  <div className="navigationButton" style={{ color: "#f1f5f9" }}>
+                    <FontAwesomeIcon icon={faSquarePlus} className="navigationButtonIcon" />
+                    Add Ons
+                  </div>
+                  <div
+                    className="navigationButtonDivider"
+                    style={{ backgroundColor: "#94a3b8" }}
+                  />
+                </button>
+              )}
+              
               <button className="navigationButtonWrapper" onClick={handleLogout} style={{ "background": "linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%)" }}>
                 <div className="navigationButton" style={{ color: "#f1f5f9" }}>
                   <FontAwesomeIcon

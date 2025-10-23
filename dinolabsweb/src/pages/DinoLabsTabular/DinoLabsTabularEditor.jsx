@@ -1693,11 +1693,11 @@ export default function DinoLabsTabularEditor({ fileHandle, keyBinds, onSaveStat
   }
   if (loading) return <div className="loading-wrapper">
     <div className="loading-circle" />
-    <label className="loading-title">Dino Labs Web IDE</label>
+    <label className="loading-title">Dino Labs</label>
   </div>;
   if (error) return <div className="loading-wrapper">
     <div className="loading-circle" />
-    <label className="loading-title">Dino Labs Web IDE</label>
+    <label className="loading-title">Dino Labs</label>
   </div>;
   const activeFilterCount = Object.values(columnFilters).reduce((acc, v) => acc + ((v && v.length) ? 1 : 0), 0);
   return (

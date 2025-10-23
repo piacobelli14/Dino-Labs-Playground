@@ -49,7 +49,6 @@
   box-sizing: border-box;
 }
 
-/* Sidebar Styling */
 .leadingIDEDirectoryStack {
   min-width: 25%;
   max-width: 25%;
@@ -113,7 +112,6 @@
 .leadingDirectoryZoomButton:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-  background: linear-gradient(145deg, #334155 0%, #475569 100%);
   transform: none;
 }
 
@@ -294,7 +292,6 @@
   outline: none;
 }
 
-/* File List Styling */
 .directoryListItemRoot,
 .directoryListItem {
   font-size: 12px;
@@ -316,19 +313,16 @@
   transition: all 0.2s ease;
 }
 
-/* Add indentation for first level nested items */
 .directoryListItem[style*="padding-left: 20px"],
 .directoryListItem[data-depth="1"] {
   padding-left: 40px !important;
 }
 
-/* Add indentation for second level nested items */
 .directoryListItem[style*="padding-left: 40px"],
 .directoryListItem[data-depth="2"] {
   padding-left: 56px !important;
 }
 
-/* Add indentation for third level nested items */
 .directoryListItem[style*="padding-left: 60px"],
 .directoryListItem[data-depth="3"] {
   padding-left: 72px !important;
@@ -413,7 +407,6 @@
   flex-direction: column;
 }
 
-/* Enhanced hover effects for all nested items */
 .directoryListNestedFiles,
 .directoryListItem[style*="padding-left"],
 .directoryListItem[data-depth],
@@ -448,7 +441,6 @@ li[style*="padding-left"]:hover {
   vertical-align: middle;
 }
 
-/* Main Editor Area */
 .dinolabsControlStack {
   min-width: 75%;
   max-width: 75%;
@@ -477,7 +469,6 @@ li[style*="padding-left"]:hover {
   border-top: 1px solid #475569;
 }
 
-/* Tab Styling */
 .dinolabsTabItem {
   height: 2.5rem;
   padding: 0 16px;
@@ -553,7 +544,6 @@ li[style*="padding-left"]:hover {
   margin-right: 8px;
 }
 
-/* Editor Wrapper */
 .dinolabsMarkdownWrapper {
   min-height: calc(100% - 5rem);
   max-height: calc(100% - 5rem);
@@ -597,7 +587,6 @@ li[style*="padding-left"]:hover {
   right: 0;
 }
 
-/* Resizable Pane Divider */
 .resizablePaneDivider {
   width: 4px;
   background: linear-gradient(145deg, #475569 0%, #64748b 100%);
@@ -609,7 +598,6 @@ li[style*="padding-left"]:hover {
   background: linear-gradient(135deg, #1e40af 0%, #1d4ed8 100%);
 }
 
-/* Welcome Screen */
 .dinolabsNoFileSelectedWrapper {
   min-height: 100%;
   max-height: 100%;
@@ -904,7 +892,6 @@ li[style*="padding-left"]:hover {
   margin-bottom: 0;
 }
 
-/* Scrollbars */
 .leadingDirectoryFiles::-webkit-scrollbar,
 .leadingDirectoryFilesSupplement::-webkit-scrollbar,
 .nestedDirectoryFileStack::-webkit-scrollbar,
@@ -944,7 +931,6 @@ li[style*="padding-left"]:hover {
   background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
 }
 
-/* Responsive Design */
 @media (max-width: 1024px) {
   .dinolabsGetStartedStack {
     flex-direction: column;
