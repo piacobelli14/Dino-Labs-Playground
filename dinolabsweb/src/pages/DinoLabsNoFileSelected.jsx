@@ -59,14 +59,6 @@ const DinoLabsNoFileSelected = ({ handleLoadRepository, handleLoadFile, isPlotRe
               </button>
             </div>
           </div>
-
-          {isPlotRendered && isValidUsageByDay ? (
-            <LinePlot plotType="getStartedPageUsagePlot" data={personalUsageByDay} />
-          ) : (
-            <div className="getStartedLinePlot" style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-              <div className="loading-circle" />
-            </div>
-          )}
         </div>
 
         <div className="dinolabsLanguageDisplayFlex">
@@ -105,18 +97,7 @@ const DinoLabsNoFileSelected = ({ handleLoadRepository, handleLoadFile, isPlotRe
               <div className="loading-circle" />
             </div>
           )}
-          {isPlotRendered && isValidLanguages ? (
-            <div className="dinolabsGetStartedWrapperLanguages">
-              <DoughnutPlot cellType="languageUsage" data={{ usageLanguages }} fontSizeMultiplier={1.7} />
-            </div>
-          ) : (
-            <div
-              className="dinolabsGetStartedWrapperLanguages"
-              style={{ display: "flex", justifyContent: "center", alignItems: "center" }}
-            >
-              <div className="loading-circle" />
-            </div>
-          )}
+          
         </div>
       </div>
     </div>

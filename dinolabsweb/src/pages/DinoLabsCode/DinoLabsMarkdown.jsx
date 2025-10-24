@@ -910,7 +910,7 @@ const DinoLabsMarkdown = forwardRef((props, ref) => {
                 <FontAwesomeIcon icon={isCopied ? faSquareCheck : faCopy} />
               </button>
             </Tippy>
-            {/*
+            
             <Tippy content="Split Tabs" theme="tooltip-light">
               <button
                 type="button"
@@ -926,7 +926,7 @@ const DinoLabsMarkdown = forwardRef((props, ref) => {
                 <FontAwesomeIcon icon={faTableColumns} />
               </button>
             </Tippy>
-            */}
+            
           </div>
         </div>
       </div>

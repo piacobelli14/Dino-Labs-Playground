@@ -623,22 +623,27 @@ li[style*="padding-left"]:hover {
   justify-content: space-between;
   align-items: center;
   box-sizing: border-box;
-  overflow: hidden;
+  overflow: scroll;
 }
 
 .dinolabsGetStartedFlex {
-  width: 59%;
+  width: 50%;
   height: 100%;
+  min-height: 100%; 
+  max-height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
   box-sizing: border-box;
+  padding: 12px; 
 }
 
 .dinolabsGetStartedWrapperInfo {
-  width: 96%;
-  height: 48%;
+  width: 100%;
+  height: 100%;
+  min-height: 100%;
+  max-height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -690,18 +695,23 @@ li[style*="padding-left"]:hover {
 }
 
 .dinolabsLanguageDisplayFlex {
-  width: 39%;
+  width: 50%;
   height: 100%;
+  min-height: 100%; 
+  max-height: 100%; 
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   align-items: center;
   box-sizing: border-box;
+  padding: 12px;
 }
 
 .dinolabsGetStartedWrapperLanguages {
   width: 100%;
-  height: 48%;
+  height: 100%;
+  min-height: 100%;
+  max-height: 100%;
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
@@ -790,7 +800,13 @@ li[style*="padding-left"]:hover {
   font-weight: 700;
   color: #94a3b8;
   width: 100%;
+  height: 100%; 
+  min-height: 100%; 
+  max-height: 100%;
   text-align: center;
+  display: flex; 
+  justify-content: center;
+  align-items: center;
 }
 
 .dinolabsTitle {
@@ -804,8 +820,7 @@ li[style*="padding-left"]:hover {
   flex-direction: column;
   justify-content: flex-start;
   align-items: flex-start;
-  margin-left: 8px;
-  padding: 12px 0; 
+  padding: 32px 0; 
 }
 
 .dinolabsStartButton {
@@ -823,6 +838,9 @@ li[style*="padding-left"]:hover {
   transition: all 0.2s ease;
   margin-bottom: 16px;
   box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
 .dinolabsStartButton svg {
@@ -931,18 +949,6 @@ li[style*="padding-left"]:hover {
   background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
 }
 
-@media (max-width: 1024px) {
-  .dinolabsGetStartedStack {
-    flex-direction: column;
-    gap: 20px;
-  }
-  
-  .dinolabsGetStartedFlex,
-  .dinolabsLanguageDisplayFlex {
-    width: 100%;
-  }
-}
-
 @media (max-width: 768px) {
   .leadingIDEDirectoryStack {
     min-width: 30%;
@@ -999,4 +1005,8 @@ li[style*="padding-left"]:hover {
   .dinolabsLanguageBar {
     transition: none;
   }
+}
+
+.topIDEControlBarWrapper {
+  display: flex !important;
 }

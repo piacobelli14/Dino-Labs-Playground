@@ -25,7 +25,7 @@ const ManagerLinePlot = ({
       };
     } else if (size >= 500 && size <= 699) {
       return {
-        fontSize: 8,
+        fontSize: 80,
         grid: { left: 30, right: 30, bottom: 10, top: 15, containLabel: true },
         lineWidth: 2,
         symbolSize: 9,

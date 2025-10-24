@@ -514,12 +514,12 @@ const DinoLabs = () => {
   }, [globalSearchResults, collapsedFiles]);
   useEffect(() => { repositoryFilesRef.current = repositoryFiles; openedDirectoriesRef.current = openedDirectories; fsOpLoadingRef.current = fsOpLoading; panesRef.current = panes; }, [repositoryFiles, openedDirectories, fsOpLoading, panes]);
   useEffect(() => {
-  const handleResize = () => { 
-    setScreenSize(window.innerWidth); 
-  };
-  window.addEventListener("resize", handleResize);
-  return () => window.removeEventListener("resize", handleResize);
-}, []);
+    const handleResize = () => {
+      setScreenSize(window.innerWidth);
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, []);
   useEffect(() => {
     if (!loading && token) {
       (async () => {
@@ -553,7 +553,7 @@ const DinoLabs = () => {
       })();
     }
   }, [userID, organizationID, loading, token]);
-  
+
   useEffect(() => {
     (async () => {
       try {
@@ -603,7 +603,7 @@ const DinoLabs = () => {
                       const rel = savedTab.id.replace(savedState.rootDirectoryName + "/", "");
                       fileHandle = await resolveHandleFromPath(rootHandleLocal, rel);
                     }
-                  } catch {}
+                  } catch { }
                   let content = "";
                   if (!savedTab.isMedia) {
                     const hasUnsaved = savedState.unsavedChanges?.[savedTab.id];
@@ -618,7 +618,7 @@ const DinoLabs = () => {
                       try {
                         const file = await fileHandle.getFile();
                         content = await file.text();
-                      } catch {}
+                      } catch { }
                     }
                   }
                   return {
@@ -663,7 +663,7 @@ const DinoLabs = () => {
       setIsLoaded(true);
     })();
   }, []);
-  
+
   useEffect(() => {
     (async () => {
       if (!pendingHydrate || !rootDirectoryHandle || !rootDirectoryName) return;
@@ -935,11 +935,38 @@ const DinoLabs = () => {
       const currentTabIndex = currentPane.openedTabs.findIndex((t) => t.id === currentPane.activeTabId);
       const currentTab = currentPane.openedTabs[currentTabIndex];
       if (!currentTab) return prev;
-      const next = [...prev];
-      const newPane = { openedTabs: [{ ...currentTab, forceOpen: currentTab.forceOpen || unsavedChanges[currentTab.id] }], activeTabId: currentTab.id };
+
+      const tabCopy = {
+        ...currentTab,
+        forceOpen: currentTab.forceOpen || unsavedChanges[currentTab.id]
+      };
+
+      const remainingTabs = currentPane.openedTabs.filter((_, index) => index !== currentTabIndex);
+      const newActiveTabId = remainingTabs.length > 0
+        ? (remainingTabs[Math.min(currentTabIndex, remainingTabs.length - 1)]?.id || remainingTabs[0]?.id)
+        : null;
+
+      const updatedCurrentPane = {
+        ...currentPane,
+        openedTabs: remainingTabs,
+        activeTabId: newActiveTabId
+      };
+
+      const newPane = {
+        openedTabs: [tabCopy],
+        activeTabId: tabCopy.id
+      };
+
       setPaneWidths({ pane1: 50, pane2: 50 });
-      return [...next, newPane];
+
+      const updatedPanes = [...prev];
+      updatedPanes[activePaneIndex] = updatedCurrentPane;
+      updatedPanes.push(newPane);
+
+      return updatedPanes;
     });
+
+    setActivePaneIndex(1);
   };
   const handleForceOpenTab = (paneIndex, tabId) => tabPatch(paneIndex, tabId, { forceOpen: true });
   const handleDragStart = (e, sourcePaneIndex, tabId) => e.dataTransfer.setData("text/plain", JSON.stringify({ sourcePaneIndex, tabId }));
@@ -1514,7 +1541,7 @@ const DinoLabs = () => {
     const itemName = sourcePath.split("/").pop();
     const sourceParentPath = sourcePath.split("/").slice(0, -1).join("/");
     const targetPath = normalizePath(`${targetDirItem.fullPath}/${itemName}`);
-    if (samePath(sourcePath, targetPath) ) return;
+    if (samePath(sourcePath, targetPath)) return;
     const exists = await fsEntryExists(targetDirHandle, itemName, sourceType);
     let overwrite = false;
     if (exists) {
@@ -1891,212 +1918,213 @@ const DinoLabs = () => {
               <div className="leadingDirectoryBottomBar">
                 <div className="leadingDirectorySettingsButtonFlex" style={{ borderRight: "0.2vh solid rgba(255,255,255,0.1)" }}>
                   <Tippy content="Monitoring" theme="tooltip-light">
-                    <button className="leadingDirectoryZoomButton" onClick={() => {navigate("/monitoring");}}>
+                    <button className="leadingDirectoryZoomButton" onClick={() => { navigate("/monitoring"); }}>
                       <FontAwesomeIcon icon={faComputer} style={{ color: "" }} />
                     </button>
                   </Tippy>
 
                   <Tippy content="Add Ons" theme="tooltip-light">
-                    <button className="leadingDirectoryZoomButton" onClick={(() => {navigate("/plugins");})}>
+                    <button className="leadingDirectoryZoomButton" onClick={(() => { navigate("/plugins"); })}>
                       <FontAwesomeIcon icon={faPlusSquare} style={{ color: "" }} />
                     </button>
                   </Tippy>
 
                   <Tippy content="My Account" theme="tooltip-light">
-                    <button className="leadingDirectoryZoomButton" onClick={(() => {navigate("/account");})}>
+                    <button className="leadingDirectoryZoomButton" onClick={(() => { navigate("/account"); })}>
                       <FontAwesomeIcon icon={faUserCog} style={{ color: "" }} />
                     </button>
                   </Tippy>
 
                   <Tippy content="My Team" theme="tooltip-light">
-                    <button className="leadingDirectoryZoomButton" onClick={(() => {navigate("/team");})}>
+                    <button className="leadingDirectoryZoomButton" onClick={(() => { navigate("/team"); })}>
                       <FontAwesomeIcon icon={faUsersCog} style={{ color: "" }} />
                     </button>
                   </Tippy>
                 </div>
               </div>
             </div>
+
             <div
               className="dinolabsControlStack"
               style={{ width: `${contentWidth}%` }}
               ref={contentRef}
               onMouseDown={widthDrag.onMouseDown}
             >
-                <div className="topIDEControlBarWrapper">
-                  {panes.map((pane, paneIndex) => (
-                    <React.Fragment key={`pane-wrapper-${paneIndex}`}>
-                      {panes.length > 1 && paneIndex === 1 && <div className="resizablePaneDivider" />}
-                      <div
-                        className="topIDEControlBar"
-                        style={{ height: "100%", width: panes.length > 1 ? `${paneWidths[`pane${paneIndex + 1}`]}%` : "100%" }}
-                        onDragOver={(e) => e.preventDefault()}
-                        onDrop={(e) => handleDrop(e, paneIndex)}
-                      >
-                        {pane.openedTabs.length ? (
-                          pane.openedTabs.map((tab) => {
-                            editorRefs.current[paneIndex] ??= {};
-                            editorRefs.current[paneIndex][tab.id] ??= React.createRef();
-                            const cls =
-                              pane.activeTabId === tab.id && unsavedChanges[tab.id]
-                                ? "activeUnsavedTab"
-                                : pane.activeTabId === tab.id
-                                  ? "activeTab"
-                                  : unsavedChanges[tab.id]
-                                    ? "unsavedTab"
-                                    : "";
-                            return (
-                              <div
-                                key={tab.id}
-                                className={`dinolabsTabItem ${cls}`}
-                                onClick={() => switchTab(paneIndex, tab.id)}
-                                draggable
-                                onDragStart={(e) => handleDragStart(e, paneIndex, tab.id)}
-                                style={{ width: "fit-content" }}
+              <div className="topIDEControlBarWrapper">
+                {panes.map((pane, paneIndex) => (
+                  <React.Fragment key={`pane-wrapper-${paneIndex}`}>
+                    <div
+                      className="topIDEControlBar"
+                      style={{ height: "100%", width: panes.length > 1 ? `${paneWidths[`pane${paneIndex + 1}`]}%` : "100%" }}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => handleDrop(e, paneIndex)}
+                    >
+                      {pane.openedTabs.length ? (
+                        pane.openedTabs.map((tab) => {
+                          editorRefs.current[paneIndex] ??= {};
+                          editorRefs.current[paneIndex][tab.id] ??= React.createRef();
+                          const cls =
+                            pane.activeTabId === tab.id && unsavedChanges[tab.id]
+                              ? "activeUnsavedTab"
+                              : pane.activeTabId === tab.id
+                                ? "activeTab"
+                                : unsavedChanges[tab.id]
+                                  ? "unsavedTab"
+                                  : "";
+                          return (
+                            <div
+                              key={tab.id}
+                              className={`dinolabsTabItem ${cls}`}
+                              onClick={() => switchTab(paneIndex, tab.id)}
+                              draggable
+                              onDragStart={(e) => handleDragStart(e, paneIndex, tab.id)}
+                              style={{ width: "fit-content" }}
+                            >
+                              {unsavedChanges[tab.id] && (
+                                <Tippy content="Unsaved" theme="tooltip-light">
+                                  <span className="dinolabsFileUnsavedDot" />
+                                </Tippy>
+                              )}
+
+                              {(
+                                getFileIcon(tab.name)
+                              )}
+                              {tab.name}
+                              <span
+                                className="dinolabsCloseTab"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  closeTab(paneIndex, tab.id);
+                                }}
                               >
-                                {unsavedChanges[tab.id] && (
-                                  <Tippy content="Unsaved" theme="tooltip-light">
-                                    <span className="dinolabsFileUnsavedDot" />
-                                  </Tippy>
-                                )}
-                              
-                                {(
-                                  getFileIcon(tab.name)
-                                )}
-                                {tab.name}
-                                <span
-                                  className="dinolabsCloseTab"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    closeTab(paneIndex, tab.id);
-                                  }}
-                                >
-                                  ×
-                                </span>
-                              </div>
-                            );
-                          })
+                                ×
+                              </span>
+                            </div>
+                          );
+                        })
+                      ) : (
+                        <div className="dinolabsTabItem activeTab">
+                          <FontAwesomeIcon icon={faWandMagicSparkles} /> Get Started
+                        </div>
+                      )}
+                    </div>
+                    {paneIndex < panes.length - 1 && <div className="resizablePaneDivider" />}
+                  </React.Fragment>
+                ))}
+              </div>
+              <div
+                className="dinolabsMarkdownWrapper"
+                onMouseDown={paneDrag.onMouseDown}
+              >
+                {panes.map((pane, paneIndex) => (
+                  <React.Fragment key={`pane-${paneIndex}`}>
+                    <div
+                      className="dinolabsMarkdownPaneWrapper"
+                      style={{ width: panes.length > 1 ? `${paneWidths[`pane${paneIndex + 1}`]}%` : "100%" }}
+                      onClick={() => setActivePaneIndex(paneIndex)}
+                    >
+                      <div className="dinolabsMarkdownPaneFlex">
+                        {pane.openedTabs.length ? (
+                          pane.openedTabs.map((tab) => (
+                            <div key={tab.id} className="dinolabsMarkdownPane" style={{ display: pane.activeTabId === tab.id ? "block" : "none" }}>
+                              {tab.isAccount ? (
+                                <DinoLabsAccount
+                                  onClose={() => closeTab(paneIndex, tab.id)}
+                                  keyBinds={keyBinds}
+                                  setKeyBinds={setKeyBinds}
+                                  zoomLevel={zoomLevel}
+                                  setZoomLevel={setZoomLevel}
+                                  colorTheme={colorTheme}
+                                  setColorTheme={setColorTheme}
+                                />
+                              ) : tab.isMedia ? (
+                                <>
+                                  {mediaExtensions.image.includes(tab.fileHandle?.name.split(".").pop()?.toLowerCase() || "") && (
+                                    <DinoLabsImageEditor fileHandle={tab.fileHandle} />
+                                  )}
+                                  {mediaExtensions.video.includes(tab.fileHandle?.name.split(".").pop()?.toLowerCase() || "") && (
+                                    <DinoLabsVideoEditor fileHandle={tab.fileHandle} />
+                                  )}
+                                  {mediaExtensions.audio.includes(tab.fileHandle?.name.split(".").pop()?.toLowerCase() || "") && (
+                                    <DinoLabsAudioEditor fileHandle={tab.fileHandle} />
+                                  )}
+                                  {mediaExtensions.pdf.includes(tab.fileHandle?.name.split(".").pop()?.toLowerCase() || "") && (
+                                    <DinoLabsPDFEditor fileHandle={tab.fileHandle} />
+                                  )}
+                                  {mediaExtensions.threeD.includes(tab.fileHandle?.name.split(".").pop()?.toLowerCase() || "") && (
+                                    <DinoLabs3DEditor fileHandle={tab.fileHandle} />
+                                  )}
+                                </>
+                              ) : (
+                                <>
+                                  {["txt", "md"].includes(tab.fileHandle?.name.split(".").pop()?.toLowerCase() || "") && (
+                                    <DinoLabsRichTextEditor fileHandle={tab.fileHandle} keyBinds={keyBinds}
+                                      onEdit={(prev, next) => handleEdit(paneIndex, tab.id, prev, next)}
+                                      onSave={(newFullCode) => handleSave(paneIndex, tab.id, newFullCode)}
+                                    />
+                                  )}
+                                  {["csv"].includes(tab.fileHandle?.name.split(".").pop()?.toLowerCase() || "") && (
+                                    <DinoLabsTabularEditor
+                                      fileHandle={tab.fileHandle}
+                                      keyBinds={keyBinds}
+                                      onEdit={(prev, next) => handleEdit(paneIndex, tab.id, prev, next)}
+                                      onSave={(newFullCode) => handleSave(paneIndex, tab.id, newFullCode)}
+                                    />
+                                  )}
+
+
+                                  {(!tab.fileHandle ||
+                                    !["txt", "md", "csv"].includes(tab.fileHandle.name.split(".").pop()?.toLowerCase() || "")) && (
+                                      <DinoLabsMarkdown
+                                        fileContent={tab.content}
+                                        detectedLanguage={tab.language}
+                                        forceOpen={tab.forceOpen}
+                                        onForceOpen={() => handleForceOpenTab(paneIndex, tab.id)}
+                                        searchTerm={tab.searchTerm}
+                                        setSearchTerm={(term) => tabPatch(paneIndex, tab.id, { searchTerm: term })}
+                                        replaceTerm={tab.replaceTerm}
+                                        setReplaceTerm={(term) => tabPatch(paneIndex, tab.id, { replaceTerm: term })}
+                                        searchPositions={tab.searchPositions}
+                                        setSearchPositions={(positions) => tabPatch(paneIndex, tab.id, { searchPositions: positions })}
+                                        currentSearchIndex={tab.currentSearchIndex}
+                                        setCurrentSearchIndex={(index) => tabPatch(paneIndex, tab.id, { currentSearchIndex: index })}
+                                        onSplit={splitTab}
+                                        disableSplit={panes.length >= 2 || pane.openedTabs.length <= 1 || pane.openedTabs.some((inner) => inner.isMedia || inner.isAccount)}
+                                        paneIndex={paneIndex}
+                                        tabId={tab.id}
+                                        isSearchOpen={tab.isSearchOpen}
+                                        isReplaceOpen={tab.isReplaceOpen}
+                                        setTabSearchOpen={(isOpen) => tabPatch(paneIndex, tab.id, { isSearchOpen: isOpen })}
+                                        setTabReplaceOpen={(isOpen) => tabPatch(paneIndex, tab.id, { isReplaceOpen: isOpen })}
+                                        ref={editorRefs.current[paneIndex][tab.id]}
+                                        onEdit={(prevState, newState) => handleEdit(paneIndex, tab.id, prevState, newState)}
+                                        onSave={(newFullCode) => handleSave(paneIndex, tab.id, newFullCode)}
+                                        fileHandle={tab.fileHandle}
+                                        isGlobalSearchActive={!!globalSearchQuery}
+                                        keyBinds={keyBinds}
+                                        colorTheme={colorTheme}
+                                        zoomLevel={zoomLevel}
+                                      />
+                                    )}
+                                </>
+                              )}
+                            </div>
+                          ))
                         ) : (
-                          <div className="dinolabsTabItem activeTab">
-                            <FontAwesomeIcon icon={faWandMagicSparkles} /> Get Started
-                          </div>
+                          <DinoLabsNoFileSelected
+                            handleLoadRepository={handleLoadRepository}
+                            handleLoadFile={handleLoadFile}
+                            isPlotRendered={isPlotRendered}
+                            personalUsageByDay={personalUsageByDay}
+                            usageLanguages={usageLanguages}
+                          />
                         )}
                       </div>
-                    </React.Fragment>
-                  ))}
-                </div>
-                <div
-                  className="dinolabsMarkdownWrapper"
-                  onMouseDown={paneDrag.onMouseDown}
-                >
-                  {panes.map((pane, paneIndex) => (
-                    <React.Fragment key={`pane-${paneIndex}`}>
-                      <div
-                        className="dinolabsMarkdownPaneWrapper"
-                        style={{ width: panes.length > 1 ? `${paneWidths[`pane${paneIndex + 1}`]}%` : "100%" }}
-                        onClick={() => setActivePaneIndex(paneIndex)}
-                      >
-                        <div className="dinolabsMarkdownPaneFlex">
-                          {pane.openedTabs.length ? (
-                            pane.openedTabs.map((tab) => (
-                              <div key={tab.id} className="dinolabsMarkdownPane" style={{ display: pane.activeTabId === tab.id ? "block" : "none" }}>
-                                {tab.isAccount ? (
-                                  <DinoLabsAccount
-                                    onClose={() => closeTab(paneIndex, tab.id)}
-                                    keyBinds={keyBinds}
-                                    setKeyBinds={setKeyBinds}
-                                    zoomLevel={zoomLevel}
-                                    setZoomLevel={setZoomLevel}
-                                    colorTheme={colorTheme}
-                                    setColorTheme={setColorTheme}
-                                  />
-                                ) : tab.isMedia ? (
-                                  <>
-                                    {mediaExtensions.image.includes(tab.fileHandle?.name.split(".").pop()?.toLowerCase() || "") && (
-                                      <DinoLabsImageEditor fileHandle={tab.fileHandle} />
-                                    )}
-                                    {mediaExtensions.video.includes(tab.fileHandle?.name.split(".").pop()?.toLowerCase() || "") && (
-                                      <DinoLabsVideoEditor fileHandle={tab.fileHandle} />
-                                    )}
-                                    {mediaExtensions.audio.includes(tab.fileHandle?.name.split(".").pop()?.toLowerCase() || "") && (
-                                      <DinoLabsAudioEditor fileHandle={tab.fileHandle} />
-                                    )}
-                                    {mediaExtensions.pdf.includes(tab.fileHandle?.name.split(".").pop()?.toLowerCase() || "") && (
-                                      <DinoLabsPDFEditor fileHandle={tab.fileHandle} />
-                                    )}
-                                    {mediaExtensions.threeD.includes(tab.fileHandle?.name.split(".").pop()?.toLowerCase() || "") && (
-                                      <DinoLabs3DEditor fileHandle={tab.fileHandle} />
-                                    )}
-                                  </>
-                                ) : (
-                                  <>
-                                    {["txt", "md"].includes(tab.fileHandle?.name.split(".").pop()?.toLowerCase() || "") && (
-                                      <DinoLabsRichTextEditor fileHandle={tab.fileHandle} keyBinds={keyBinds} 
-                                        onEdit={(prev, next) => handleEdit(paneIndex, tab.id, prev, next)}
-                                        onSave={(newFullCode) => handleSave(paneIndex, tab.id, newFullCode)}
-                                      />
-                                    )}
-                                    {["csv"].includes(tab.fileHandle?.name.split(".").pop()?.toLowerCase() || "") && (
-                                      <DinoLabsTabularEditor
-                                        fileHandle={tab.fileHandle}
-                                        keyBinds={keyBinds}
-                                        onEdit={(prev, next) => handleEdit(paneIndex, tab.id, prev, next)}
-                                        onSave={(newFullCode) => handleSave(paneIndex, tab.id, newFullCode)}
-                                      />
-                                    )}
-
-
-                                    {(!tab.fileHandle ||
-                                      !["txt", "md", "csv"].includes(tab.fileHandle.name.split(".").pop()?.toLowerCase() || "")) && (
-                                        <DinoLabsMarkdown
-                                          fileContent={tab.content}
-                                          detectedLanguage={tab.language}
-                                          forceOpen={tab.forceOpen}
-                                          onForceOpen={() => handleForceOpenTab(paneIndex, tab.id)}
-                                          searchTerm={tab.searchTerm}
-                                          setSearchTerm={(term) => tabPatch(paneIndex, tab.id, { searchTerm: term })}
-                                          replaceTerm={tab.replaceTerm}
-                                          setReplaceTerm={(term) => tabPatch(paneIndex, tab.id, { replaceTerm: term })}
-                                          searchPositions={tab.searchPositions}
-                                          setSearchPositions={(positions) => tabPatch(paneIndex, tab.id, { searchPositions: positions })}
-                                          currentSearchIndex={tab.currentSearchIndex}
-                                          setCurrentSearchIndex={(index) => tabPatch(paneIndex, tab.id, { currentSearchIndex: index })}
-                                          onSplit={splitTab}
-                                          disableSplit={panes.length >= 2 || pane.openedTabs.length <= 1 || pane.openedTabs.some((inner) => inner.isMedia || inner.isAccount)}
-                                          paneIndex={paneIndex}
-                                          tabId={tab.id}
-                                          isSearchOpen={tab.isSearchOpen}
-                                          isReplaceOpen={tab.isReplaceOpen}
-                                          setTabSearchOpen={(isOpen) => tabPatch(paneIndex, tab.id, { isSearchOpen: isOpen })}
-                                          setTabReplaceOpen={(isOpen) => tabPatch(paneIndex, tab.id, { isReplaceOpen: isOpen })}
-                                          ref={editorRefs.current[paneIndex][tab.id]}
-                                          onEdit={(prevState, newState) => handleEdit(paneIndex, tab.id, prevState, newState)}
-                                          onSave={(newFullCode) => handleSave(paneIndex, tab.id, newFullCode)}
-                                          fileHandle={tab.fileHandle}
-                                          isGlobalSearchActive={!!globalSearchQuery}
-                                          keyBinds={keyBinds}
-                                          colorTheme={colorTheme}
-                                          zoomLevel={zoomLevel}
-                                        />
-                                      )}
-                                  </>
-                                )}
-                              </div>
-                            ))
-                          ) : (
-                            <DinoLabsNoFileSelected
-                              handleLoadRepository={handleLoadRepository}
-                              handleLoadFile={handleLoadFile}
-                              isPlotRendered={isPlotRendered}
-                              personalUsageByDay={personalUsageByDay}
-                              usageLanguages={usageLanguages}
-                            />
-                          )}
-                        </div>
-                      </div>
-                      {paneIndex < panes.length - 1 && <div className="resizablePaneDivider" onMouseDown={paneDrag.onMouseDown} />}
-                    </React.Fragment>
-                  ))}
-                </div>
+                    </div>
+                    {paneIndex < panes.length - 1 && <div className="resizablePaneDivider" onMouseDown={paneDrag.onMouseDown} />}
+                  </React.Fragment>
+                ))}
+              </div>
               <div className="bottomIDEControlBar" />
             </div>
           </div>
