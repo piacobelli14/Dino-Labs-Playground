@@ -144,7 +144,7 @@
   background: linear-gradient(135deg, #4d4a86 0%, #d5957c 100%);
 }
 
-.dinolabsPluginsGradientA11y {
+.dinolabsPluginsGradientCompressionLab {
   background: linear-gradient(135deg, #274661 0%, #66a2c0 100%);
 }
 
@@ -152,7 +152,7 @@
   background: linear-gradient(135deg, #4b4232 0%, #c4965a 100%);
 }
 
-.dinolabsPluginsGradientVisualDiff {
+.dinolabsPluginsGradientBackgroundRemover {
   background: linear-gradient(135deg, #3c376a 0%, #a97fa8 100%);
 }
 

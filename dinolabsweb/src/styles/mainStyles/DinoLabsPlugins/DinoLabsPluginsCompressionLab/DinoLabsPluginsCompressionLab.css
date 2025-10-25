@@ -1,0 +1,837 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+.dinolabsCompressionLabApp,
+.dinolabsCompressionLabApp *,
+.dinolabsCompressionLabApp *::before,
+.dinolabsCompressionLabApp *::after {
+  box-sizing: border-box;
+}
+
+.dinolabsCompressionLabApp button {
+  padding: 0.6rem 0.8rem;
+}
+
+.dinolabsCompressionLabApp {
+  width: 100%;
+  min-height: 100vh;
+  min-height: 100dvh;
+  height: 100vh;
+  height: 100dvh;
+  max-height: 100vh;
+  max-height: 100dvh;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #334155 100%);
+  color: #f1f5f9;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  font-weight: 600;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.dinolabsCompressionLabShell {
+  flex: 1;
+  display: grid;
+  grid-template-columns: clamp(240px, 26vw, 340px) minmax(0, 1fr);
+  border-top: 1px solid #475569;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.dinolabsCompressionLabSidebar {
+  background: linear-gradient(145deg, #334155 0%, #475569 100%);
+  border-right: 1px solid #475569;
+  padding: 20px;
+  min-height: 0;
+  max-height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.dinolabsCompressionLabSection {
+  background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
+  border: 1px solid #475569;
+  border-radius: 6px;
+  padding: 20px;
+  margin-bottom: 20px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+}
+
+.dinolabsCompressionLabSectionTitle {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 1rem;
+  margin-bottom: 24px;
+  color: #f1f5f9;
+}
+
+.dinolabsCompressionLabSectionTitle svg {
+  font-size: 0.9rem;
+  margin-right: 0.4rem;
+}
+
+.dinolabsCompressionLabRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 8px;
+  min-width: 0;
+  background-color: rgba(0, 0, 0, 0.1); 
+  padding: 16px 12px;
+  border-radius: 6px;  
+}
+
+.dinolabsCompressionLabLabel {
+  font-size: 12px;
+  font-weight: 700;
+  color: #94a3b8;
+  margin-left: 4px;
+}
+
+.dinolabsCompressionLabSmall {
+  font-size: 0.7rem;
+  font-weight: 800; 
+  color: #94a3b8;
+  padding: 0 0.4rem; 
+}
+
+.dinolabsCompressionLabInput,
+.dinolabsCompressionLabSelect,
+.dinolabsCompressionLabTextArea,
+.dinolabsCompressionLabNumber,
+.dinolabsCompressionLabFileInput {
+  width: 100%;
+  background: linear-gradient(145deg, #334155 0%, #475569 100%);
+  border: 1px solid #475569;
+  color: #f1f5f9;
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
+  outline: none;
+  font-weight: 700;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  height: 34px;
+  min-width: 0;
+}
+
+.dinolabsCompressionLabFileInput {
+  display: none;
+}
+
+.dinolabsCompressionLabSelect {
+  height: 44px;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+  background-image: none !important;
+}
+
+.dinolabsCompressionLabSelect::-ms-expand {
+  display: none;
+}
+
+.dinolabsCompressionLabTextArea {
+  height: auto;
+  resize: vertical;
+  min-height: 72px;
+}
+
+.dinolabsCompressionLabInput:focus,
+.dinolabsCompressionLabSelect:focus,
+.dinolabsCompressionLabTextArea:focus,
+.dinolabsCompressionLabNumber:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2), 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
+}
+
+.dinolabsCompressionLabInput::placeholder,
+.dinolabsCompressionLabSelect::placeholder,
+.dinolabsCompressionLabTextArea::placeholder,
+.dinolabsCompressionLabNumber::placeholder {
+  color: #94a3b8;
+  font-weight: 700;
+}
+
+.dinolabsCompressionLabCheckbox {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 12px;
+  font-weight: 700;
+  color: #f1f5f9;
+  cursor: pointer;
+  margin-left: 4px;
+}
+
+.dinolabsCompressionLabCheckbox input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #3b82f6;
+}
+
+/* Custom checkbox styles from provided CSS */
+@media (min-width: 1700px) {
+    .dinolabsSettingsCheckbox {
+        cursor: pointer;
+        width: 1.2vw;
+        height: 1.2vw;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        border: 0px solid #ddd;
+        border-radius: 4px; 
+        background-color: #f0f0f0;
+        border-radius: 0.05rem;
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .dinolabsSettingsCheckbox:checked {
+        background-color: #5C2BE2;
+        border-color: #5C2BE2;
+    }
+
+    .dinolabsSettingsCheckbox:hover {
+        opacity: 0.6;
+        transform: scale(1.1);
+    }
+}
+
+@media (min-width: 1300px) and (max-width: 1699px) {
+    .dinolabsSettingsCheckbox {
+        cursor: pointer;
+        width: 1.2vw;
+        height: 1.2vw;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        border: 0px solid #ddd;
+        border-radius: 4px; 
+        background-color: #f0f0f0;
+        border-radius: 0.05rem;
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .dinolabsSettingsCheckbox:checked {
+        background-color: #5C2BE2;
+        border-color: #5C2BE2;
+    }
+
+    .dinolabsSettingsCheckbox:hover {
+        opacity: 0.6;
+        transform: scale(1.1);
+    }
+}
+
+@media (min-width: 700px) and (max-width: 1299px) {
+    .dinolabsSettingsCheckbox {
+        cursor: pointer;
+        width: 1.2vw;
+        height: 1.2vw;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        border: 0px solid #ddd;
+        border-radius: 4px; 
+        background-color: #f0f0f0;
+        border-radius: 0.05rem;
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .dinolabsSettingsCheckbox:checked {
+        background-color: #5C2BE2;
+        border-color: #5C2BE2;
+    }
+
+    .dinolabsSettingsCheckbox:hover {
+        opacity: 0.6;
+        transform: scale(1.1);
+    }
+}
+
+@media (max-width: 699px) {
+    .dinolabsSettingsCheckbox {
+        cursor: pointer;
+        width: 1.2vw;
+        height: 1.2vw;
+        -webkit-appearance: none;
+        -moz-appearance: none;
+        appearance: none;
+        border: 0px solid #ddd;
+        border-radius: 4px; 
+        background-color: #f0f0f0;
+        border-radius: 0.05rem;
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+
+    .dinolabsSettingsCheckbox:checked {
+        background-color: #5C2BE2;
+        border-color: #5C2BE2;
+    }
+
+    .dinolabsSettingsCheckbox:hover {
+        opacity: 0.6;
+        transform: scale(1.1);
+    }
+}
+
+.dinolabsCompressionLabActions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dinolabsCompressionLabStats {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 8px;
+}
+
+.dinolabsCompressionLabStat {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background: linear-gradient(145deg, #334155 0%, #475569 100%);
+  border: 1px solid #475569;
+  border-radius: 6px;
+  padding: 8px 10px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.dinolabsCompressionLabStatLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.dinolabsCompressionLabStatValue {
+  font-size: 12px;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.dinolabsCompressionLabPresets {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(60px, 1fr));
+  gap: 6px;
+}
+
+.dinolabsCompressionLabPresetBtn {
+  background: linear-gradient(145deg, #334155 0%, #475569 100%);
+  border: 1px solid #475569;
+  color: #f1f5f9;
+  border-radius: 4px;
+  padding: 6px 8px;
+  font-weight: 700;
+  font-size: 10px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.dinolabsCompressionLabPresetBtn:hover {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border-color: #3b82f6;
+  transform: translateY(-1px);
+}
+
+.dinolabsCompressionLabPresetBtn.active {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border-color: #2563eb;
+  color: #ffffff;
+}
+
+.dinolabsCompressionLabPresetBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.dinolabsCompressionLabProgress {
+  width: 100%;
+  height: 8px;
+  background: linear-gradient(145deg, #334155 0%, #475569 100%);
+  border: 1px solid #475569;
+  border-radius: 4px;
+  overflow: hidden;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.dinolabsCompressionLabProgressBar {
+  height: 100%;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  transition: width 0.3s ease;
+  border-radius: 2px;
+}
+
+.dinolabsCompressionLabMain {
+  background: linear-gradient(145deg, #334155 0%, #475569 100%);
+  overflow: auto;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+.dinolabsCompressionLabMainGrid {
+  padding: 20px;
+  width: min(1200px, 100%);
+  margin-inline: auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  min-width: 0;
+}
+
+.dinolabsCompressionLabCard {
+  background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
+  border: 1px solid #475569;
+  border-radius: 6px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  padding: 32px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  min-width: 0;
+  min-height: 0;
+}
+
+.dinolabsCompressionLabCardTitle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 1rem !important;
+  margin-bottom: 10px;
+  color: #f1f5f9;
+  min-width: 0;
+}
+
+.dinolabsCompressionLabDownloadAll {
+  margin-left: auto;
+  font-size: 11px !important;
+  padding: 0.4rem 0.6rem !important;
+}
+
+.dinolabsCompressionLabEmpty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 60px 20px;
+  color: #94a3b8;
+  text-align: center;
+  width: 100%; 
+}
+
+.dinolabsCompressionLabEmpty svg {
+  font-size: 3rem;
+  opacity: 0.6;
+}
+
+.dinolabsCompressionLabEmpty p {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 1rem 0;
+  width: 60%; 
+}
+
+.dinolabsCompressionLabImageGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 16px;
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.dinolabsCompressionLabImageCard {
+  background: linear-gradient(145deg, #334155 0%, #475569 100%);
+  border: 1px solid #475569;
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  position: relative;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: all 0.2s ease;
+}
+
+.dinolabsCompressionLabImageCard:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.dinolabsCompressionLabImagePreview {
+  width: 100%;
+  height: 120px;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  border-radius: 4px;
+  border: 1px solid #475569;
+  background-color: #1e293b;
+}
+
+.dinolabsCompressionLabFilePreview {
+  width: 100%;
+  height: 120px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  border: 1px solid #475569;
+  background-color: #1e293b;
+  color: #94a3b8;
+  font-size: 2.5rem;
+}
+
+.dinolabsCompressionLabImageInfo {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.dinolabsCompressionLabImageName {
+  font-size: 12px;
+  font-weight: 700;
+  color: #f1f5f9;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dinolabsCompressionLabImageMeta {
+  font-size: 11px;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.dinolabsCompressionLabImageDimensions {
+  font-size: 10px;
+  font-weight: 600;
+  color: #64748b;
+}
+
+.dinolabsCompressionLabImageRemove,
+.dinolabsCompressionLabImageDownload {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: white;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.dinolabsCompressionLabImageDownload {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.dinolabsCompressionLabImageRemove:hover {
+  background: linear-gradient(135deg, #dc2626 0%, #b91c1c 100%);
+  transform: scale(1.1);
+}
+
+.dinolabsCompressionLabImageDownload:hover {
+  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  transform: scale(1.1);
+}
+
+.dinolabsCompressionLabSummary {
+  background: linear-gradient(145deg, #334155 0%, #475569 100%);
+  border: 1px solid #475569;
+  border-radius: 6px;
+  padding: 16px;
+  margin-bottom: 16px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.dinolabsCompressionLabSummaryStats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.dinolabsCompressionLabSummaryStat {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  text-align: center;
+}
+
+.dinolabsCompressionLabSummaryLabel {
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+}
+
+.dinolabsCompressionLabSummaryValue {
+  font-size: 14px;
+  font-weight: 700;
+  color: #f1f5f9;
+}
+
+.dinolabsCompressionLabBtn {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border: 1px solid #2563eb;
+  color: #ffffff;
+  border-radius: 6px;
+  padding: 0.6rem 0.8rem;
+  font-weight: 700;
+  font-size: 12px;
+  cursor: pointer;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 34px;
+  line-height: 1.2;
+  text-align: center;
+  word-break: break-word;
+}
+
+.dinolabsCompressionLabBtn:hover:not(:disabled) {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  border-color: #1d4ed8;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+}
+
+.dinolabsCompressionLabBtn:active {
+  transform: translateY(0);
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.dinolabsCompressionLabBtn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.dinolabsCompressionLabBtn.subtle,
+.dinolabsCompressionLabSubtle {
+  background: linear-gradient(145deg, #334155 0%, #475569 100%);
+  border-color: #475569;
+  color: #f1f5f9;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.dinolabsCompressionLabBtn.subtle:hover:not(:disabled),
+.dinolabsCompressionLabSubtle:hover:not(:disabled) {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border-color: #3b82f6;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px -1px rgba(59, 130, 246, 0.2);
+}
+
+.dinolabsCompressionLabSidebar::-webkit-scrollbar,
+.dinolabsCompressionLabImageGrid::-webkit-scrollbar,
+.dinolabsCompressionLabMain::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.dinolabsCompressionLabSidebar::-webkit-scrollbar-thumb,
+.dinolabsCompressionLabImageGrid::-webkit-scrollbar-thumb,
+.dinolabsCompressionLabMain::-webkit-scrollbar-thumb {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+  border-radius: 6px;
+  box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1);
+}
+
+.dinolabsCompressionLabSidebar::-webkit-scrollbar-thumb:hover,
+.dinolabsCompressionLabImageGrid::-webkit-scrollbar-thumb:hover,
+.dinolabsCompressionLabMain::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+}
+
+.dinolabsCompressionLabSidebar::-webkit-scrollbar-track,
+.dinolabsCompressionLabImageGrid::-webkit-scrollbar-track,
+.dinolabsCompressionLabMain::-webkit-scrollbar-track {
+  background: linear-gradient(145deg, #1e293b 0%, #334155 100%);
+}
+
+@media (max-width: 1280px) {
+  .dinolabsCompressionLabMainGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 1100px) {
+  .dinolabsCompressionLabShell {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .dinolabsCompressionLabSidebar {
+    order: 2;
+  }
+  .dinolabsCompressionLabMain {
+    order: 1;
+  }
+}
+
+@media (max-width: 768px) {
+  .dinolabsCompressionLabImageGrid {
+    grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+    gap: 12px;
+  }
+  
+  .dinolabsCompressionLabCardTitle {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  
+  .dinolabsCompressionLabDownloadAll {
+    margin-left: 0;
+    width: 100%;
+  }
+  
+  .dinolabsCompressionLabSummaryStats {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+  
+  .dinolabsCompressionLabPresets {
+    grid-template-columns: repeat(auto-fit, minmax(50px, 1fr));
+    gap: 4px;
+  }
+}
+
+@media (max-width: 560px) {
+  .dinolabsCompressionLabSection {
+    padding: 12px;
+  }
+  
+  .dinolabsCompressionLabMainGrid {
+    padding: 12px;
+    gap: 14px;
+  }
+  
+  .dinolabsCompressionLabSidebar {
+    padding: 12px;
+  }
+  
+  .dinolabsCompressionLabCard {
+    padding: 12px;
+  }
+  
+  .dinolabsCompressionLabInput,
+  .dinolabsCompressionLabSelect,
+  .dinolabsCompressionLabTextArea,
+  .dinolabsCompressionLabNumber {
+    font-size: 16px;
+    padding: 8px 12px;
+  }
+  
+  .dinolabsCompressionLabImageGrid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (min-width: 561px) and (max-width: 768px) {
+  .dinolabsCompressionLabSection {
+    padding: 16px;
+  }
+  
+  .dinolabsCompressionLabMainGrid {
+    padding: 16px;
+    gap: 16px;
+  }
+  
+  .dinolabsCompressionLabSidebar {
+    padding: 16px;
+  }
+  
+  .dinolabsCompressionLabCard {
+    padding: 16px;
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .dinolabsCompressionLabSection {
+    padding: 18px;
+  }
+  
+  .dinolabsCompressionLabMainGrid {
+    padding: 18px;
+    gap: 18px;
+  }
+  
+  .dinolabsCompressionLabSidebar {
+    padding: 18px;
+  }
+  
+  .dinolabsCompressionLabCard {
+    padding: 18px;
+  }
+}
+
+@media (min-width: 1025px) {
+  .dinolabsCompressionLabSection {
+    padding: 22px;
+  }
+  
+  .dinolabsCompressionLabMainGrid {
+    padding: 22px;
+    gap: 22px;
+  }
+  
+  .dinolabsCompressionLabSidebar {
+    padding: 22px;
+  }
+  
+  .dinolabsCompressionLabCard {
+    padding: 22px;
+  }
+}
+
+@media (prefers-contrast: high) {
+  .dinolabsCompressionLabInput,
+  .dinolabsCompressionLabSelect,
+  .dinolabsCompressionLabTextArea,
+  .dinolabsCompressionLabNumber {
+    border-width: 2px;
+  }
+  
+  .dinolabsCompressionLabSection,
+  .dinolabsCompressionLabCard,
+  .dinolabsCompressionLabImageCard {
+    border-width: 2px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dinolabsCompressionLabBtn,
+  .dinolabsCompressionLabInput,
+  .dinolabsCompressionLabSelect,
+  .dinolabsCompressionLabTextArea,
+  .dinolabsCompressionLabNumber,
+  .dinolabsCompressionLabImageCard,
+  .dinolabsCompressionLabImageRemove,
+  .dinolabsCompressionLabImageDownload,
+  .dinolabsCompressionLabPresetBtn,
+  .dinolabsCompressionLabProgressBar {
+    transition: none;
+  }
+}

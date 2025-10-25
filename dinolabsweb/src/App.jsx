@@ -16,7 +16,9 @@ import DinoLabsPluginsThesaurus from "./pages/DinoLabsPlugins/DinoLabsPluginsThe
 import DinoLabsPluginsCalculator from "./pages/DinoLabsPlugins/DinoLabsPluginsCalculator/DinoLabsPluginsCalculator";
 import DinoLabsPluginsMatrix from "./pages/DinoLabsPlugins/DinoLabsPluginsMatrix/DinoLabsPluginsMatrix";
 import DinoLabsPluginsColorTypeLab from "./pages/DinoLabsPlugins/DinoLabsPluginsColorTypeLab/DinoLabsPluginsColorTypeLab";
+import DinoLabsPluginsCompressionLab from "./pages/DinoLabsPlugins/DinoLabsPluginsCompressionLab/DinoLabsPluginsCompressionLab";
 import DinoLabsPluginsPlot from "./pages/DinoLabsPlugins/DinoLabsPluginsPlot/DinoLabsPluginsPlot";
+import DinoLabsPluginsBackgroundRemover from "./pages/DinoLabsPlugins/DinoLabsPluginsBackgroundRemover/DinoLabsPluginsBackgroundRemover";
 
 function App() {
   const [osClass, setOsClass] = useState("");
@@ -93,6 +95,16 @@ function App() {
           <Route path="/colortypelab" element={
             <ProtectedRoute>
               <DinoLabsPluginsColorTypeLab />
+            </ProtectedRoute>
+          } />
+          <Route path="/compressionlab" element={
+            <ProtectedRoute>
+              <DinoLabsPluginsCompressionLab />
+            </ProtectedRoute>
+          } />
+          <Route path="/backgroundremover" element={
+            <ProtectedRoute>
+              <DinoLabsPluginsBackgroundRemover />
             </ProtectedRoute>
           } />
           <Route path="/plot" element={

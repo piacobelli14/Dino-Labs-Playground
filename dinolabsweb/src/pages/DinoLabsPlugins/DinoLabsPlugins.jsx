@@ -12,7 +12,9 @@ import {
   faUniversalAccess,   
   faCubesStacked,     
   faImages,            
-  faHighlighter       
+  faHighlighter,
+  faCompressArrowsAlt,
+  faScissors       
 } from "@fortawesome/free-solid-svg-icons";
 import DinoLabsNav from "../../helpers/Nav.jsx";
 import DinoLabsLoading from "../../helpers/Loading.jsx";
@@ -75,6 +77,22 @@ const DinoLabsPlugins = () => {
         icon: faPalette,
         gradientClass: "dinolabsPluginsGradientColorTypeLab",
         path: "/colortypelab"
+      },
+      {
+        key: "compressionlab",
+        title: "Compression Lab",
+        description: "Compress images, documents, and other files efficiently.",
+        icon: faCompressArrowsAlt,
+        gradientClass: "dinolabsPluginsGradientCompressionLab",
+        path: "/compressionlab"
+      },
+      {
+        key: "backgroundremover",
+        title: "Background Remover",
+        description: "Remove backgrounds from images with smart detection tools.",
+        icon: faScissors,
+        gradientClass: "dinolabsPluginsGradientBackgroundRemover",
+        path: "/backgroundremover"
       },
     ],
     []
