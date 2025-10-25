@@ -145,12 +145,14 @@ const DinoLabsMirror = forwardRef(function DinoLabsMirror(
     handleInput,
     handleKeyDown,
     highlightedCode,
+    fullHighlightedCode,
     fontSize,
     lineHeight,
     editorId,
     disableFocus,
     keyBinds,
     lintErrors = [],
+    handleScroll,
   },
   ref
 ) {
@@ -175,6 +177,10 @@ const DinoLabsMirror = forwardRef(function DinoLabsMirror(
   const foldingDebounceTimer = useRef(null);
   const minimapDebounceTimer = useRef(null);
   const lastCodeHashRef = useRef("");
+  const highlightUpdateTimer = useRef(null);
+  const scrollUpdateTimer = useRef(null);
+  const renderTimer = useRef(null);
+  const batchUpdateTimer = useRef(null);
   
   const [contextMenuState, setContextMenuState] = useState({ visible: false, x: 0, y: 0 });
   const [foldedRegions, setFoldedRegions] = useState(new Set());
@@ -183,6 +189,8 @@ const DinoLabsMirror = forwardRef(function DinoLabsMirror(
   const [minimapHost, setMinimapHost] = useState(null);
   const [minimapRect, setMinimapRect] = useState({ top: 0, left: 0, width: 92, height: 0 });
   const [minimapReady, setMinimapReady] = useState(false);
+  const [isUpdatingHighlight, setIsUpdatingHighlight] = useState(false);
+  
   const minimapWidthPx = 92;
 
   const measureGutter = useCallback(() => {
@@ -205,7 +213,8 @@ const DinoLabsMirror = forwardRef(function DinoLabsMirror(
   const getCodeHash = useCallback((code) => {
     if (!code) return "";
     let hash = 0;
-    for (let i = 0; i < code.length; i++) {
+    const len = Math.min(code.length, 1000);
+    for (let i = 0; i < len; i++) {
       const char = code.charCodeAt(i);
       hash = ((hash << 5) - hash) + char;
       hash = hash & hash;
@@ -242,7 +251,7 @@ const DinoLabsMirror = forwardRef(function DinoLabsMirror(
           previousCodeRef.current = currentCode;
           lastCodeHashRef.current = currentHash;
         }
-      }, 300);
+      }, 1200);
       
       return foldableRegionsRef.current;
     }
@@ -251,7 +260,7 @@ const DinoLabsMirror = forwardRef(function DinoLabsMirror(
       const previousLines = previousCodeRef.current.split("\n");
       const currentLines = currentCode.split("\n");
       
-      if (Math.abs(currentLines.length - previousLines.length) >= 10) {
+      if (Math.abs(currentLines.length - previousLines.length) >= 15) {
         const regions = detectFoldableRegions(currentCode);
         foldableRegionsRef.current = regions;
         previousCodeRef.current = currentCode;
@@ -274,13 +283,10 @@ const DinoLabsMirror = forwardRef(function DinoLabsMirror(
   const { displayCode, displayHighlightedCode, lineMapping } = useMemo(() => {
     if (!viewCode) return { displayCode: "", displayHighlightedCode: "", lineMapping: new Map() };
     
-    const foldedString = Array.from(foldedRegions).sort().join(',');
-    const cacheKey = `${getCodeHash(viewCode)}-${foldedString}`;
-    
     const lines = viewCode.split("\n");
-    const highlightLines = highlightedCode.includes("<br")
+    const highlightLines = highlightedCode && highlightedCode.includes("<br")
       ? highlightedCode.split(/<br\s*\/?>/gi)
-      : highlightedCode.split(/\r\n|\r|\n/);
+      : highlightedCode ? highlightedCode.split(/\r\n|\r|\n/) : lines;
     
     const visibleLines = [];
     const visibleHighlightLines = [];
@@ -307,7 +313,7 @@ const DinoLabsMirror = forwardRef(function DinoLabsMirror(
       displayHighlightedCode: visibleHighlightLines.join("\n"),
       lineMapping: mapping,
     };
-  }, [viewCode, highlightedCode, foldedRegions, foldableRegions, getCodeHash]);
+  }, [viewCode, highlightedCode, foldedRegions, foldableRegions]);
 
   const canFoldLine = useCallback(
     (originalLineNumber) => foldableRegions.some((region) => region.startLine === originalLineNumber),
@@ -453,19 +459,22 @@ const DinoLabsMirror = forwardRef(function DinoLabsMirror(
     }
     
     minimapDebounceTimer.current = setTimeout(() => {
-      const lines = (displayHighlightedCode || "").split(/\r\n|\r|\n/);
-      const html = lines
-        .map((line) => (line.trim() === "" ? "\u200B" : line))
-        .join("<br>");
-
-      node.innerHTML = `<pre class="minimapPre" style="font-size: ${fontSize}px; line-height: ${lineHeight}px; margin: 0; padding: 0;">${html}</pre>`;
-
       requestAnimationFrame(() => {
-        syncMinimapViewport();
-        syncMinimapContent();
+        const minimapCode = fullHighlightedCode || displayHighlightedCode || "";
+        const lines = minimapCode.split(/\r\n|\r|\n/);
+        const html = lines
+          .map((line) => (line.trim() === "" ? "\u200B" : line))
+          .join("<br>");
+
+        node.innerHTML = `<pre class="minimapPre" style="font-size: ${fontSize}px; line-height: ${lineHeight}px; margin: 0; padding: 0;">${html}</pre>`;
+
+        requestAnimationFrame(() => {
+          syncMinimapViewport();
+          syncMinimapContent();
+        });
       });
-    }, 100);
-  }, [displayHighlightedCode, fontSize, lineHeight, syncMinimapViewport, syncMinimapContent]);
+    }, 200);
+  }, [fullHighlightedCode, displayHighlightedCode, fontSize, lineHeight, syncMinimapViewport, syncMinimapContent]);
 
   const handleAnyScroll = useCallback(() => {
     const container = containerRef.current;
@@ -480,11 +489,23 @@ const DinoLabsMirror = forwardRef(function DinoLabsMirror(
       textareaRef.current.scrollLeft = container.scrollLeft;
     }
     
-    requestAnimationFrame(() => {
-      syncMinimapViewport();
-      syncMinimapContent();
-    });
-  }, [syncMinimapViewport, syncMinimapContent]);
+    if (scrollUpdateTimer.current) {
+      clearTimeout(scrollUpdateTimer.current);
+    }
+    
+    scrollUpdateTimer.current = setTimeout(() => {
+      if (handleScroll && container) {
+        requestAnimationFrame(() => {
+          handleScroll(container);
+        });
+      }
+      
+      requestAnimationFrame(() => {
+        syncMinimapViewport();
+        syncMinimapContent();
+      });
+    }, 16);
+  }, [syncMinimapViewport, syncMinimapContent, handleScroll]);
 
   const minimapDragToScroll = useCallback((e) => {
     const wrapper = minimapWrapperRef.current;
@@ -498,8 +519,10 @@ const DinoLabsMirror = forwardRef(function DinoLabsMirror(
     const maxScroll = container.scrollHeight - container.clientHeight;
     container.scrollTop = clickRatio * maxScroll;
     
-    syncMinimapViewport();
-    syncMinimapContent();
+    requestAnimationFrame(() => {
+      syncMinimapViewport();
+      syncMinimapContent();
+    });
   }, [syncMinimapViewport, syncMinimapContent]);
 
   const updateMinimapRect = useCallback(() => {
@@ -622,7 +645,7 @@ const DinoLabsMirror = forwardRef(function DinoLabsMirror(
       const scrollSnap = { top: textEl.scrollTop, left: textEl.scrollLeft };
       
       operationFn(textEl, scrollSnap, resolve);
-      setTimeout(() => (isEditingRef.current = false), 0);
+      setTimeout(() => (isEditingRef.current = false), 10);
     });
   }
 
@@ -806,13 +829,17 @@ const DinoLabsMirror = forwardRef(function DinoLabsMirror(
         const newCaretOriginal = originalStart - 1;
         const newCaretDisplay = convertOriginalToDisplayOffset(newCaretOriginal, updated);
         
-        const currLC = offsetToLineCol(original, originalStart);
-        const editLine = currLC.line + 1;
-        const linesDelta = removedChar === "\n" ? -1 : 0;
-        const overlaps = editOverlapWithRegions(editLine, editLine);
-        
-        applyLineEditAdjustments(editLine, editLine, linesDelta, updated, overlaps);
-        updateContentViaParent(updated, { start: newCaretDisplay, end: newCaretDisplay }, scrollSnap);
+        if (removedChar !== "\n") {
+          previousCodeRef.current = updated;
+          updateContentViaParent(updated, { start: newCaretDisplay, end: newCaretDisplay }, scrollSnap);
+        } else {
+          const currLC = offsetToLineCol(original, originalStart);
+          const editLine = currLC.line + 1;
+          const overlaps = editOverlapWithRegions(editLine, editLine);
+          
+          applyLineEditAdjustments(editLine, editLine, -1, updated, overlaps);
+          updateContentViaParent(updated, { start: newCaretDisplay, end: newCaretDisplay }, scrollSnap);
+        }
       }
       resolve();
     });
@@ -977,7 +1004,14 @@ const DinoLabsMirror = forwardRef(function DinoLabsMirror(
         const newDisplayValue = event.target.value || "";
         handleInput({ target: { value: newDisplayValue } });
         previousCodeRef.current = newDisplayValue;
-        setTimeout(() => { isEditingRef.current = false; }, 0);
+        
+        if (batchUpdateTimer.current) {
+          clearTimeout(batchUpdateTimer.current);
+        }
+        
+        batchUpdateTimer.current = setTimeout(() => { 
+          isEditingRef.current = false;
+        }, 50);
       }
     },
     [handleInput]
@@ -1217,7 +1251,13 @@ const DinoLabsMirror = forwardRef(function DinoLabsMirror(
   useEffect(() => {
     if (!highlightRef.current) return;
     
-    const timeoutId = setTimeout(() => {
+    const updateDelay = isEditingRef.current ? 0 : 20;
+    
+    if (highlightUpdateTimer.current) {
+      clearTimeout(highlightUpdateTimer.current);
+    }
+    
+    if (updateDelay === 0) {
       const splitted = displayHighlightedCode.split(/\r\n|\r|\n/);
       const highlightLines = splitted.map((line) => (line.trim() === "" ? "\u200B" : line));
       let finalHTML = "";
@@ -1228,9 +1268,42 @@ const DinoLabsMirror = forwardRef(function DinoLabsMirror(
       }
       
       highlightRef.current.innerHTML = finalHTML;
-    }, isEditingRef.current ? 50 : 0);
+      setIsUpdatingHighlight(false);
+    } else {
+      highlightUpdateTimer.current = setTimeout(() => {
+        if (renderTimer.current) {
+          cancelAnimationFrame(renderTimer.current);
+        }
+        
+        renderTimer.current = requestAnimationFrame(() => {
+          setIsUpdatingHighlight(true);
+          
+          const splitted = displayHighlightedCode.split(/\r\n|\r|\n/);
+          const highlightLines = splitted.map((line) => (line.trim() === "" ? "\u200B" : line));
+          let finalHTML = "";
+          
+          for (let i = 0; i < highlightLines.length; i++) {
+            if (highlightLines[i] === "\u200B") finalHTML += `<span class="hlLine">\u200B<br></span>`;
+            else finalHTML += `<span class="hlLine">${highlightLines[i]}\n</span>`;
+          }
+          
+          if (highlightRef.current) {
+            highlightRef.current.innerHTML = finalHTML;
+          }
+          
+          setIsUpdatingHighlight(false);
+        });
+      }, updateDelay);
+    }
 
-    return () => clearTimeout(timeoutId);
+    return () => {
+      if (highlightUpdateTimer.current) {
+        clearTimeout(highlightUpdateTimer.current);
+      }
+      if (renderTimer.current) {
+        cancelAnimationFrame(renderTimer.current);
+      }
+    };
   }, [displayHighlightedCode]);
 
   const splitted = displayHighlightedCode.split(/\r\n|\r|\n/);
@@ -1297,8 +1370,8 @@ const DinoLabsMirror = forwardRef(function DinoLabsMirror(
               <span className="chevronSpacer" style={{ fontSize: `${fontSize}px` }} />
             )}
             <span className="indicatorCluster" style={{ fontSize: `${Math.max(8, fontSize * 0.6)}px` }}>
-              {(showErrorIndicator && !showFoldIndicator) && <span title="Lint error" aria-label="Lint error" className="errorIndicatorDot" />}
-              {showFoldIndicator && <span title="Folded block" aria-label="Folded block" className="foldIndicatorDot" />}
+              {(showErrorIndicator && !showFoldIndicator) && <span title="Lint Error" aria-label="Lint Error" className="errorIndicatorDot" />}
+              {showFoldIndicator && <span title="Folded Block" aria-label="Folded Block" className="foldIndicatorDot" />}
               
             </span>
           </div>
@@ -1347,6 +1420,7 @@ const DinoLabsMirror = forwardRef(function DinoLabsMirror(
     ensureVisible(lineNum) { ensureVisible(lineNum); },
     doUndo, 
     doRedo, 
+    pushUndoSnapshot,
     doPasteAtCursor() {
       const sel = saveSelection(textareaRef.current);
       if (!sel) return;
@@ -1403,7 +1477,9 @@ const DinoLabsMirror = forwardRef(function DinoLabsMirror(
             style={{ 
               fontSize: `${fontSize}px`, 
               lineHeight: `${lineHeight}px`,
-              paddingLeft: `${fontSize * 0.5}px`
+              paddingLeft: `${fontSize * 0.5}px`,
+              opacity: isUpdatingHighlight ? 0.7 : 1,
+              transition: "opacity 0.1s ease"
             }}
           />
           <textarea

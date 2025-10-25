@@ -811,17 +811,29 @@ const DinoLabs = () => {
   const openFile = async (fileHandle, fileName, fullPath = null) => {
     const fileId = fullPath || fileName;
     const { language, category } = getFileTypeInfo(fileName);
-    const existingPaneIndex = panes.findIndex((pane) => pane.openedTabs.some((tab) => tab.id === fileId));
-    if (existingPaneIndex !== -1) {
-      setActivePaneIndex(existingPaneIndex);
+
+    const isInSplitView = panes.length > 1 && panes.every(pane => pane.openedTabs.length > 0);
+    const isMedia = ["image", "video", "audio", "pdf", "threeD"].includes(category);
+    const isTextFile = ["txt", "md"].includes(fileName.split(".").pop()?.toLowerCase() || "");
+    const isTabularFile = ["csv"].includes(fileName.split(".").pop()?.toLowerCase() || "");
+    const isCodeFile = !isMedia && !isTextFile && !isTabularFile;
+
+    if (isInSplitView && !isCodeFile) {
+      return;
+    }
+
+    const currentPane = panes[activePaneIndex];
+    const existingTabIndex = currentPane.openedTabs.findIndex((tab) => tab.id === fileId);
+
+    if (existingTabIndex !== -1) {
       setPanes((prev) => {
         const next = [...prev];
-        next[existingPaneIndex].activeTabId = fileId;
+        next[activePaneIndex].activeTabId = fileId;
         return next;
       });
       return;
     }
-    const isMedia = ["image", "video", "audio", "pdf", "threeD"].includes(category);
+
     let content = null;
     let finalHandle = fileHandle;
     if (!isMedia) {
@@ -834,6 +846,7 @@ const DinoLabs = () => {
         finalHandle = null;
       }
     }
+
     const newTab = {
       id: fileId,
       name: fileName,
@@ -851,12 +864,15 @@ const DinoLabs = () => {
       isSingleFile: !fileId.includes("/"),
       isAccount: false
     };
+
     setPanes((prev) => {
       const next = [...prev];
-      next[activePaneIndex].openedTabs.push(newTab);
+      const filteredTabs = next[activePaneIndex].openedTabs.filter(tab => tab.id !== fileId);
+      next[activePaneIndex].openedTabs = [...filteredTabs, newTab];
       next[activePaneIndex].activeTabId = newTab.id;
       return next;
     });
+
     setOriginalContents((p) => ({ ...p, [fileId]: content }));
     setUnsavedChanges((p) => ({ ...p, [fileId]: false }));
     if (!fullPath) saveHandle(fileId, finalHandle);
@@ -935,6 +951,11 @@ const DinoLabs = () => {
       const currentTabIndex = currentPane.openedTabs.findIndex((t) => t.id === currentPane.activeTabId);
       const currentTab = currentPane.openedTabs[currentTabIndex];
       if (!currentTab) return prev;
+
+      const fileExt = currentTab.fileHandle?.name.split(".").pop()?.toLowerCase() || "";
+      const isCodeFile = !currentTab.isMedia && !currentTab.isAccount && !["txt", "md", "csv"].includes(fileExt);
+
+      if (!isCodeFile) return prev;
 
       const tabCopy = {
         ...currentTab,
@@ -1626,6 +1647,7 @@ const DinoLabs = () => {
     const indentStyle = { paddingLeft: `${1 + item.level * 1}rem` };
     const baseBg = dragOverId === item.id ? "rgba(255,255,255,0.2)" : item.highlight ? "rgba(255,255,255,0.05)" : undefined;
     const itemClass = `directoryListItem ${item.level > 0 ? "indented" : ""} ${item.level === 0 ? "rootDirectory" : ""} ${unsavedChanges[item.id] ? "dinolabsFileUnsaved" : ""}`;
+
     if (item.type === "directory") {
       return (
         <div
@@ -1640,13 +1662,11 @@ const DinoLabs = () => {
           onClick={() => toggleDirectory(item.id)}
           onContextMenu={(e) => handleContextMenu(e, { type: "directory", path: item.id })}
         >
-          <span style={{ display: "flex", alignItems: "center", width: "100%" }}>
+          <span style={{ display: "flex", alignItems: "center", width: "100%", pointerEvents: "none" }}>
             <FontAwesomeIcon icon={item.isOpen ? faAngleDown : faAngleRight} style={{ marginRight: "0.4rem" }} />
             {item.name}
             {unsavedChanges[item.id] && (
-              <Tippy content="Unsaved" theme="tooltip-light">
-                <span className="dinolabsFileUnsavedDot" />
-              </Tippy>
+              <span className="dinolabsFileUnsavedDot" style={{ pointerEvents: "auto" }} />
             )}
           </span>
         </div>
@@ -1662,11 +1682,9 @@ const DinoLabs = () => {
         onClick={() => handleFileClick(item)}
         onContextMenu={(e) => handleContextMenu(e, { type: "file", path: item.id })}
       >
-        <span style={{ display: "flex", alignItems: "center", width: "100%" }}>
+        <span style={{ display: "flex", alignItems: "center", width: "100%", pointerEvents: "none" }}>
           {unsavedChanges[item.id] && (
-            <Tippy content="Unsaved" theme="tooltip-light">
-              <span className="dinolabsFileUnsavedDot" />
-            </Tippy>
+            <span className="dinolabsFileUnsavedDot" style={{ pointerEvents: "auto" }} />
           )}
           {getFileIcon(item.name)}
           {item.name}

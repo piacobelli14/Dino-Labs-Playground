@@ -29,7 +29,7 @@ import {
 } from "@fortawesome/free-solid-svg-icons";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import DinoLabsMirror from "./DinoLabsMirror";
-import { syntaxHighlight, escapeRegExp } from "./DinoLabsParser";
+import { syntaxHighlight, syntaxHighlightViewportOptimized, getVisibleLineRange, escapeRegExp } from "./DinoLabsParser";
 import useAuth from "../../UseAuth.jsx";
 import { lintPython } from "./DinoLabsLint/DinoLabsLintPython.jsx";
 import { lintTypeScript } from "./DinoLabsLint/DinoLabsLintTypeScript.jsx";
@@ -122,12 +122,21 @@ const DinoLabsMarkdown = forwardRef((props, ref) => {
   const searchInputRef = useRef(null);
   const debounceTimer = useRef(null);
   const lintDebounceTimer = useRef(null);
-  const syntaxDebounceTimer = useRef(null);
+  const highlightDebounceTimer = useRef(null);
   const mirrorRef = useRef(null);
   const editorId = useRef(generateEditorId()).current;
   const isInitializedRef = useRef(false);
   const containerRef = useRef(null);
   const isResizingRef = useRef(false);
+  const lastHighlightUpdateRef = useRef(0);
+  const contentUpdateTimer = useRef(null);
+  const searchUpdateTimer = useRef(null);
+  const performanceTimer = useRef(null);
+  const batchedUpdatesRef = useRef({
+    content: null,
+    search: null,
+    lint: null
+  });
 
   const [editorContent, setEditorContent] = useState("");
   const [currentLanguage, setCurrentLanguage] = useState(detectedLanguage || "Unknown");
@@ -151,7 +160,8 @@ const DinoLabsMarkdown = forwardRef((props, ref) => {
   const [editorGrow, setEditorGrow] = useState(70);
   const [consoleGrow, setConsoleGrow] = useState(30);
 
-  const [highlightedCodeCache, setHighlightedCodeCache] = useState("");
+  const [highlightedCodeCache, setHighlightedCodeCache] = useState(new Map());
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const dividerHeight = 10;
   const minHeight = 50;
@@ -159,6 +169,60 @@ const DinoLabsMarkdown = forwardRef((props, ref) => {
   const visibleLintErrors = useMemo(() => {
     return lintErrors.filter((error) => !mutedLines.includes(error.line));
   }, [lintErrors, mutedLines]);
+
+  const [visibleRange, setVisibleRange] = useState({ startLine: 1, endLine: 50 });
+  const scrollUpdateTimer = useRef(null);
+  const editUpdateTimer = useRef(null);
+  const isScrolling = useRef(false);
+  const isEditing = useRef(false);
+  const rapidEditCounter = useRef(0);
+
+  const updateVisibleRange = useCallback((scrollContainer, isEditContext = false) => {
+    if (scrollContainer && lineHeight) {
+      const newRange = getVisibleLineRange(scrollContainer, lineHeight);
+      
+      let bufferedRange;
+      if (isEditContext) {
+        bufferedRange = {
+          startLine: Math.max(1, newRange.startLine - 3),
+          endLine: newRange.endLine + 3
+        };
+      } else {
+        bufferedRange = {
+          startLine: Math.max(1, newRange.startLine - 30),
+          endLine: newRange.endLine + 30
+        };
+      }
+      
+      setVisibleRange(bufferedRange);
+    }
+  }, [lineHeight]);
+
+  const handleMirrorScroll = useCallback((scrollContainer) => {
+    isScrolling.current = true;
+    
+    if (scrollUpdateTimer.current) {
+      clearTimeout(scrollUpdateTimer.current);
+    }
+    
+    updateVisibleRange(scrollContainer, false);
+    
+    scrollUpdateTimer.current = setTimeout(() => {
+      isScrolling.current = false;
+    }, 50);
+  }, [updateVisibleRange]);
+
+  const fastContentHash = useCallback((content) => {
+    if (!content) return 0;
+    let hash = 0;
+    const len = Math.min(content.length, 500);
+    for (let i = 0; i < len; i++) {
+      const char = content.charCodeAt(i);
+      hash = ((hash << 5) - hash) + char;
+      hash = hash & hash;
+    }
+    return hash;
+  }, []);
 
   const highlightedCode = useMemo(() => {
     if (currentLanguage === "Unknown") {
@@ -168,20 +232,62 @@ const DinoLabsMarkdown = forwardRef((props, ref) => {
         .replace(/>/g, "&gt;");
     }
     
-    if (syntaxDebounceTimer.current) {
-      return highlightedCodeCache || editorContent
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;");
+    const contentHash = fastContentHash(editorContent + editorContent.length);
+    
+    if (isEditing.current) {
+      const cacheKey = `${currentLanguage}-${searchTerm}-${isCaseSensitiveSearch}-${contentHash}-viewport-${visibleRange.startLine}-${visibleRange.endLine}`;
+      
+      if (highlightedCodeCache.has(cacheKey)) {
+        return highlightedCodeCache.get(cacheKey);
+      }
+      
+      const result = syntaxHighlightViewportOptimized(
+        editorContent,
+        currentLanguage.toLowerCase(),
+        searchTerm,
+        isCaseSensitiveSearch,
+        visibleRange.startLine,
+        visibleRange.endLine
+      );
+      
+      setHighlightedCodeCache(prev => {
+        const newCache = new Map(prev);
+        if (newCache.size >= 30) {
+          const firstKey = newCache.keys().next().value;
+          newCache.delete(firstKey);
+        }
+        newCache.set(cacheKey, result);
+        return newCache;
+      });
+      
+      return result;
     }
     
-    return syntaxHighlight(
+    const cacheKey = `${currentLanguage}-${searchTerm}-${isCaseSensitiveSearch}-${contentHash}-full`;
+    
+    if (highlightedCodeCache.has(cacheKey)) {
+      return highlightedCodeCache.get(cacheKey);
+    }
+    
+    const result = syntaxHighlight(
       editorContent,
       currentLanguage.toLowerCase(),
       searchTerm,
       isCaseSensitiveSearch
     );
-  }, [editorContent, currentLanguage, searchTerm, isCaseSensitiveSearch, highlightedCodeCache]);
+    
+    setHighlightedCodeCache(prev => {
+      const newCache = new Map(prev);
+      if (newCache.size >= 20) {
+        const firstKey = newCache.keys().next().value;
+        newCache.delete(firstKey);
+      }
+      newCache.set(cacheKey, result);
+      return newCache;
+    });
+    
+    return result;
+  }, [editorContent, currentLanguage, searchTerm, isCaseSensitiveSearch, visibleRange, fastContentHash, highlightedCodeCache]);
 
   const isLanguageSupported = useMemo(() => {
     const lang = currentLanguage.toLowerCase();
@@ -199,8 +305,31 @@ const DinoLabsMarkdown = forwardRef((props, ref) => {
   }, [lineHeight, zoomLevel]);
 
   const handleContentChange = useCallback((newContent) => {
+    if (contentUpdateTimer.current) {
+      clearTimeout(contentUpdateTimer.current);
+    }
+    
     setEditorContent(newContent);
-    onEdit(paneIndex, tabId, { fullCode: editorContent }, { fullCode: newContent });
+    isEditing.current = true;
+    rapidEditCounter.current++;
+    
+    contentUpdateTimer.current = setTimeout(() => {
+      isEditing.current = false;
+      rapidEditCounter.current = Math.max(0, rapidEditCounter.current - 1);
+    }, 150);
+    
+    batchedUpdatesRef.current.content = newContent;
+    
+    if (editUpdateTimer.current) {
+      clearTimeout(editUpdateTimer.current);
+    }
+    
+    editUpdateTimer.current = setTimeout(() => {
+      if (batchedUpdatesRef.current.content) {
+        onEdit(paneIndex, tabId, { fullCode: editorContent }, { fullCode: batchedUpdatesRef.current.content });
+        batchedUpdatesRef.current.content = null;
+      }
+    }, 200);
   }, [paneIndex, tabId, onEdit, editorContent]);
 
   const handleInput = useCallback((event) => {
@@ -214,25 +343,32 @@ const DinoLabsMarkdown = forwardRef((props, ref) => {
       setCurrentSearchIndex(-1);
       return;
     }
-    const flags = isCaseSensitiveSearch ? "" : "i";
-    const safeTerm = escapeRegExp(searchTerm);
-
-    try {
-      const re = new RegExp(safeTerm, flags);
-      const lines = editorContent.split("\n");
-      const matches = [];
-      for (let i = 0; i < lines.length; i++) {
-        if (re.test(lines[i])) {
-          matches.push({ lineNumber: i + 1 });
-        }
-      }
-      setSearchPositions(matches);
-      setCurrentSearchIndex(matches.length > 0 ? 0 : -1);
-    } catch {
-      setSearchPositions([]);
-      setCurrentSearchIndex(-1);
+    
+    if (searchUpdateTimer.current) {
+      clearTimeout(searchUpdateTimer.current);
     }
-  }, [searchTerm, isCaseSensitiveSearch, editorContent, setSearchPositions, setCurrentSearchIndex]);
+    
+    searchUpdateTimer.current = setTimeout(() => {
+      const flags = isCaseSensitiveSearch ? "" : "i";
+      const safeTerm = escapeRegExp(searchTerm);
+
+      try {
+        const re = new RegExp(safeTerm, flags);
+        const lines = editorContent.split("\n");
+        const matches = [];
+        for (let i = 0; i < lines.length; i++) {
+          if (re.test(lines[i])) {
+            matches.push({ lineNumber: i + 1 });
+          }
+        }
+        setSearchPositions(matches);
+        setCurrentSearchIndex(matches.length > 0 ? 0 : -1);
+      } catch {
+        setSearchPositions([]);
+        setCurrentSearchIndex(-1);
+      }
+    }, 100);
+  }, [searchTerm, isCaseSensitiveSearch, editorContent]);
 
   const performNextSearch = () => {
     if (searchPositions.length === 0) return;
@@ -254,6 +390,9 @@ const DinoLabsMarkdown = forwardRef((props, ref) => {
 
   const performReplace = () => {
     if (currentSearchIndex === -1 || searchPositions.length === 0) return;
+    
+    mirrorRef.current?.pushUndoSnapshot?.();
+    
     const currentMatch = searchPositions[currentSearchIndex];
     const lineNumber = currentMatch.lineNumber;
     const lines = editorContent.split("\n");
@@ -280,6 +419,9 @@ const DinoLabsMarkdown = forwardRef((props, ref) => {
 
   const performReplaceAll = () => {
     if (searchPositions.length === 0) return;
+    
+    mirrorRef.current?.pushUndoSnapshot?.();
+    
     const flags = isCaseSensitiveSearch ? "g" : "gi";
     const regex = new RegExp(escapeRegExp(searchTerm), flags);
     const updatedCode = editorContent.replace(regex, replaceTerm ?? "");
@@ -355,7 +497,7 @@ const DinoLabsMarkdown = forwardRef((props, ref) => {
         setCopySuccess("Copied to Clipboard!");
         setIsCopied(true);
       } else {
-        setCopySuccess("Failed to copy!");
+        setCopySuccess("Failed to Copy!");
       }
       setTimeout(() => {
         setCopySuccess("");
@@ -366,7 +508,7 @@ const DinoLabsMarkdown = forwardRef((props, ref) => {
 
   const saveFile = async () => {
     if (!fileHandle) {
-      setSaveStatus("No file handle available.");
+      setSaveStatus("No File Handle Available.");
       setTimeout(() => setSaveStatus(""), 3000);
       return;
     }
@@ -394,10 +536,10 @@ const DinoLabsMarkdown = forwardRef((props, ref) => {
       if (onSave) {
         onSave(paneIndex, tabId, editorContent);
       }
-      setSaveStatus("Save successful!");
+      setSaveStatus("Save Successful!");
       setTimeout(() => setSaveStatus(""), 3000);
     } catch {
-      setSaveStatus("Save failed!");
+      setSaveStatus("Save Failed!");
       setTimeout(() => setSaveStatus(""), 3000);
     }
   };
@@ -539,10 +681,12 @@ const DinoLabsMarkdown = forwardRef((props, ref) => {
         setSearchPositions([]);
         setCurrentSearchIndex(-1);
         isInitializedRef.current = true;
+        setVisibleRange({ startLine: 1, endLine: 50 });
       }
     } else if (!isInitializedRef.current) {
       setEditorContent("");
       isInitializedRef.current = true;
+      setVisibleRange({ startLine: 1, endLine: 50 });
     }
   }, [fileContent, forceOpen]);
 
@@ -583,10 +727,14 @@ const DinoLabsMarkdown = forwardRef((props, ref) => {
       clearTimeout(lintDebounceTimer.current);
     }
     
+    const debounceTime = rapidEditCounter.current > 2 ? 1500 : 800;
+    
     lintDebounceTimer.current = setTimeout(() => {
+      setIsUpdating(true);
       const errors = getLintErrors(currentLanguage, editorContent);
       setLintErrors(errors);
-    }, 500); 
+      setIsUpdating(false);
+    }, debounceTime); 
 
     return () => {
       if (lintDebounceTimer.current) {
@@ -601,7 +749,7 @@ const DinoLabsMarkdown = forwardRef((props, ref) => {
     }
     debounceTimer.current = setTimeout(() => {
       performSearch();
-    }, 300);
+    }, 200);
 
     return () => {
       if (debounceTimer.current) {
@@ -820,11 +968,11 @@ const DinoLabsMarkdown = forwardRef((props, ref) => {
 
               {searchPositions.length > 0 && currentSearchIndex >= 0 && (
                 <span className="codeEditorSearchMatchIndicator">
-                  {currentSearchIndex + 1} of {searchPositions.length} results found
+                  {currentSearchIndex + 1} of {searchPositions.length} Results Found
                 </span>
               )}
               {searchPositions.length === 0 && (
-                <span className="codeEditorSearchMatchIndicator">No matches found</span>
+                <span className="codeEditorSearchMatchIndicator">No Matches Found</span>
               )}
 
             </div>
@@ -946,12 +1094,19 @@ const DinoLabsMarkdown = forwardRef((props, ref) => {
               handleInput={handleInput}
               handleKeyDown={handleKeyDown}
               highlightedCode={highlightedCode}
+              fullHighlightedCode={syntaxHighlight(
+                editorContent,
+                currentLanguage.toLowerCase(),
+                searchTerm,
+                isCaseSensitiveSearch
+              )}
               fontSize={zoomedFontSize}
               lineHeight={zoomedLineHeight}
               editorId={editorId}
               disableFocus={isSearchBoxFocused}
               keyBinds={keyBinds}
               lintErrors={visibleLintErrors}
+              handleScroll={handleMirrorScroll}
             />
           </div>
 
@@ -997,7 +1152,10 @@ const DinoLabsMarkdown = forwardRef((props, ref) => {
                 <div
                   className="codeLintMessage"
                   key={idx}
-                  style={{ fontSize: `${Math.round(12 * zoomLevel)}px` }}
+                  style={{ 
+                    fontSize: `${Math.round(12 * zoomLevel)}px`,
+                    opacity: isUpdating ? 0.6 : 1
+                  }}
                 >
                   <div
                     onClick={() => mirrorRef.current?.jumpToLine(err.line)}
@@ -1025,7 +1183,7 @@ const DinoLabsMarkdown = forwardRef((props, ref) => {
             The content of this file type is unsupported.
           </label>
           <button className="codeTryToOpenButton" onClick={onForceOpen}>
-            Try to open anyway.
+            Try to Open Anyway.
           </button>
         </div>
       )}
